@@ -1,0 +1,98 @@
+---
+title: "Sept 11 class"
+author: "Amelia Shuler"
+format: html
+editor: visual
+---
+
+## What is tidyverse?
+
+Tidyverse is a collection of R packages designed for data science, sharing a common design philosophy, grammar, and data structures for data manipulation, exploration, and visualization.
+
+|  |  |
+|----|----|
+| {lubridate}: date management | {rvest}: web scraping |
+| {tidymodels}: modeling/prediction | {tibble}: optimizing data.frame |
+| {tidyr}: data cleaning | {readr}: load rectangular data (.csv) |
+| {readxl}: import .xls and .xlsx files | {dplyr}: grammar for debugging |
+| {stringr}: text handling | {purrr}: list handling |
+| {forcats}: qualitative handling | {ggplot2}: data visualization |
+
+## Rules
+
+1.  Each variable in a single column
+2.  Each individual in a different row
+3.  Each cell with a single value
+4.  Each dataset in a tibble
+5.  If we want to join multiple datasets we must have a common (key) column (Don't use names)
+
+![](tidy_def.jpg){fig-align="right" width="800"}
+
+```{r}
+library(tidyr)
+table4b
+```
+
+This is not tidy data because 1999 and 2000 both represent 'cases.' cases should be in a single column, not split across columns.
+
+There are 6 values for number of cases. So they should each be on their own row (6 total rows).
+
+| Country     | Year | Cases      |
+|-------------|------|------------|
+| Afghanistan | 1999 | 19987071   |
+| Afghanistan | 2000 | 20595360   |
+| Brazil      | 1999 | 172006362  |
+| Brazil      | 2000 | 174504898  |
+| China       | 1999 | 1272915272 |
+| China       | 2000 | 1280428583 |
+
+## Pipes
+
+Read code right to left.
+
+third(second(first(data)))
+
+Apply first to data, then second, then third. This is R Base.
+
+data \|\> first() \|\> second() \|\> third()
+
+This uses the pipe to connect the data with the action. This is tidyverse. Put each function on its own line of code.
+
+## pivot_longer
+
+In order to translate the data, we need to pivot the date columns.
+
+```{r}
+table4b |> 
+  pivot_longer(cols = c("1999", "2000"), # always put numbers in quotes
+               names_to = "year", #specifies where the columns go
+               values_to = "population")
+
+# this will produce the same thing, but is longer
+# table4b [, c("country")]
+# table4b |> select(country)
+```
+
+cols can also be used to index the data
+
+billboard \|\> pivot_longer(cols = wk1:wk30)
+
+selects columns between wk1:wk30
+
+billboard \|\> pivot_longer(cols = -wk3)
+
+pivots everything except wk3
+
+## pivot_wider
+
+```{r}
+table2
+```
+
+This table is incorrect because all the information about one individual is not in the same row. An individual is all of the data collected at a specific point in time about a given subject.
+
+```{r}
+table2 |> 
+  pivot_wider(values_from = count,
+              names_from = type)
+```

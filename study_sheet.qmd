@@ -1,0 +1,293 @@
+---
+title: "Study Sheet"
+author: "Amelia Shuler"
+format: html
+editor: visual
+---
+
+## Libraries
+
+```{r}
+#| message: false
+# install package
+# install.packages("")
+
+# call library
+library(tibble)
+library(datasets)
+library(lubridate)
+library(glue)
+```
+
+## Types of Data
+
+```{r}
+#| eval: false
+# numerical values
+number <- 100
+numbers <- c(1, 2, 3, 4)
+
+# string values
+word <- "word"
+words <- c("one", "blue", "3")
+
+# logical values
+y <- TRUE
+y <- c(TRUE, TRUE, FALSE, FALSE, FALSE, NA, TRUE)
+
+# dates
+birth_date <- as_date("1996-05-15")
+```
+
+#### Dates
+
+```{r}
+#| eval: false
+# dates
+library(lubridate)
+# format default is YYYY-MM-DD, can change with format = "%d-%m-%y"
+as_date("2025-09-03")
+# uppercase is for 4 year digits
+as_date("09-03-2025", format = "%m-%d-%Y")
+# lowercase is for 2 year digits
+as_date("09-03-25", format = "%m-%d-%y")
+# slashes can also be used
+as_date("09/03/25", format = "%m/%d/%y")
+# will return the next date
+as_date("09/03/25", format = "%m/%d/%y") + 1
+# adds three months, also works with years(x)
+as_date("09/03/25", format = "%m/%d/%y") + months(3)
+# date + time uses different function
+as_datetime("2025-09-03 18:44:55")
+as_datetime("2025-09-03 18:44:55") + hours(2) + minutes(23)
+# returns date
+today()
+# returns date + time
+now()
+# returns month of today
+month(today())
+# returns year of today
+year(today())
+# returns week of year (i.e. 36)
+week(today())
+# returns day of the week
+wday(today())
+# returns the day of the week starting on Monday
+wday(today(), week_start = 1)
+```
+
+## Basic Operators
+
+#### Return number 1 through 20
+
+```{r}
+#| eval: false
+1:20
+```
+
+#### Create a Sequence with 7 items
+
+```{r}
+#| eval: false
+seq(1, 20, l = 7)
+```
+
+#### Concatenate (Define Variable) x
+
+```{r}
+#| eval: false
+x <- c(1, 2, 3, 4, 5)
+```
+
+#### Mean
+
+```{r}
+#| eval: false
+mean(x)
+```
+
+#### Median
+
+```{r}
+#| eval: false
+median(x)
+```
+
+#### Quasi Variance
+
+```{r}
+#| eval: false
+var(x)
+```
+
+#### Variance
+
+```{r}
+#| eval: false
+mean(x^2) - mean(x)^2
+mean((x - mean(x))^2)
+```
+
+#### Quasi-Standard Deviation
+
+```{r}
+#| eval: false
+sd(x)
+```
+
+#### Sum all Numbers in an Element
+
+```{r}
+#| eval: false
+sum(x)
+```
+
+#### Return Largest Number in an Element
+
+```{r}
+#| eval: false
+max(x)
+```
+
+#### Returns Smallest Number in an Element
+
+```{r}
+#| eval: false
+min(x)
+```
+
+#### Calculates the Difference Between Each Element
+
+```{r}
+#| eval: false
+diff(x)
+```
+
+#### Reverse x
+
+```{r}
+#| eval: false
+rev(x)
+```
+
+#### Returns Quantiles
+
+```{r}
+#| eval: false
+# returns quadrilles
+quantile(x, na.rm = TRUE)
+
+# returns quadrilles, but sets custom %
+quantile(x, probs = c(.13, .27, .71, .95), na.rm = TRUE)
+
+# removes NA before running function
+var(x, na.rm = TRUE)
+```
+
+## Running Logic Against an Element
+
+```{r}
+#| eval: false
+age <- c(25, 24, 40, 50, 17, 16, 30, 35)
+name <- c("a", "b", "c", "d", "e", "f", "g", "h")
+# will return a logical variable determining if the age is equal to or less than 18
+age <= 18 
+# will return a logical variable determining if the age is less than 18
+age < 18
+# will return age greater than 23
+age [age > 23]
+# Find a way to find out if all the elements are positive or not.
+all(age > 0)
+# validating with two conditions. AND
+name[age <= 30 & age >= 21]
+# validating with two conditions. OR
+name [age <= 30 | age >= 21] 
+# asks the data if it is equal to 27 yes or no, not an assignment
+age == 27
+# asks the data if it is NOT equal to 27
+age != 27
+# asks the data if it is NOT equal to 27
+!(age == 27)
+# less than thirty and greater than 21 OR name is C
+name[age <= 30 & age >= 21 | name == "c"]
+name[age >= 21 & age <= 30 | name == "a" | name == "c"]
+name[age >= 21 & age <= 30 | name %in% c("a", "c")]
+```
+
+## Add and Delete Elements in a Variable
+
+```{r}
+#| eval: false
+# Adds NA to end of X
+x <- c(x, NA)
+# removes last element
+x[-length(x)]
+# removes last 4 elements
+rev(rev(x)[-(1:4)])
+x[-c(length(x) - 3, length(x) - 2, length(x) - 1, length(x))]
+x[-c(length(x))]
+# Delete the first element
+x[-1]
+
+```
+
+## Use Glue to connect text variables
+
+```{r}
+#| eval: false
+# Define another variable with your last name (called surname)
+surname <- "Shuler"
+# use glue() to have, in a single variable called full_name, your first and 
+# last name separated by a comma
+full_name <- glue("{name}, {surname}")
+```
+
+## Extract Elements from a Variable
+
+```{r}
+#| eval: false
+# extract the elements occupying the locations 1, 2, 5, 6
+x <- c(4, 3, 6, 2, 10, 23, 10)
+x[c(1, 2, 5, 6)]
+```
+
+## Data Frames
+
+```{r}
+#| eval: false
+df <- data.frame(name, age)
+
+library(lubridate)
+ages <- c(18, NA, 40, NA, 45)
+names <- c("a", "b", NA, "d", "e")
+siblings <- c(NA, TRUE, FALSE, FALSE, NA)
+degree_date <- as_date(c("2024-06-30", "2025-05-31", "2024-09-10", NA, NA))
+df <- data.frame(ages, names, siblings, degree_date)
+df <- data.frame("edad" = ages, "nombres" = names, "hermanos" = siblings, "fecha_grado" = degree_date)
+# returns number of rows
+nrow(df)
+# returns number of columns
+ncol(df)
+# returns names in Dataframe
+names(df)
+# renames dataframe values for names
+names(df) <- c("var1", "var2", "var3", "var4")
+```
+
+## Tibble
+
+```{r}
+#| eval: false
+# a vector of heights (in meters)
+# a vector of weights (in kg)
+h <- c(1.81, 1.50, 1.63, 1.64)
+w <- c(62, 71, 64, 59)
+df <- data.frame("altura" = h, "peso" = w, "BMI" = w / (h^2))
+
+# install.packages("tibble")
+# use tibble to create a better data frame
+library(tibble)
+tb <- tibble("altura" = h, "peso" = w, "BMI" = w / (h^2))
+# adds a column to the database
+tb$name <- c("a", "b", "c", "d")
+```
