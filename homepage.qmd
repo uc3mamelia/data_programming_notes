@@ -6,11 +6,11 @@ editor: visual
 
 ## Topics
 
-#### Study Sheet from Introduction to R
+#### [Study Sheet from Introduction to R](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/study_sheet.html)
 
 -   
 
-#### Mock Case Study
+#### [Mock Case Study](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/case_study_mock_task.html)
 
 -   
 
