@@ -5,3 +5,15 @@ editor: visual
 ---
 
 ## Topics
+
+#### Study Sheet from Introduction to R
+
+-   
+
+#### Mock Case Study
+
+-   
+
+#### [Sept 11th](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/sept_11_class.html)
+
+-   tidy data, pivot_longer, pivot_wider

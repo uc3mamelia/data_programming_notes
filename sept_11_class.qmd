@@ -26,6 +26,12 @@ Tidyverse is a collection of R packages designed for data science, sharing a com
 4.  Each dataset in a tibble
 5.  If we want to join multiple datasets we must have a common (key) column (Don't use names)
 
+Why ensure that your data is tidy? There are two main advantages:
+
+1.  There’s a general advantage to picking one consistent way of storing data. If you have a consistent data structure, it’s easier to learn the tools that work with it because they have an underlying uniformity.
+
+2.  There’s a specific advantage to placing variables in columns because it allows R’s vectorised nature to shine. As you learned in [mutate](https://r4ds.had.co.nz/transform.html#mutate-funs) and [summary functions](https://r4ds.had.co.nz/tidy-data.html#summary-funs), most built-in R functions work with vectors of values. That makes transforming tidy data feel particularly natural.x
+
 ![](tidy_def.jpg){fig-align="right" width="800"}
 
 ```{r}
