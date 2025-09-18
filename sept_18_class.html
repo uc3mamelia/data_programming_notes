@@ -98,8 +98,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="tidyr" class="level2">
-<h2 class="anchored" data-anchor-id="tidyr">TidyR</h2>
+<section id="separate" class="level2">
+<h2 class="anchored" data-anchor-id="separate">Separate</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>table3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -214,6 +214,68 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 3 c     5-7.5/3    .1   </code></pre>
 </div>
 </div>
+</section>
+<section id="unite" class="level2">
+<h2 class="anchored" data-anchor-id="unite">Unite</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>table5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  country     century year  rate             
+  &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;            
+1 Afghanistan 19      99    745/19987071     
+2 Afghanistan 20      00    2666/20595360    
+3 Brazil      19      99    37737/172006362  
+4 Brazil      20      00    80488/174504898  
+5 China       19      99    212258/1272915272
+6 China       20      00    213766/1280428583</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>table5 <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unite</span>(<span class="fu">c</span>(<span class="st">"century"</span>, <span class="st">"year"</span>), <span class="at">col =</span> <span class="st">"year_new"</span>, <span class="at">sep =</span> <span class="st">"-"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+  country     year_new rate             
+  &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;            
+1 Afghanistan 19-99    745/19987071     
+2 Afghanistan 20-00    2666/20595360    
+3 Brazil      19-99    37737/172006362  
+4 Brazil      20-00    80488/174504898  
+5 China       19-99    212258/1272915272
+6 China       20-00    213766/1280428583</code></pre>
+</div>
+</div>
+<p>For no separator, use empty quotes</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>table5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  country     century year  rate             
+  &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;            
+1 Afghanistan 19      99    745/19987071     
+2 Afghanistan 20      00    2666/20595360    
+3 Brazil      19      99    37737/172006362  
+4 Brazil      20      00    80488/174504898  
+5 China       19      99    212258/1272915272
+6 China       20      00    213766/1280428583</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>table5 <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unite</span>(<span class="fu">c</span>(<span class="st">"century"</span>, <span class="st">"year"</span>), <span class="at">col =</span> <span class="st">"year_new"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+  country     year_new rate             
+  &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;            
+1 Afghanistan 1999     745/19987071     
+2 Afghanistan 2000     2666/20595360    
+3 Brazil      1999     37737/172006362  
+4 Brazil      2000     80488/174504898  
+5 China       1999     212258/1272915272
+6 China       2000     213766/1280428583</code></pre>
+</div>
+</div>
+</section>
+<section id="exercise-5" class="level2">
+<h2 class="anchored" data-anchor-id="exercise-5"><a href="https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/tu-turno-1-2">Exercise 5</a></h2>
+<p>Take a look at the <code>billboard</code> table in the <code>{tidyr}</code> package. Is it tidydata? If not, what is wrong, how to convert it to tidy data in case it is not already?</p>
 </section>
 
 </main>

@@ -8,12 +8,16 @@ editor: visual
 
 #### [Study Sheet from Introduction to R](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/study_sheet.html)
 
--   
+-   libraries, data types, dates, basic operators, logic, add elements, delete elements, glue, extract, data tables, tibble
 
 #### [Mock Case Study](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/case_study_mock_task.html)
 
--   
+-   nrow, ncol, order(), unique(), mean(), sd()
 
 #### [Sept 11th](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/sept_11_class.html)
 
 -   tidy data, pivot_longer, pivot_wider
+
+#### [Sept 18th](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/sept_18_class.html)
+
+-   separate, unite

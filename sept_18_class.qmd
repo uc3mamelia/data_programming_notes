@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## TidyR
+## Separate
 
 ```{r}
 library(tidyr)
@@ -66,3 +66,23 @@ tb <- tibble("v1" = c("a", "b", "c"),
 tb |> separate(col = "v2", into = c("a1", "a2"),
                sep = -2)
 ```
+
+## Unite
+
+```{r}
+table5
+table5 |>
+  unite(c("century", "year"), col = "year_new", sep = "-")
+```
+
+For no separator, use empty quotes
+
+```{r}
+table5
+table5 |>
+  unite(c("century", "year"), col = "year_new", sep = "")
+```
+
+## [Exercise 5](https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/tu-turno-1-2)
+
+Take a look at the `billboard` table in the `{tidyr}` package. Is it tidydata? If not, what is wrong, how to convert it to tidy data in case it is not already?
