@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Homepage</title>
+<title>sept_18_class</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,20 +20,55 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="homepage_files/libs/clipboard/clipboard.min.js"></script>
-<script src="homepage_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="homepage_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="homepage_files/libs/quarto-html/popper.min.js"></script>
-<script src="homepage_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="homepage_files/libs/quarto-html/anchor.min.js"></script>
-<link href="homepage_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="homepage_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="homepage_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="homepage_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="homepage_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="sept_18_class_files/libs/clipboard/clipboard.min.js"></script>
+<script src="sept_18_class_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="sept_18_class_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="sept_18_class_files/libs/quarto-html/popper.min.js"></script>
+<script src="sept_18_class_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="sept_18_class_files/libs/quarto-html/anchor.min.js"></script>
+<link href="sept_18_class_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="sept_18_class_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="sept_18_class_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="sept_18_class_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="sept_18_class_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -46,7 +81,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Homepage</h1>
+<h1 class="title">sept_18_class</h1>
 </div>
 
 
@@ -63,26 +98,122 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="topics" class="level2">
-<h2 class="anchored" data-anchor-id="topics">Topics</h2>
-<section id="study-sheet-from-introduction-to-r" class="level4">
-<h4 class="anchored" data-anchor-id="study-sheet-from-introduction-to-r">Study Sheet from Introduction to R</h4>
-<ul>
-<li></li>
-</ul>
-</section>
-<section id="mock-case-study" class="level4">
-<h4 class="anchored" data-anchor-id="mock-case-study">Mock Case Study</h4>
-<ul>
-<li></li>
-</ul>
-</section>
-<section id="sept-11th" class="level4">
-<h4 class="anchored" data-anchor-id="sept-11th"><a href="https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/sept_11_class.html">Sept 11th</a></h4>
-<ul>
-<li>tidy data, pivot_longer, pivot_wider</li>
-</ul>
-</section>
+<section id="tidyr" class="level2">
+<h2 class="anchored" data-anchor-id="tidyr">TidyR</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>table3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+  country      year rate             
+  &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;            
+1 Afghanistan  1999 745/19987071     
+2 Afghanistan  2000 2666/20595360    
+3 Brazil       1999 37737/172006362  
+4 Brazil       2000 80488/174504898  
+5 China        1999 212258/1272915272
+6 China        2000 213766/1280428583</code></pre>
+</div>
+</div>
+<p>This table breaks the rule of one cell containing one piece of information</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>table3 <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(<span class="at">col =</span> rate, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"cases"</span>, <span class="st">"pop"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  country      year cases  pop       
+  &lt;chr&gt;       &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;     
+1 Afghanistan  1999 745    19987071  
+2 Afghanistan  2000 2666   20595360  
+3 Brazil       1999 37737  172006362 
+4 Brazil       2000 80488  174504898 
+5 China        1999 212258 1272915272
+6 China        2000 213766 1280428583</code></pre>
+</div>
+</div>
+<p>What if we wanted to create a new column ‘rate’ which is cases divided by pop? We can’t because “cases” and “pop” are string values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>table3 <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(<span class="at">col =</span> rate, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"cases"</span>, <span class="st">"pop"</span>), <span class="at">convert =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  country      year  cases        pop
+  &lt;chr&gt;       &lt;dbl&gt;  &lt;int&gt;      &lt;int&gt;
+1 Afghanistan  1999    745   19987071
+2 Afghanistan  2000   2666   20595360
+3 Brazil       1999  37737  172006362
+4 Brazil       2000  80488  174504898
+5 China        1999 212258 1272915272
+6 China        2000 213766 1280428583</code></pre>
+</div>
+</div>
+<p>Convert is set to false by default. Setting it to true makes it numerical variables. Cannot use to specify beyond text or number variables.</p>
+<p>Each separator does not have to be the same. Can be “/”, “,”, “-”… any non-numerical value.</p>
+<p>You can specify that “.” represents a decimal point by doing the following:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tb <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="st">"v1"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>),</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"v2"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"12-78.65/6.1"</span>, <span class="st">"10-7.4/4.3"</span>, <span class="st">"5-7.5/3.1"</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>tb <span class="sc">|&gt;</span> <span class="fu">separate</span>(<span class="at">col =</span> <span class="st">"v2"</span>, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"a1"</span>, <span class="st">"a2"</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">sep =</span> <span class="st">"/ | -"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Expected 2 pieces. Missing pieces filled with `NA` in 3 rows [1, 2,
+3].</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  v1    a1           a2   
+  &lt;chr&gt; &lt;chr&gt;        &lt;chr&gt;
+1 a     12-78.65/6.1 &lt;NA&gt; 
+2 b     10-7.4/4.3   &lt;NA&gt; 
+3 c     5-7.5/3.1    &lt;NA&gt; </code></pre>
+</div>
+</div>
+<p>| is or that indicates “/” or “-”</p>
+<p>how to divide by position:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tb <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="st">"v1"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>),</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"v2"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"12-78.65/6.1"</span>, <span class="st">"10-7.4/4.3"</span>, <span class="st">"5-7.5/3.1"</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>tb <span class="sc">|&gt;</span> <span class="fu">separate</span>(<span class="at">col =</span> <span class="st">"v2"</span>, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"a1"</span>, <span class="st">"a2"</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">sep =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  v1    a1    a2        
+  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;     
+1 a     12    -78.65/6.1
+2 b     10    -7.4/4.3  
+3 c     5-    7.5/3.1   </code></pre>
+</div>
+</div>
+<p>To separate by two positions:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>tb <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="st">"v1"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>),</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"v2"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"12-78.65/6.1"</span>, <span class="st">"10-7.4/4.3"</span>, <span class="st">"5-7.5/3.1"</span>))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>tb <span class="sc">|&gt;</span> <span class="fu">separate</span>(<span class="at">col =</span> <span class="st">"v2"</span>, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"a1"</span>, <span class="st">"a2"</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">sep =</span> <span class="fu">c</span>(<span class="dv">2</span> , <span class="dv">3</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  v1    a1    a2   
+  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+1 a     12    -    
+2 b     10    -    
+3 c     5-    7    </code></pre>
+</div>
+</div>
+<p>How to count from the last digit</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tb <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="st">"v1"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>),</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"v2"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"12-78.65/6.1"</span>, <span class="st">"10-7.4/4.3"</span>, <span class="st">"5-7.5/3.1"</span>))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>tb <span class="sc">|&gt;</span> <span class="fu">separate</span>(<span class="at">col =</span> <span class="st">"v2"</span>, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"a1"</span>, <span class="st">"a2"</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">sep =</span> <span class="sc">-</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  v1    a1         a2   
+  &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;
+1 a     12-78.65/6 .1   
+2 b     10-7.4/4   .3   
+3 c     5-7.5/3    .1   </code></pre>
+</div>
+</div>
 </section>
 
 </main>

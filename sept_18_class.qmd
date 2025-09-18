@@ -1,0 +1,68 @@
+---
+title: "sept_18_class"
+format: html
+editor: visual
+---
+
+## TidyR
+
+```{r}
+library(tidyr)
+table3
+```
+
+This table breaks the rule of one cell containing one piece of information
+
+```{r}
+table3 |>
+  separate(col = rate, into = c("cases", "pop"))
+```
+
+What if we wanted to create a new column 'rate' which is cases divided by pop? We can't because "cases" and "pop" are string values.
+
+```{r}
+table3 |>
+  separate(col = rate, into = c("cases", "pop"), convert = TRUE)
+```
+
+Convert is set to false by default. Setting it to true makes it numerical variables. Cannot use to specify beyond text or number variables.
+
+Each separator does not have to be the same. Can be "/", ",", "-"... any non-numerical value.
+
+You can specify that "." represents a decimal point by doing the following:
+
+```{r}
+tb <- tibble("v1" = c("a", "b", "c"),
+             "v2" = c("12-78.65/6.1", "10-7.4/4.3", "5-7.5/3.1"))
+tb |> separate(col = "v2", into = c("a1", "a2"),
+               sep = "/ | -")
+```
+
+\| is or that indicates "/" or "-"
+
+how to divide by position:
+
+```{r}
+tb <- tibble("v1" = c("a", "b", "c"),
+             "v2" = c("12-78.65/6.1", "10-7.4/4.3", "5-7.5/3.1"))
+tb |> separate(col = "v2", into = c("a1", "a2"),
+               sep = 2)
+```
+
+To separate by two positions:
+
+```{r}
+tb <- tibble("v1" = c("a", "b", "c"),
+             "v2" = c("12-78.65/6.1", "10-7.4/4.3", "5-7.5/3.1"))
+tb |> separate(col = "v2", into = c("a1", "a2"),
+               sep = c(2 , 3))
+```
+
+How to count from the last digit
+
+```{r}
+tb <- tibble("v1" = c("a", "b", "c"),
+             "v2" = c("12-78.65/6.1", "10-7.4/4.3", "5-7.5/3.1"))
+tb |> separate(col = "v2", into = c("a1", "a2"),
+               sep = -2)
+```
