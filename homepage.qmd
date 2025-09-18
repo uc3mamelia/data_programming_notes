@@ -4,6 +4,10 @@ format: html
 editor: visual
 ---
 
+## Resources
+
+-   [Execution Options](https://quarto.org/docs/computations/execution-options.html)
+
 ## Topics
 
 #### [Study Sheet from Introduction to R](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/study_sheet.html)
@@ -20,4 +24,4 @@ editor: visual
 
 #### [Sept 18th](https://htmlpreview.github.io/?https://github.com/uc3mamelia/data_programming_notes/blob/main/sept_18_class.html)
 
--   separate, unite
+-   separate, unite, pivot_longer with extra specs,

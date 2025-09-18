@@ -86,3 +86,30 @@ table5 |>
 ## [Exercise 5](https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/tu-turno-1-2)
 
 Take a look at the `billboard` table in the `{tidyr}` package. Is it tidydata? If not, what is wrong, how to convert it to tidy data in case it is not already?
+
+```{r}
+billboard
+```
+
+```{r}
+ billboard |>
+  pivot_longer(cols = wk1:wk76,
+               names_to = "week",
+               values_to = "position",
+               names_prefix = "wk",
+              values_drop_na = TRUE)
+```
+
+names_prefix removes the "wk" from the data
+
+values_drop_na = TRUE removes NA variables
+
+Can pivot in 3 ways:
+
+```{r}
+#| eval: false
+billboard |>
+  pivot_longer(cols = c(wk1, wk2, wk3, wk4, ...))
+  pivot_longer(cols = wk1:wk76)
+  pivot_longer(cols = -c(artist, track, date.entered))
+```
