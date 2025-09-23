@@ -113,3 +113,94 @@ billboard |>
   pivot_longer(cols = wk1:wk76)
   pivot_longer(cols = -c(artist, track, date.entered))
 ```
+
+```{r}
+relig_income
+```
+
+```{r}
+relig_income |>
+  pivot_longer(cols = -religion,
+               names_to = "income_bracket",
+               values_to = "count")
+```
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+```
+
+## What can you do with a database?
+
+#### Working with Rows
+
+-   filter rows, drop, arrange / order, sample, remove duplicates, sample
+
+#### Working with Columns
+
+-   select columns, create variables, rename, modify a variable
+
+#### Summarize Actions (new table with statistics)
+
+-   sum, mean, count
+
+#### Join (with other tables)
+
+-   merge
+
+## Working with Rows - Sampling
+
+One of the most common operations is what is known in statistics as **sampling**: a **selection or filtering of records (rows)** (a subsample).
+
+#### **Non-random (by quota)**
+
+based on logical conditions on the records (`filter()`).
+
+-   filter by people who verify that...
+
+-   need to put logical conditions inside the filter()
+
+-   will always return TRUE, FALSE values
+
+Examples:
+
+```{r}
+#| eval: false
+starwars |>
+  filter(mass < 50 & height > 90 & eye_color == "brown")
+```
+
+```{r}
+#| eval: false
+starwars |>
+  filter(eye_color == "brown" | eye_color == "green" | eye_color == "blue")
+starwars |>
+  filter(eye_color %in% c("brown", "green", "blue"))
+```
+
+```{r}
+#| eval: false
+starwars |>
+  filter(between(mass, 60, 90))
+starwars |>
+  filter(mass > 60 & mass < 90)
+```
+
+#### **Non-random (intentional/discretionary)**
+
+based on a position (`slice()`).
+
+-   
+
+#### **Simple random**
+
+(`slice_sample()`).
+
+-   
+
+#### **Stratified**
+
+(`group_by()` + `slice_sample()`).
+
+-   Usually in statistics, we will use stratified. Stratified will sample by proportions that are representative of the population (i.e. 50% male, 50% female).

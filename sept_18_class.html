@@ -334,6 +334,150 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> wk1<span class="sc">:</span>wk76)</span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(artist, track, date.entered))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>relig_income</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 18 × 11
+   religion `&lt;$10k` `$10-20k` `$20-30k` `$30-40k` `$40-50k` `$50-75k` `$75-100k`
+   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+ 1 Agnostic      27        34        60        81        76       137        122
+ 2 Atheist       12        27        37        52        35        70         73
+ 3 Buddhist      27        21        30        34        33        58         62
+ 4 Catholic     418       617       732       670       638      1116        949
+ 5 Don’t k…      15        14        15        11        10        35         21
+ 6 Evangel…     575       869      1064       982       881      1486        949
+ 7 Hindu          1         9         7         9        11        34         47
+ 8 Histori…     228       244       236       238       197       223        131
+ 9 Jehovah…      20        27        24        24        21        30         15
+10 Jewish        19        19        25        25        30        95         69
+11 Mainlin…     289       495       619       655       651      1107        939
+12 Mormon        29        40        48        51        56       112         85
+13 Muslim         6         7         9        10         9        23         16
+14 Orthodox      13        17        23        32        32        47         38
+15 Other C…       9         7        11        13        13        14         18
+16 Other F…      20        33        40        46        49        63         46
+17 Other W…       5         2         3         4         2         7          3
+18 Unaffil…     217       299       374       365       341       528        407
+# ℹ 3 more variables: `$100-150k` &lt;dbl&gt;, `&gt;150k` &lt;dbl&gt;,
+#   `Don't know/refused` &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>relig_income <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>religion,</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"income_bracket"</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 180 × 3
+   religion income_bracket     count
+   &lt;chr&gt;    &lt;chr&gt;              &lt;dbl&gt;
+ 1 Agnostic &lt;$10k                 27
+ 2 Agnostic $10-20k               34
+ 3 Agnostic $20-30k               60
+ 4 Agnostic $30-40k               81
+ 5 Agnostic $40-50k               76
+ 6 Agnostic $50-75k              137
+ 7 Agnostic $75-100k             122
+ 8 Agnostic $100-150k            109
+ 9 Agnostic &gt;150k                 84
+10 Agnostic Don't know/refused    96
+# ℹ 170 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ purrr     1.1.0
+✔ forcats   1.0.0     ✔ readr     2.1.5
+✔ ggplot2   3.5.2     ✔ stringr   1.5.1
+✔ lubridate 1.9.4     ✔ tibble    3.3.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="what-can-you-do-with-a-database" class="level2">
+<h2 class="anchored" data-anchor-id="what-can-you-do-with-a-database">What can you do with a database?</h2>
+<section id="working-with-rows" class="level4">
+<h4 class="anchored" data-anchor-id="working-with-rows">Working with Rows</h4>
+<ul>
+<li>filter rows, drop, arrange / order, sample, remove duplicates, sample</li>
+</ul>
+</section>
+<section id="working-with-columns" class="level4">
+<h4 class="anchored" data-anchor-id="working-with-columns">Working with Columns</h4>
+<ul>
+<li>select columns, create variables, rename, modify a variable</li>
+</ul>
+</section>
+<section id="summarize-actions-new-table-with-statistics" class="level4">
+<h4 class="anchored" data-anchor-id="summarize-actions-new-table-with-statistics">Summarize Actions (new table with statistics)</h4>
+<ul>
+<li>sum, mean, count</li>
+</ul>
+</section>
+<section id="join-with-other-tables" class="level4">
+<h4 class="anchored" data-anchor-id="join-with-other-tables">Join (with other tables)</h4>
+<ul>
+<li>merge</li>
+</ul>
+</section>
+</section>
+<section id="working-with-rows---sampling" class="level2">
+<h2 class="anchored" data-anchor-id="working-with-rows---sampling">Working with Rows - Sampling</h2>
+<p>One of the most common operations is what is known in statistics as <strong>sampling</strong>: a <strong>selection or filtering of records (rows)</strong> (a subsample).</p>
+<section id="non-random-by-quota" class="level4">
+<h4 class="anchored" data-anchor-id="non-random-by-quota"><strong>Non-random (by quota)</strong></h4>
+<p>based on logical conditions on the records (<code>filter()</code>).</p>
+<ul>
+<li><p>filter by people who verify that…</p></li>
+<li><p>need to put logical conditions inside the filter()</p></li>
+<li><p>will always return TRUE, FALSE values</p></li>
+</ul>
+<p>Examples:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(mass <span class="sc">&lt;</span> <span class="dv">50</span> <span class="sc">&amp;</span> height <span class="sc">&gt;</span> <span class="dv">90</span> <span class="sc">&amp;</span> eye_color <span class="sc">==</span> <span class="st">"brown"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(eye_color <span class="sc">==</span> <span class="st">"brown"</span> <span class="sc">|</span> eye_color <span class="sc">==</span> <span class="st">"green"</span> <span class="sc">|</span> eye_color <span class="sc">==</span> <span class="st">"blue"</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(eye_color <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"brown"</span>, <span class="st">"green"</span>, <span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">between</span>(mass, <span class="dv">60</span>, <span class="dv">90</span>))</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(mass <span class="sc">&gt;</span> <span class="dv">60</span> <span class="sc">&amp;</span> mass <span class="sc">&lt;</span> <span class="dv">90</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="non-random-intentionaldiscretionary" class="level4">
+<h4 class="anchored" data-anchor-id="non-random-intentionaldiscretionary"><strong>Non-random (intentional/discretionary)</strong></h4>
+<p>based on a position (<code>slice()</code>).</p>
+<ul>
+<li></li>
+</ul>
+</section>
+<section id="simple-random" class="level4">
+<h4 class="anchored" data-anchor-id="simple-random"><strong>Simple random</strong></h4>
+<p>(<code>slice_sample()</code>).</p>
+<ul>
+<li></li>
+</ul>
+</section>
+<section id="stratified" class="level4">
+<h4 class="anchored" data-anchor-id="stratified"><strong>Stratified</strong></h4>
+<p>(<code>group_by()</code> + <code>slice_sample()</code>).</p>
+<ul>
+<li>Usually in statistics, we will use stratified. Stratified will sample by proportions that are representative of the population (i.e.&nbsp;50% male, 50% female).</li>
+</ul>
+</section>
 </section>
 
 </main>
