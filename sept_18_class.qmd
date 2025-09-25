@@ -191,7 +191,26 @@ starwars |>
 
 based on a position (`slice()`).
 
--   
+```{r}
+starwars |>
+  slice(7)
+```
+
+slices row 7
+
+```{r}
+starwars |>
+  slice( c(7, 10))
+```
+
+slices only 7th and 10th row
+
+```{r}
+starwars |>
+  slice(7:15)
+```
+
+slices rows 7-15
 
 #### **Simple random**
 

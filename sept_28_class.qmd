@@ -1,0 +1,35 @@
+---
+title: "sept_25_class"
+format: html
+editor: visual
+---
+
+"!=" is opposite of an operator
+
+"!" is always with logical (TRUE/FALSE)
+
+"-" is always with index (exclude a variable)
+
+```{r}
+library(tidyverse)
+library(tidyr)
+starwars
+
+starwars |>
+  filter(is.na(mass) == FALSE)
+
+starwars |>
+  filter(!is.na(mass))
+
+starwars |>
+  drop_na(mass)
+```
+
+All three of the above are the way to remove NA from a specific variable
+
+```{r}
+starwars |>
+  drop_na()
+```
+
+The above removes ANYTHING with NA

@@ -460,9 +460,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="non-random-intentionaldiscretionary" class="level4">
 <h4 class="anchored" data-anchor-id="non-random-intentionaldiscretionary"><strong>Non-random (intentional/discretionary)</strong></h4>
 <p>based on a position (<code>slice()</code>).</p>
-<ul>
-<li></li>
-</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">7</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 14
+  name      height  mass hair_color skin_color eye_color birth_year sex   gender
+  &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+1 Beru Whi…    165    75 brown      light      blue              47 fema… femin…
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>slices row 7</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>( <span class="fu">c</span>(<span class="dv">7</span>, <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 14
+  name      height  mass hair_color skin_color eye_color birth_year sex   gender
+  &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+1 Beru Whi…    165    75 brown      light      blue              47 fema… femin…
+2 Obi-Wan …    182    77 auburn, w… fair       blue-gray         57 male  mascu…
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>slices only 7th and 10th row</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">7</span><span class="sc">:</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 14
+  name      height  mass hair_color skin_color eye_color birth_year sex   gender
+  &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+1 Beru Whi…    165    75 brown      light      blue            47   fema… femin…
+2 R5-D4         97    32 &lt;NA&gt;       white, red red             NA   none  mascu…
+3 Biggs Da…    183    84 black      light      brown           24   male  mascu…
+4 Obi-Wan …    182    77 auburn, w… fair       blue-gray       57   male  mascu…
+5 Anakin S…    188    84 blond      fair       blue            41.9 male  mascu…
+6 Wilhuff …    180    NA auburn, g… fair       blue            64   male  mascu…
+7 Chewbacca    228   112 brown      unknown    blue           200   male  mascu…
+8 Han Solo     180    80 brown      fair       brown           29   male  mascu…
+9 Greedo       173    74 &lt;NA&gt;       green      black           44   male  mascu…
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>slices rows 7-15</p>
 </section>
 <section id="simple-random" class="level4">
 <h4 class="anchored" data-anchor-id="simple-random"><strong>Simple random</strong></h4>
