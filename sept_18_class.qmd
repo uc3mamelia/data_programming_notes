@@ -192,6 +192,7 @@ starwars |>
 based on a position (`slice()`).
 
 ```{r}
+#| eval: false
 starwars |>
   slice(7)
 ```
@@ -199,6 +200,7 @@ starwars |>
 slices row 7
 
 ```{r}
+#| eval: false
 starwars |>
   slice( c(7, 10))
 ```
@@ -206,20 +208,107 @@ starwars |>
 slices only 7th and 10th row
 
 ```{r}
+#| eval: false
 starwars |>
   slice(7:15)
 ```
 
 slices rows 7-15
 
+```{r}
+#| eval: false
+starwars |>
+  slice_head(n = 4)
+```
+
+From 1 to 4
+
+```{r}
+#| eval: false
+starwars |>
+  slice_tail(n = 5)
+```
+
+From last row to n + 1. Likely not to use this
+
+```{r}
+#| eval: false
+starwars |>
+  slice_max(mass, n = 5)
+```
+
+Returns the five characters with the largest mass.
+
+```{r}
+starwars |>
+  slice_min(mass, n = 4)
+```
+
+returns the four characters with the smallest mass. Notice that R2-D2 and R5-D4 weigh the same, so it returns five characters.
+
+```{r}
+starwars |>
+  slice_min(mass, n = 4, with_ties = FALSE)
+```
+
+With ties removes the tie and returns four characters, but eliminates R5-D4 based on order.
+
+```{r}
+starwars |>
+  arrange(mass, desc(height)) |>
+  slice_head(n = 4)
+```
+
+This is a way to put R5-D4 first by ordering by mass, then height and then selecting a slice.
+
 #### **Simple random**
 
 (`slice_sample()`).
 
--   
+-   random is based on the microseconds of your computer. It captures a snapshot based on the microseconds.
+
+```{r}
+starwars |>
+  slice_sample(n = 3)
+```
+
+selects a random 3 rows
+
+```{r}
+set.seed(12345)
+starwars |>
+  slice_sample(n = 3)
+```
+
+set.seed breaks the randomness and decides which rows to select.
+
+```{r}
+#| eval: false
+starwars |>
+  slice_sample(n = 90, replace = TRUE)
+```
+
+Replacement = TRUE means rows can be repeated.
 
 #### **Stratified**
 
 (`group_by()` + `slice_sample()`).
 
 -   Usually in statistics, we will use stratified. Stratified will sample by proportions that are representative of the population (i.e. 50% male, 50% female).
+-   We want to give proportional weight in the sample that matches the weights of the population
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  slice_sample(n = 2, weight_by = mass)
+```
+
+weight_by changes the probability of the individuals comparable to the variable 'mass'. The larger the number, the higher the probability.
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  slice_sample(n = 2, weight_by = 1/mass)
+```
+
+1/variable. The lower the number, the higher the probability. Only works with positive numerical values.
