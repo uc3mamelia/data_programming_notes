@@ -52,3 +52,17 @@ starwars |>
 ```
 
 select everything except the selection in parenthesis
+
+```{r}
+starwars |>
+  select(last_col(), name)
+```
+
+will select last column and name
+
+```{r}
+starwars |>
+  select(everything())
+```
+
+selects everything. Is useful when trying to relocate one column
