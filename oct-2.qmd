@@ -1,0 +1,55 @@
+---
+title: "oct-2"
+format: html
+editor: visual
+---
+
+## Columns
+
+-   select column
+
+-   unselect column
+
+-   rename
+
+-   relocate (move columns)
+
+-   modify/create
+
+```{r}
+#| eval: FALSE
+library(tidyverse)
+starwars
+```
+
+### Select
+
+```{r}
+starwars |>
+  select(name, mass, eye_color)
+starwars |>
+  select (name:skin_color, species)
+```
+
+makes the table only those selected columns
+
+```{r}
+starwars |>
+  select(skin_color:name, species)
+```
+
+This also reorders the columns
+
+```{r}
+starwars |>
+  select(-name)
+```
+
+removes the columns following the -
+
+```{r}
+starwars |>
+  select(-(name:skin_color))
+```
+
+select everything except the selection in parenthesis
