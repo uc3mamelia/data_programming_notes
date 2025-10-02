@@ -17,7 +17,6 @@ editor: visual
 -   modify/create
 
 ```{r}
-#| eval: FALSE
 library(tidyverse)
 starwars
 ```

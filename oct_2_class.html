@@ -58,17 +58,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="oct-2_files/libs/clipboard/clipboard.min.js"></script>
-<script src="oct-2_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="oct-2_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="oct-2_files/libs/quarto-html/popper.min.js"></script>
-<script src="oct-2_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="oct-2_files/libs/quarto-html/anchor.min.js"></script>
-<link href="oct-2_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="oct-2_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="oct-2_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="oct-2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="oct-2_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="oct_2_class_files/libs/clipboard/clipboard.min.js"></script>
+<script src="oct_2_class_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="oct_2_class_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="oct_2_class_files/libs/quarto-html/popper.min.js"></script>
+<script src="oct_2_class_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="oct_2_class_files/libs/quarto-html/anchor.min.js"></script>
+<link href="oct_2_class_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="oct_2_class_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="oct_2_class_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="oct_2_class_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="oct_2_class_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -226,6 +226,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>removes the columns following the -</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>(name<span class="sc">:</span>skin_color))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 9
+   eye_color birth_year sex    gender homeworld species films vehicles starships
+   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;   &lt;lis&gt; &lt;list&gt;   &lt;list&gt;   
+ 1 blue            19   male   mascu… Tatooine  Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [2]&gt;
+ 2 yellow         112   none   mascu… Tatooine  Droid   &lt;chr&gt; &lt;chr&gt;    &lt;chr [0]&gt;
+ 3 red             33   none   mascu… Naboo     Droid   &lt;chr&gt; &lt;chr&gt;    &lt;chr [0]&gt;
+ 4 yellow          41.9 male   mascu… Tatooine  Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [1]&gt;
+ 5 brown           19   female femin… Alderaan  Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [0]&gt;
+ 6 blue            52   male   mascu… Tatooine  Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [0]&gt;
+ 7 blue            47   female femin… Tatooine  Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [0]&gt;
+ 8 red             NA   none   mascu… Tatooine  Droid   &lt;chr&gt; &lt;chr&gt;    &lt;chr [0]&gt;
+ 9 brown           24   male   mascu… Tatooine  Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [1]&gt;
+10 blue-gray       57   male   mascu… Stewjon   Human   &lt;chr&gt; &lt;chr&gt;    &lt;chr [5]&gt;
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>select everything except the selection in parenthesis</p>
 </section>
 </section>
 
