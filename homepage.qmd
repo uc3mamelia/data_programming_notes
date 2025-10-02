@@ -28,4 +28,8 @@ editor: visual
 
 #### [Sept 25](https://uc3mamelia.github.io/data_programming_notes/sept_28_class.html)
 
--   remove NAs,
+-   remove NAs
+
+#### [Oct 2](https://uc3mamelia.github.io/data_programming_notes/oct_2_class.html)
+
+-   column functions
