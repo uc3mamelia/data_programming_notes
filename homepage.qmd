@@ -32,4 +32,4 @@ editor: visual
 
 #### [Oct 2](https://uc3mamelia.github.io/data_programming_notes/oct_2_class.html)
 
--   column functions
+-   column functions: select, unselect, rename, relocate, mutate, flow structures

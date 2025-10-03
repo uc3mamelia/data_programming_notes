@@ -1,0 +1,317 @@
+---
+title: "happiness_quarto"
+format: html
+editor: visual
+---
+
+### Libraries
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(descr)
+library(ggplot2)
+library(dbplyr)
+library(ggpubr)
+library(Rmisc)
+library(lattice)
+library(plyr)
+```
+
+### Import Data
+
+```{r}
+happiness <-read.csv2("felicidadcis.csv")
+```
+
+Description:
+
+Happiness: Numeric variable ranging from 0 to 10, representing the respondent's level of happiness.
+
+Income: Categorical variable representing income brackets:
+
+-   1 to 6 = 0 to 1200 euros
+
+-   7 = 1200 to 2400 euros
+
+-   8 = 2400 to 3000 euros
+
+-   9 = 3000 to 4500 euros
+
+-   10 = 4500 to 6000 euros
+
+-   11 = 6000 euros and more
+
+# Univariate Descriptive Analysis
+
+```{r}
+data.df<-data.frame(happiness[1:2487,1:2]) #data frame(rectangular data structures)
+```
+
+### Bar Charts for Happiness and Income
+
+```{r}
+
+bxp_o<-ggplot(data.df,mapping=aes(x=happiness)) +
+              geom_bar(fill="Orange")
+
+dp_o<-ggplot(data.df,mapping=aes(x=Income)) +
+              geom_bar(fill="lightblue")
+
+ggarrange(bxp_o, dp_o,
+          ncol = 2, nrow = 1)
+```
+
+Interpretation: The data are displayed in two separate groups of barcharts, so the overall distribution is not clearly visible. We can only observe that, for both the happiness and income variables, most values are as expected, although some high outliers (98 and 99) are present.
+
+### Tables for Happiness and Income
+
+```{r}
+table(data.df$happiness)
+table(data.df$Income)
+```
+
+Interpretation: Through the frequency table, we can observe these anomalous values: 11 observations with a value of 98 and 14 with a value of 99 for happiness; and 258 with a value of 98 and 666 with a value of 99 for income. According to the CIS (Centro de Investigaciones Sociológicas), 98 usually indicates "No sabe / Don't know" and 99 usually indicates "No contesta / No answer." It is to be expected that for a sensitive question, such as income, people may prefer to abstain from answering.
+
+### Filter Out Outliers
+
+Filtering data: For CIS, 98 usually indicates "No sabe / Don't know" and 99 usually indicates "No contesta / No answer".
+
+```{r}
+data<-filter(data.df,happiness<11 , Income<12)
+```
+
+### Describing Socio-Economic Characteristics
+
+```{r}
+bxp<-ggplot(data,mapping=aes(x=happiness)) +
+  geom_bar(fill="Orange")
+dp<-ggplot(data,mapping=aes(x=Income)) +
+  geom_bar(fill="lightblue")
+
+ggarrange(bxp, dp,
+          ncol = 2, nrow = 1)
+```
+
+Interpretation: Now we can see the distributions more clearly. For happiness, the highest density is concentrated in the upper-middle values (5 to 10), although there are some observations with low values. The distribution appears to be left-skewed. For income, we observe a roughly symmetric distribution, with the highest density in the middle values (5 to 7).
+
+### Numerical Measures for Happiness
+
+```{r}
+data_df_summary <-data %>%
+  summarise_at(vars(happiness:Income), # variables from happiness to income
+               list(avg=mean, std=sd))  # you can include more measures
+data_df_summary
+```
+
+Interpretation: The average happiness is 7.43, indicating that people are moderately happy. The average income is 5.9, which corresponds approximately to 1,200 euros.
+
+### Frequency Table for Happiness
+
+```{r}
+datfreq<-freq(ordered(data$happiness),plot=T)
+datfreq
+#Income
+datfreqIncome<-freq(ordered(data$Income),plot=T)
+datfreqIncome
+```
+
+The interpretation is the same for the previous bar charts.
+
+### Boxplots for Happiness and Income
+
+```{r}
+bxp<-ggplot(data,mapping=aes(y=happiness))+
+  geom_boxplot(fill="Orange") +
+  ylim(c(0,12))
+dp<-ggplot(data,mapping=aes(y=Income))+
+  geom_boxplot(fill="lightblue") +
+  ylim(c(0,12))
+
+
+ggarrange(bxp, dp,
+          ncol = 2, nrow = 1)
+```
+
+Interpretation: From the boxplots, we can confirm the negative skew (left-skew) of the happiness variable, as well as the symmetry of income. There are 7 outliers for happiness and 2 for income.
+
+# Bivariate Descriptive Analysis
+
+### Contingency Tables - Joint Absolute Frequencies
+
+```{r}
+# group Income
+
+dataincome<-case_when((data$Income<=6) ~ "0 to 1200",
+                      (data$Income<=7) ~ "1200 to 2400",
+                      (data$Income==8) ~ "2400 to 3000",
+                      (data$Income==9) ~ "3000 to 4500",
+                      (data$Income==10) ~ "4500 to 6000",
+                      (data$Income==11) ~ "6000 and more")
+                      
+                      
+                      
+
+ConTtable<-table(dataincome,data$happiness)#Joint absolute frequencies
+ConTtable
+```
+
+Interpretation: We can see that most people are concentrated in the upper-right section of the contingency table. This corresponds to individuals who are moderately happy and have low to moderate incomes.
+
+### Contingency Tables - Joint Relative Frequencies
+
+```{r}
+RConTtable<-prop.table(ConTtable)*100 #Joint relative frequencies
+round(RConTtable, 3)
+RConTtable
+```
+
+The interpretation is the same, but using percentages. For example, we can say that 16.24% of the people have an income of 0-1200 euros and a happiness level of 8.
+
+### Contingency Tables - Marginal Frequencies
+
+```{r}
+colSums(RConTtable)#Marginal relative frequencies happiness 
+```
+
+Interpretation: We observe that most people are moderately to very happy. The mode is 8.
+
+```{r}
+rowSums(RConTtable)#Marginal relative frequencies for Income
+```
+
+Interpretation: The mode, as well as the majority (65.4%) of people, corresponds to a low income (0 to 1,200 euros).
+
+### Contingency Tables - Conditional Frequencies
+
+```{r}
+CConTtableG<-prop.table(ConTtable,margin=2)*100#Conditional of Income for fixed happiness
+CConTtableG
+CConTtableM<-prop.table(ConTtable,margin=1)*100#Conditional of happiness for fixed Income
+CConTtableM
+```
+
+Interpretation: In particular, from the second table (happiness \| income), we observe that as income increases, the occurrence of low happiness values drops to zero: money contributes to happiness. However, there are also people who are very happy without much money.
+
+### Box plot for Conditional Distribution of Happiness (Fixed Income)
+
+```{r}
+dataincome<-as.character(dataincome)
+group<-tibble(happiness = data$happiness, income = dataincome) # Creates a dataframe
+ggplot(group, mapping = aes(x = income, y = happiness)) +
+  geom_boxplot(fill="Red")
+```
+
+Interpretation: From the boxplots, we observe that the medians are similar, but the lowest happiness values tend to disappear as income increases. Happiness becomes increasingly concentrated (less dispersed) at higher values as income rises.
+
+### Conditional mean, median and sd for happiness, fixed income
+
+```{r}
+datagrouped <- group_by(group, income) # It facilitates operations such as summarise().
+head(datagrouped) # show first 6 rows
+
+
+data_df_summary <-datagrouped %>%
+  summarize_at(vars(happiness),
+               list(avg=mean, stde=sd, median=median))
+data_df_summary 
+```
+
+Interpretation: We can observe that happiness tends to increase with income, although not by much. More importantly, the variability decreases, as we have seen in previous analyses.
+
+# Confidence Intervals
+
+#### \[FUNCTION\]
+
+Confidence interval for the population mean (unknown variance)
+
+```{r}
+
+CI_m <- function (x, ci = 0.95)
+{
+  `%>%` <- magrittr::`%>%`
+  standard_deviation <- sd(x)
+  sample_size <- length(x)
+  Margin_Error <- abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
+  df_out <- data.frame( sample_size=length(x), Mean=mean(x), sd=sd(x),
+                        Margin_Error=Margin_Error,
+                        'CI lower limit'=(mean(x) - Margin_Error),
+                        'CI Upper limit'=(mean(x) + Margin_Error)) %>%
+    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:6 )
+  return(df_out)
+}
+```
+
+#### Example
+
+Compute 95% confidence interval for the mean of 'happiness' in the population
+
+```{r}
+CI_m(data$happiness, ci=0.95)
+```
+
+If we construct 100 confidence intervals, the population mean will fall within approximately 95 of them. We are 95% confident that the population mean lies within the confidence interval (7.35 , 7.52).
+
+#### \[FUNCTION\]
+
+Confidence interval for the population proportion in a Bernoulli distribution.
+
+```{r}
+CI_p <- function(x, ci = 95)
+{
+  `%>%` <- magrittr::`%>%`
+  vcat<-na.omit(x)
+  p<-mean(x)
+  standard_deviation <- sqrt(p*(1-p))
+  sample_size <- length(x)
+  Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
+  df_out <- data.frame( sample_size=length(x), p,
+                        Margin_Error=Margin_Error,
+                        'CI lower limit'=(p - Margin_Error),
+                        'CI Upper limit'=(p + Margin_Error)) %>%
+    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:5 )
+  return(df_out)
+} 
+```
+
+#### Example
+
+Compute 95% confidence interval for the population proportion of people that give 7 or more to happiness.
+
+```{r}
+prop <- ifelse(data$happiness>=7, 1, 0) #Generate the Bernoulli sample with 1(meet the condition) and 0
+prop.table(table(prop))
+
+CI_p(prop ,ci=0.95)
+```
+
+If we construct 100 confidence intervals, the population proportion of people that give 7 or more to happiness will fall within approximately\~ 95 of them. We are 95% confident that the population proportion of people that give 7 or more to happiness lies within the confidence interval (0.736 , 0.778).
+
+### Plots of CI
+
+Plot 95% confidence intervals for 'happiness' divided by categories of income. Function "summarySE" in the library Rmisc allow us to summarise one variable divided in groups.
+
+```{r}
+
+df <- summarySE(group, measurevar="happiness", groupvars="income", na.rm=T)
+
+graf.point <- ggplot(df, aes(x=income, y=happiness)) + 
+  geom_point(size = 3) + 
+  ylim(5,10)
+graf.point
+
+graf.interval <- graf.point + 
+  geom_errorbar(aes(ymin=happiness-ci, ymax=happiness+ci), width = 0.2) + 
+  ylab("happiness") + 
+  ggtitle("95% Confidence interval for the mean of happiness by income")
+graf.interval
+```
+
+Why are some intervals wider?
+
+```{r}
+table(data$Income)
+```
+
+The width of the confidence intervals depends on the sample size. The smaller the sample size, the wider the intervals.

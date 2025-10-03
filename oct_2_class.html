@@ -247,6 +247,448 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>select everything except the selection in parenthesis</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">last_col</span>(), name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 2
+   starships name              
+   &lt;list&gt;    &lt;chr&gt;             
+ 1 &lt;chr [2]&gt; Luke Skywalker    
+ 2 &lt;chr [0]&gt; C-3PO             
+ 3 &lt;chr [0]&gt; R2-D2             
+ 4 &lt;chr [1]&gt; Darth Vader       
+ 5 &lt;chr [0]&gt; Leia Organa       
+ 6 &lt;chr [0]&gt; Owen Lars         
+ 7 &lt;chr [0]&gt; Beru Whitesun Lars
+ 8 &lt;chr [0]&gt; R5-D4             
+ 9 &lt;chr [1]&gt; Biggs Darklighter 
+10 &lt;chr [5]&gt; Obi-Wan Kenobi    
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>will select last column and name</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">everything</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 14
+   name     height  mass hair_color skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke Sk…    172    77 blond      fair       blue            19   male  mascu…
+ 2 C-3PO       167    75 &lt;NA&gt;       gold       yellow         112   none  mascu…
+ 3 R2-D2        96    32 &lt;NA&gt;       white, bl… red             33   none  mascu…
+ 4 Darth V…    202   136 none       white      yellow          41.9 male  mascu…
+ 5 Leia Or…    150    49 brown      light      brown           19   fema… femin…
+ 6 Owen La…    178   120 brown, gr… light      blue            52   male  mascu…
+ 7 Beru Wh…    165    75 brown      light      blue            47   fema… femin…
+ 8 R5-D4        97    32 &lt;NA&gt;       white, red red             NA   none  mascu…
+ 9 Biggs D…    183    84 black      light      brown           24   male  mascu…
+10 Obi-Wan…    182    77 auburn, w… fair       blue-gray       57   male  mascu…
+# ℹ 77 more rows
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>selects everything. Is useful when trying to relocate one column</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">ends_with</span>(<span class="st">"color"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 3
+   hair_color    skin_color  eye_color
+   &lt;chr&gt;         &lt;chr&gt;       &lt;chr&gt;    
+ 1 blond         fair        blue     
+ 2 &lt;NA&gt;          gold        yellow   
+ 3 &lt;NA&gt;          white, blue red      
+ 4 none          white       yellow   
+ 5 brown         light       brown    
+ 6 brown, grey   light       blue     
+ 7 brown         light       blue     
+ 8 &lt;NA&gt;          white, red  red      
+ 9 black         light       brown    
+10 auburn, white fair        blue-gray
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>selects all the columns that end with ‘color’ in the name</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">"color"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 0</code></pre>
+</div>
+</div>
+<p>selects all the columns that start with ‘color’ in the name</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">contains</span>(<span class="st">"a"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 5
+   name                mass hair_color    birth_year starships
+   &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt;              &lt;dbl&gt; &lt;list&gt;   
+ 1 Luke Skywalker        77 blond               19   &lt;chr [2]&gt;
+ 2 C-3PO                 75 &lt;NA&gt;               112   &lt;chr [0]&gt;
+ 3 R2-D2                 32 &lt;NA&gt;                33   &lt;chr [0]&gt;
+ 4 Darth Vader          136 none                41.9 &lt;chr [1]&gt;
+ 5 Leia Organa           49 brown               19   &lt;chr [0]&gt;
+ 6 Owen Lars            120 brown, grey         52   &lt;chr [0]&gt;
+ 7 Beru Whitesun Lars    75 brown               47   &lt;chr [0]&gt;
+ 8 R5-D4                 32 &lt;NA&gt;                NA   &lt;chr [0]&gt;
+ 9 Biggs Darklighter     84 black               24   &lt;chr [1]&gt;
+10 Obi-Wan Kenobi        77 auburn, white       57   &lt;chr [5]&gt;
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>Doesn’t matter where in the name the keyword is, but will select any columns that contain that keyword</p>
+<p>You can combine the various methods in order to select things</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">matches</span>(<span class="st">"hair|birth"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 2
+   hair_color    birth_year
+   &lt;chr&gt;              &lt;dbl&gt;
+ 1 blond               19  
+ 2 &lt;NA&gt;               112  
+ 3 &lt;NA&gt;                33  
+ 4 none                41.9
+ 5 brown               19  
+ 6 brown, grey         52  
+ 7 brown               47  
+ 8 &lt;NA&gt;                NA  
+ 9 black               24  
+10 auburn, white       57  
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>matches allows you to use “or” expressions | . The above selects columns with either “hair” or “birth”. The lack of spaces is important here.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 3
+   height  mass birth_year
+    &lt;int&gt; &lt;dbl&gt;      &lt;dbl&gt;
+ 1    172    77       19  
+ 2    167    75      112  
+ 3     96    32       33  
+ 4    202   136       41.9
+ 5    150    49       19  
+ 6    178   120       52  
+ 7    165    75       47  
+ 8     97    32       NA  
+ 9    183    84       24  
+10    182    77       57  
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>Selects only the numeric values; this selects columns by type.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 3
+   height  mass birth_year
+    &lt;int&gt; &lt;dbl&gt;      &lt;dbl&gt;
+ 1    172    77       19  
+ 2    167    75      112  
+ 3     96    32       33  
+ 4    202   136       41.9
+ 5    150    49       19  
+ 6    178   120       52  
+ 7    165    75       47  
+ 8     97    32       NA  
+ 9    183    84       24  
+10    182    77       57  
+# ℹ 77 more rows</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.character))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 8
+   name           hair_color skin_color eye_color sex   gender homeworld species
+   &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;  
+ 1 Luke Skywalker blond      fair       blue      male  mascu… Tatooine  Human  
+ 2 C-3PO          &lt;NA&gt;       gold       yellow    none  mascu… Tatooine  Droid  
+ 3 R2-D2          &lt;NA&gt;       white, bl… red       none  mascu… Naboo     Droid  
+ 4 Darth Vader    none       white      yellow    male  mascu… Tatooine  Human  
+ 5 Leia Organa    brown      light      brown     fema… femin… Alderaan  Human  
+ 6 Owen Lars      brown, gr… light      blue      male  mascu… Tatooine  Human  
+ 7 Beru Whitesun… brown      light      blue      fema… femin… Tatooine  Human  
+ 8 R5-D4          &lt;NA&gt;       white, red red       none  mascu… Tatooine  Droid  
+ 9 Biggs Darklig… black      light      brown     male  mascu… Tatooine  Human  
+10 Obi-Wan Kenobi auburn, w… fair       blue-gray male  mascu… Stewjon   Human  
+# ℹ 77 more rows</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.logical))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.Date))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.list))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 3
+   films     vehicles  starships
+   &lt;list&gt;    &lt;list&gt;    &lt;list&gt;   
+ 1 &lt;chr [5]&gt; &lt;chr [2]&gt; &lt;chr [2]&gt;
+ 2 &lt;chr [6]&gt; &lt;chr [0]&gt; &lt;chr [0]&gt;
+ 3 &lt;chr [7]&gt; &lt;chr [0]&gt; &lt;chr [0]&gt;
+ 4 &lt;chr [4]&gt; &lt;chr [0]&gt; &lt;chr [1]&gt;
+ 5 &lt;chr [5]&gt; &lt;chr [1]&gt; &lt;chr [0]&gt;
+ 6 &lt;chr [3]&gt; &lt;chr [0]&gt; &lt;chr [0]&gt;
+ 7 &lt;chr [3]&gt; &lt;chr [0]&gt; &lt;chr [0]&gt;
+ 8 &lt;chr [1]&gt; &lt;chr [0]&gt; &lt;chr [0]&gt;
+ 9 &lt;chr [1]&gt; &lt;chr [0]&gt; &lt;chr [1]&gt;
+10 &lt;chr [6]&gt; &lt;chr [1]&gt; &lt;chr [5]&gt;
+# ℹ 77 more rows</code></pre>
+</div>
+</div>
+<p>All the types of data we will use.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(height <span class="sc">&gt;</span> <span class="dv">160</span>) <span class="sc">|&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(mass, name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 67 × 2
+    mass name              
+   &lt;dbl&gt; &lt;chr&gt;             
+ 1    77 Luke Skywalker    
+ 2    75 C-3PO             
+ 3   136 Darth Vader       
+ 4   120 Owen Lars         
+ 5    75 Beru Whitesun Lars
+ 6    84 Biggs Darklighter 
+ 7    77 Obi-Wan Kenobi    
+ 8    84 Anakin Skywalker  
+ 9    NA Wilhuff Tarkin    
+10   112 Chewbacca         
+# ℹ 57 more rows</code></pre>
+</div>
+</div>
+<p>Filter before the select columns. In this case, selecting columns first does not include ‘height’ which is where the filter is put.</p>
+</section>
+<section id="rename" class="level3">
+<h3 class="anchored" data-anchor-id="rename">Rename</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(starwars) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>, <span class="st">"d"</span>, <span class="st">"e"</span>, <span class="st">"f"</span>, <span class="st">"g"</span>, <span class="st">"h"</span>, <span class="st">"i"</span>, <span class="st">"j"</span>, <span class="st">"k"</span>, <span class="st">"l"</span>, <span class="st">"m"</span>, <span class="st">"n"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Rename ALL the columns. If there are 14 variables, you need 14 names. This is not scalable.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">nombre =</span> name, <span class="at">color_ojos =</span> eye_color)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 14
+   nombre  height  mass hair_color skin_color color_ojos birth_year sex   gender
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke S…    172    77 blond      fair       blue             19   male  mascu…
+ 2 C-3PO      167    75 &lt;NA&gt;       gold       yellow          112   none  mascu…
+ 3 R2-D2       96    32 &lt;NA&gt;       white, bl… red              33   none  mascu…
+ 4 Darth …    202   136 none       white      yellow           41.9 male  mascu…
+ 5 Leia O…    150    49 brown      light      brown            19   fema… femin…
+ 6 Owen L…    178   120 brown, gr… light      blue             52   male  mascu…
+ 7 Beru W…    165    75 brown      light      blue             47   fema… femin…
+ 8 R5-D4       97    32 &lt;NA&gt;       white, red red              NA   none  mascu…
+ 9 Biggs …    183    84 black      light      brown            24   male  mascu…
+10 Obi-Wa…    182    77 auburn, w… fair       blue-gray        57   male  mascu…
+# ℹ 77 more rows
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>Renames only singular variables. Existing variable name should go second.</p>
+</section>
+<section id="relocate" class="level3">
+<h3 class="anchored" data-anchor-id="relocate">Relocate</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(species, <span class="at">.after =</span> mass)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 14
+   name    height  mass species hair_color skin_color eye_color birth_year sex  
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;
+ 1 Luke S…    172    77 Human   blond      fair       blue            19   male 
+ 2 C-3PO      167    75 Droid   &lt;NA&gt;       gold       yellow         112   none 
+ 3 R2-D2       96    32 Droid   &lt;NA&gt;       white, bl… red             33   none 
+ 4 Darth …    202   136 Human   none       white      yellow          41.9 male 
+ 5 Leia O…    150    49 Human   brown      light      brown           19   fema…
+ 6 Owen L…    178   120 Human   brown, gr… light      blue            52   male 
+ 7 Beru W…    165    75 Human   brown      light      blue            47   fema…
+ 8 R5-D4       97    32 Droid   &lt;NA&gt;       white, red red             NA   none 
+ 9 Biggs …    183    84 Human   black      light      brown           24   male 
+10 Obi-Wa…    182    77 Human   auburn, w… fair       blue-gray       57   male 
+# ℹ 77 more rows
+# ℹ 5 more variables: gender &lt;chr&gt;, homeworld &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>relocates species to after mass</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(species, <span class="at">.before =</span> mass)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(species, gender, <span class="at">.before =</span> <span class="fu">everything</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 14
+   species gender  name  height  mass hair_color skin_color eye_color birth_year
+   &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt;
+ 1 Human   mascul… Luke…    172    77 blond      fair       blue            19  
+ 2 Droid   mascul… C-3PO    167    75 &lt;NA&gt;       gold       yellow         112  
+ 3 Droid   mascul… R2-D2     96    32 &lt;NA&gt;       white, bl… red             33  
+ 4 Human   mascul… Dart…    202   136 none       white      yellow          41.9
+ 5 Human   femini… Leia…    150    49 brown      light      brown           19  
+ 6 Human   mascul… Owen…    178   120 brown, gr… light      blue            52  
+ 7 Human   femini… Beru…    165    75 brown      light      blue            47  
+ 8 Droid   mascul… R5-D4     97    32 &lt;NA&gt;       white, red red             NA  
+ 9 Human   mascul… Bigg…    183    84 black      light      brown           24  
+10 Human   mascul… Obi-…    182    77 auburn, w… fair       blue-gray       57  
+# ℹ 77 more rows
+# ℹ 5 more variables: sex &lt;chr&gt;, homeworld &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>Puts the variables before everything.</p>
+<p>The order of the data does not matter in R or Python. It only matters for human reading the data.</p>
+</section>
+<section id="modifycreate" class="level3">
+<h3 class="anchored" data-anchor-id="modifycreate">Modify/Create</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">new_name =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 15
+   name     height  mass hair_color skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke Sk…    172    77 blond      fair       blue            19   male  mascu…
+ 2 C-3PO       167    75 &lt;NA&gt;       gold       yellow         112   none  mascu…
+ 3 R2-D2        96    32 &lt;NA&gt;       white, bl… red             33   none  mascu…
+ 4 Darth V…    202   136 none       white      yellow          41.9 male  mascu…
+ 5 Leia Or…    150    49 brown      light      brown           19   fema… femin…
+ 6 Owen La…    178   120 brown, gr… light      blue            52   male  mascu…
+ 7 Beru Wh…    165    75 brown      light      blue            47   fema… femin…
+ 8 R5-D4        97    32 &lt;NA&gt;       white, red red             NA   none  mascu…
+ 9 Biggs D…    183    84 black      light      brown           24   male  mascu…
+10 Obi-Wan…    182    77 auburn, w… fair       blue-gray       57   male  mascu…
+# ℹ 77 more rows
+# ℹ 6 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;, new_name &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>New variable name = value. By default, the variable gets added to the end of the columns. Both quotes or no quotes for the new variable will work.</p>
+<p>Two options: constant variable (i.e.&nbsp;1, 1, 1…) or a vector with the same length as the number of rows.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">new_name =</span> <span class="dv">1</span>, <span class="at">.before =</span> <span class="fu">everything</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 15
+   new_name name   height  mass hair_color skin_color eye_color birth_year sex  
+      &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;
+ 1        1 Luke …    172    77 blond      fair       blue            19   male 
+ 2        1 C-3PO     167    75 &lt;NA&gt;       gold       yellow         112   none 
+ 3        1 R2-D2      96    32 &lt;NA&gt;       white, bl… red             33   none 
+ 4        1 Darth…    202   136 none       white      yellow          41.9 male 
+ 5        1 Leia …    150    49 brown      light      brown           19   fema…
+ 6        1 Owen …    178   120 brown, gr… light      blue            52   male 
+ 7        1 Beru …    165    75 brown      light      blue            47   fema…
+ 8        1 R5-D4      97    32 &lt;NA&gt;       white, red red             NA   none 
+ 9        1 Biggs…    183    84 black      light      brown           24   male 
+10        1 Obi-W…    182    77 auburn, w… fair       blue-gray       57   male 
+# ℹ 77 more rows
+# ℹ 6 more variables: gender &lt;chr&gt;, homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowid_to_column</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 15
+   rowid name      height  mass hair_color skin_color eye_color birth_year sex  
+   &lt;int&gt; &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;
+ 1     1 Luke Sky…    172    77 blond      fair       blue            19   male 
+ 2     2 C-3PO        167    75 &lt;NA&gt;       gold       yellow         112   none 
+ 3     3 R2-D2         96    32 &lt;NA&gt;       white, bl… red             33   none 
+ 4     4 Darth Va…    202   136 none       white      yellow          41.9 male 
+ 5     5 Leia Org…    150    49 brown      light      brown           19   fema…
+ 6     6 Owen Lars    178   120 brown, gr… light      blue            52   male 
+ 7     7 Beru Whi…    165    75 brown      light      blue            47   fema…
+ 8     8 R5-D4         97    32 &lt;NA&gt;       white, red red             NA   none 
+ 9     9 Biggs Da…    183    84 black      light      brown           24   male 
+10    10 Obi-Wan …    182    77 auburn, w… fair       blue-gray       57   male 
+# ℹ 77 more rows
+# ℹ 6 more variables: gender &lt;chr&gt;, homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>To create an ID for the rows, use rowid_to_column() function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">height =</span> height<span class="sc">/</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">bmi =</span> mass <span class="sc">/</span> (height<span class="sc">^</span><span class="dv">2</span>), <span class="at">.before =</span> <span class="fu">everything</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 15
+     bmi name      height  mass hair_color skin_color eye_color birth_year sex  
+   &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;
+ 1  26.0 Luke Sky…   1.72    77 blond      fair       blue            19   male 
+ 2  26.9 C-3PO       1.67    75 &lt;NA&gt;       gold       yellow         112   none 
+ 3  34.7 R2-D2       0.96    32 &lt;NA&gt;       white, bl… red             33   none 
+ 4  33.3 Darth Va…   2.02   136 none       white      yellow          41.9 male 
+ 5  21.8 Leia Org…   1.5     49 brown      light      brown           19   fema…
+ 6  37.9 Owen Lars   1.78   120 brown, gr… light      blue            52   male 
+ 7  27.5 Beru Whi…   1.65    75 brown      light      blue            47   fema…
+ 8  34.0 R5-D4       0.97    32 &lt;NA&gt;       white, red red             NA   none 
+ 9  25.1 Biggs Da…   1.83    84 black      light      brown           24   male 
+10  23.2 Obi-Wan …   1.82    77 auburn, w… fair       blue-gray       57   male 
+# ℹ 77 more rows
+# ℹ 6 more variables: gender &lt;chr&gt;, homeworld &lt;chr&gt;, species &lt;chr&gt;,
+#   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>If you use the same name for the variable, it will modify the existing variable. If you use a new name for the variable, it will create a new variable.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Luke Skywalker"        "C-3PO"                 "R2-D2"                
+ [4] "Darth Vader"           "Leia Organa"           "Owen Lars"            
+ [7] "Beru Whitesun Lars"    "R5-D4"                 "Biggs Darklighter"    
+[10] "Obi-Wan Kenobi"        "Anakin Skywalker"      "Wilhuff Tarkin"       
+[13] "Chewbacca"             "Han Solo"              "Greedo"               
+[16] "Jabba Desilijic Tiure" "Wedge Antilles"        "Jek Tono Porkins"     
+[19] "Yoda"                  "Palpatine"             "Boba Fett"            
+[22] "IG-88"                 "Bossk"                 "Lando Calrissian"     
+[25] "Lobot"                 "Ackbar"                "Mon Mothma"           
+[28] "Arvel Crynyd"          "Wicket Systri Warrick" "Nien Nunb"            
+[31] "Qui-Gon Jinn"          "Nute Gunray"           "Finis Valorum"        
+[34] "Padmé Amidala"         "Jar Jar Binks"         "Roos Tarpals"         
+[37] "Rugor Nass"            "Ric Olié"              "Watto"                
+[40] "Sebulba"               "Quarsh Panaka"         "Shmi Skywalker"       
+[43] "Darth Maul"            "Bib Fortuna"           "Ayla Secura"          
+[46] "Ratts Tyerel"          "Dud Bolt"              "Gasgano"              
+[49] "Ben Quadinaros"        "Mace Windu"            "Ki-Adi-Mundi"         
+[52] "Kit Fisto"             "Eeth Koth"             "Adi Gallia"           
+[55] "Saesee Tiin"           "Yarael Poof"           "Plo Koon"             
+[58] "Mas Amedda"            "Gregar Typho"          "Cordé"                
+[61] "Cliegg Lars"           "Poggle the Lesser"     "Luminara Unduli"      
+[64] "Barriss Offee"         "Dormé"                 "Dooku"                
+[67] "Bail Prestor Organa"   "Jango Fett"            "Zam Wesell"           
+[70] "Dexter Jettster"       "Lama Su"               "Taun We"              
+[73] "Jocasta Nu"            "R4-P17"                "Wat Tambor"           
+[76] "San Hill"              "Shaak Ti"              "Grievous"             
+[79] "Tarfful"               "Raymus Antilles"       "Sly Moore"            
+[82] "Tion Medon"            "Finn"                  "Rey"                  
+[85] "Poe Dameron"           "BB8"                   "Captain Phasma"       </code></pre>
+</div>
+</div>
+<p>Select creates a tibble from the selected data. Pull creates a vector from the selected data.</p>
 </section>
 </section>
 
