@@ -33,3 +33,7 @@ editor: visual
 #### [Oct 2](https://uc3mamelia.github.io/data_programming_notes/oct_2_class.html)
 
 -   column functions: select, unselect, rename, relocate, mutate, flow structures
+
+#### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)
+
+-   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
