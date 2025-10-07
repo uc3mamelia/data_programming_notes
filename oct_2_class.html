@@ -689,6 +689,95 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Select creates a tibble from the selected data. Pull creates a vector from the selected data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>  starwars <span class="sc">|&gt;</span> </span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(height) <span class="sc">|&gt;</span> </span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, height, <span class="fu">contains</span>(<span class="st">"color"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">nombre =</span> name, <span class="at">altura =</span> height, <span class="at">cabello_color =</span> hair_color, <span class="at">piel_color =</span> skin_color, <span class="at">ojos_color =</span> eye_color) <span class="sc">|&gt;</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(cabello_color, <span class="at">.after =</span> nombre)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 81 × 5
+   nombre             cabello_color altura piel_color  ojos_color
+   &lt;chr&gt;              &lt;chr&gt;          &lt;int&gt; &lt;chr&gt;       &lt;chr&gt;     
+ 1 Luke Skywalker     blond            172 fair        blue      
+ 2 C-3PO              &lt;NA&gt;             167 gold        yellow    
+ 3 R2-D2              &lt;NA&gt;              96 white, blue red       
+ 4 Darth Vader        none             202 white       yellow    
+ 5 Leia Organa        brown            150 light       brown     
+ 6 Owen Lars          brown, grey      178 light       blue      
+ 7 Beru Whitesun Lars brown            165 light       blue      
+ 8 R5-D4              &lt;NA&gt;              97 white, red  red       
+ 9 Biggs Darklighter  black            183 light       brown     
+10 Obi-Wan Kenobi     auburn, white    182 fair        blue-gray 
+# ℹ 71 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> starwars <span class="sc">|&gt;</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">distinct</span>(hair_color)</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(a)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 1
+      n
+  &lt;int&gt;
+1    12</code></pre>
+</div>
+</div>
+</section>
+<section id="flow-structures" class="level3">
+<h3 class="anchored" data-anchor-id="flow-structures">Flow Structures</h3>
+<p>We have two structures, loops and conditional structures. Conditional structures are if-else statements.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">"height_quali"</span> <span class="ot">=</span> <span class="fu">if_else</span>(height <span class="sc">&lt;</span> <span class="dv">150</span>, <span class="st">"short"</span>, <span class="st">"tall"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 15
+   name     height  mass hair_color skin_color eye_color birth_year sex   gender
+   &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 Luke Sk…    172    77 blond      fair       blue            19   male  mascu…
+ 2 C-3PO       167    75 &lt;NA&gt;       gold       yellow         112   none  mascu…
+ 3 R2-D2        96    32 &lt;NA&gt;       white, bl… red             33   none  mascu…
+ 4 Darth V…    202   136 none       white      yellow          41.9 male  mascu…
+ 5 Leia Or…    150    49 brown      light      brown           19   fema… femin…
+ 6 Owen La…    178   120 brown, gr… light      blue            52   male  mascu…
+ 7 Beru Wh…    165    75 brown      light      blue            47   fema… femin…
+ 8 R5-D4        97    32 &lt;NA&gt;       white, red red             NA   none  mascu…
+ 9 Biggs D…    183    84 black      light      brown           24   male  mascu…
+10 Obi-Wan…    182    77 auburn, w… fair       blue-gray       57   male  mascu…
+# ℹ 77 more rows
+# ℹ 6 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;, height_quali &lt;chr&gt;</code></pre>
+</div>
+</div>
+<p>This code creates a new variable that validates if the height is greater than or less than 150. If it is 150 or greater, then it is given the value ‘tall’ and if it is less it is given the value ‘short’.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">"height_multi_quali"</span> <span class="ot">=</span> </span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">if_else</span>(height <span class="sc">&lt;</span> <span class="dv">150</span>, <span class="st">"tiny"</span>,</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">if_else</span>(height <span class="sc">&lt;=</span> <span class="dv">164</span>, <span class="st">"perfect"</span>, </span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"too much"</span>)),</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">.before =</span> <span class="fu">everything</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 87 × 15
+   height_multi_quali name          height  mass hair_color skin_color eye_color
+   &lt;chr&gt;              &lt;chr&gt;          &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    
+ 1 too much           Luke Skywalk…    172    77 blond      fair       blue     
+ 2 too much           C-3PO            167    75 &lt;NA&gt;       gold       yellow   
+ 3 tiny               R2-D2             96    32 &lt;NA&gt;       white, bl… red      
+ 4 too much           Darth Vader      202   136 none       white      yellow   
+ 5 perfect            Leia Organa      150    49 brown      light      brown    
+ 6 too much           Owen Lars        178   120 brown, gr… light      blue     
+ 7 too much           Beru Whitesu…    165    75 brown      light      blue     
+ 8 tiny               R5-D4             97    32 &lt;NA&gt;       white, red red      
+ 9 too much           Biggs Darkli…    183    84 black      light      brown    
+10 too much           Obi-Wan Keno…    182    77 auburn, w… fair       blue-gray
+# ℹ 77 more rows
+# ℹ 8 more variables: birth_year &lt;dbl&gt;, sex &lt;chr&gt;, gender &lt;chr&gt;,
+#   homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;, vehicles &lt;list&gt;,
+#   starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>You can add multiple if_else conditions to the same flow structure.</p>
 </section>
 </section>
 

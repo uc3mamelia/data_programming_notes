@@ -34,6 +34,12 @@ editor: visual
 
 -   column functions: select, unselect, rename, relocate, mutate, flow structures
 
+## Data Programming Homework Assignments
+
+#### [Task 0](https://uc3mamelia.github.io/data_programming_notes/task-0.html)
+
+-   Taylor Swift data, Intro to R exam
+
 ## Statistics Notes
 
 #### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)
