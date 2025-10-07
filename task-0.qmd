@@ -1,0 +1,153 @@
+---
+title: "Task 0"
+author: "Amelia Shuler - id document: Z0710125M"
+format:
+  html:
+    theme: [style.scss]
+    embed-resources: true
+    toc: true
+    toc-location: right
+    toc-title: Index
+---
+
+## Instructions (read before starting)
+
+-   Modify inside the header of `.qmd` document your personal data (name and ID) located in the header of the file.
+
+-   **Do not touch anything else** in the header (note that I have included `embed-resources: true` so that everything is contained in a single html without extra files, and `theme: [style.scss]` to give a cuckoo style to the delivery with the `style.scss` file in the folder)
+
+-   Make sure, **BEFORE further editing** the document, that the `.qmd` file is rendered correctly and the corresponding `.html` is generated in your local folder on your computer.
+
+-   The chunks (code boxes) created are either empty or incomplete, hence most of them have the `#| eval: false` option. Once you edit what you consider, you must change each chunck to `#| eval: true` (or remove it directly) to run them
+
+-   Remember that you can run chunk by chunk with the *play* button or run all chunks up to a given chunk (with the button to the left of the previous one)
+
+-   Only the generated `.html` will be evaluated.
+
+-   Be careful with spaces and line breaks!
+
+### Required packages
+
+We will need the following packages (play on the chunk to load them):
+
+```{r}
+rm(list = ls()) # Remove old variables
+library(glue)
+library(dplyr)
+library(tibble)
+library(lubridate)
+```
+
+## Case study: analysis of Taylor Swift's songs
+
+![](https://media.giphy.com/media/2tg4k9pXNcGi7kZ9Pz/giphy.gif)
+
+### Exercise 1
+
+> Install the `{taylor}` package (in your console, not in your chunk!) and then load it.
+
+```{r}
+# install.packages("taylor")
+library(taylor)
+```
+
+> In that package we have the dataset `taylor_album_songs` with the characteristics of Taylor Swift's album songs (songs outside of albums are excluded and only songs owned by Taylor Swift are considered).
+
+```{r}
+# just this, it is a tibble
+taylor_album_songs 
+```
+
+### Exercise 1
+
+> How many songs are stored? How many features are stored for each song?
+
+```{r}
+nrow(taylor_album_songs)
+ncol(taylor_album_songs)
+```
+
+There are ´r nrow(taylor_album_songs)´ songs. There are 29 features stored for each song.
+
+### Exercise 2
+
+> Get the name of the (unique) albums contained in the dataset (variable `album_name`). How many are there?
+
+```{r}
+album_names <- c(unique(taylor_album_songs$album_name))
+length(album_names)
+```
+
+There are 11 album names
+
+### Exercise 3
+
+> In how many songs is there a collaboration with another artist (if there is a collaboration, its name is stored in `featuring`)?
+
+```{r}
+nrow(taylor_album_songs[!is.na(taylor_album_songs$featuring), ])
+sum(!is.na(taylor_album_songs$featuring))
+```
+
+There are 23 songs that have a collaboration with another artist.
+
+### Exercise 4
+
+> How many different artists have been collaborated (in any song)?
+
+```{r}
+length(unique(taylor_album_songs$featuring[!is.na(taylor_album_songs$featuring)]))
+```
+
+Taylor Swift has collaborated with 20 artists. I know it is showing 21 but that is because I don't know how to remove the NA. I tried na.rm but it didn't work.
+
+### Exercise 5
+
+> Why the code below is wrong? Try to understand the idea about that, explain what it seems the goal of the code and try to fix it to obtain the properly tibble. Reminder: taylor_album_songs is a tibble, not a vector.
+
+```{r}
+# taylor_album_songs[sort(duration_ms, decreasing = TRUE)]
+```
+
+The code should read
+
+```{r}
+taylor_album_songs[order(taylor_album_songs$duration_ms, decreasing = TRUE, na.last = NA), ]
+```
+
+
+### Exercise 6
+
+> Create a new `tibble` with only the variables `album_name`, `album_release`, `track_name`, `featuring` and `duration_ms`. After that it sorts the rows by date from newest to oldest. Output should be also a tibble.
+
+```{r}
+new_tb <- tibble("album_name" = taylor_album_songs$album_name,"album_release" = taylor_album_songs$album_release,"track_name" = taylor_album_songs$track_name, "featuring" = taylor_album_songs$featuring, "duration_in_ms" = taylor_album_songs$duration_ms)
+sorted_tb <- new_tb[order(taylor_album_songs$album_release, decreasing = TRUE), ]
+sorted_tb
+```
+
+### Exercise 7
+
+> Add to the previous dataset two new variables with the month and year of release (use the `album_release` variable). Think about how you could determine in which month it has released more albums
+
+```{r}
+sorted_tb$album_release_month <- month(taylor_album_songs$album_release)
+sorted_tb$album_release_year <- year(taylor_album_songs$album_release)
+sorted_tb
+sum(sorted_tb$album_release_month == 1)
+sum(sorted_tb$album_release_month == 2)
+
+table(month(unique(taylor_album_songs$album_release)))
+```
+
+Hopefully you can see I added 2 more variables at the end of the tibble.
+
+### Exercise 8
+
+> Get the average duration of the songs in minutes (variable `duration_ms` in milliseconds).
+
+```{r}
+mean(taylor_album_songs$duration_ms / 60000, na.rm = TRUE)
+```
+
+The average song duration in  is 3.96 minutes.
