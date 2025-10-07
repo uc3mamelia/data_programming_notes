@@ -8,7 +8,7 @@ editor: visual
 
 -   [Execution Options](https://quarto.org/docs/computations/execution-options.html)
 
-## Topics
+## Data Programming Notes
 
 #### [Study Sheet from Introduction to R](https://uc3mamelia.github.io/data_programming_notes/study_sheet.html)
 
@@ -34,6 +34,22 @@ editor: visual
 
 -   column functions: select, unselect, rename, relocate, mutate, flow structures
 
+## Statistics Notes
+
 #### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)
 
 -   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
+
+#### [Seniors Stats](https://uc3mamelia.github.io/data_programming_notes/seniors.html)
+
+-   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
+
+## Data Visualization Notes
+
+#### [Tutorial 1](https://uc3mamelia.github.io/data_programming_notes/dataviz_tutorial1/01-building_graphs_layer_by_layer.html)
+
+-   ggplot, aes, geom_point, geom_line, geom_histogram, color, fill, facet_wrap
+
+#### [Tutorial 2](https://uc3mamelia.github.io/data_programming_notes/data-viz-2.html)
+
+-   scale_x_continuous, scale_y_continuous, scale_color_discrete(), labs, range(), lims(), breaks, guides, transformations
