@@ -1,0 +1,6 @@
+"0","starwars |>"
+"0","  mutate(""height_multi_quali"" = "
+"0","        if_else(height < 150, ""tiny"","
+"0","        if_else(height <= 164, ""perfect"", "
+"0","        ""too much"")),"
+"0","        .before = everything())"

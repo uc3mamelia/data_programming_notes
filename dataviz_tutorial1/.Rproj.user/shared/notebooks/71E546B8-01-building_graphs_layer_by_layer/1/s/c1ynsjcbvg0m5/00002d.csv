@@ -1,0 +1,6 @@
+"0","economics |>"
+"0","    dplyr::filter(date >= as.Date(""1970-01-01""),"
+"0","                date < as.Date(""1970-05-01"")) |>"
+"0","  ggplot() +"
+"0","  aes(date, unemploy) +"
+"0","  geom_line()"

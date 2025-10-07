@@ -1,0 +1,242 @@
+---
+title: "oct-2"
+format: html
+editor: visual
+---
+
+## Columns
+
+-   select column
+
+-   unselect column
+
+-   rename
+
+-   relocate (move columns)
+
+-   modify/create
+
+```{r}
+library(tidyverse)
+starwars
+```
+
+### Select
+
+```{r}
+starwars |>
+  select(name, mass, eye_color)
+starwars |>
+  select (name:skin_color, species)
+```
+
+makes the table only those selected columns
+
+```{r}
+starwars |>
+  select(skin_color:name, species)
+```
+
+This also reorders the columns
+
+```{r}
+starwars |>
+  select(-name)
+```
+
+removes the columns following the -
+
+```{r}
+starwars |>
+  select(-(name:skin_color))
+```
+
+select everything except the selection in parenthesis
+
+```{r}
+starwars |>
+  select(last_col(), name)
+```
+
+will select last column and name
+
+```{r}
+starwars |>
+  select(everything())
+```
+
+selects everything. Is useful when trying to relocate one column
+
+```{r}
+starwars |>
+  select(ends_with("color"))
+```
+
+selects all the columns that end with 'color' in the name
+
+```{r}
+starwars |>
+  select(starts_with("color"))
+```
+
+selects all the columns that start with 'color' in the name
+
+```{r}
+starwars |>
+  select(contains("a"))
+```
+
+Doesn't matter where in the name the keyword is, but will select any columns that contain that keyword
+
+You can combine the various methods in order to select things
+
+```{r}
+starwars |>
+  select(matches("hair|birth"))
+```
+
+matches allows you to use "or" expressions \| . The above selects columns with either "hair" or "birth". The lack of spaces is important here.
+
+```{r}
+starwars |>
+  select(where(is.numeric))
+```
+
+Selects only the numeric values; this selects columns by type.
+
+```{r}
+starwars |>
+  select(where(is.numeric))
+starwars |>
+  select(where(is.character))
+starwars |>
+  select(where(is.logical))
+starwars |>
+  select(where(is.Date))
+starwars |>
+  select(where(is.list))
+```
+
+All the types of data we will use.
+
+```{r}
+starwars |>
+  filter(height > 160) |>
+  select(mass, name)
+```
+
+Filter before the select columns. In this case, selecting columns first does not include 'height' which is where the filter is put.
+
+### Rename
+
+```{r}
+#| eval: false
+names(starwars) <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
+```
+
+Rename ALL the columns. If there are 14 variables, you need 14 names. This is not scalable.
+
+```{r}
+starwars |>
+  rename(nombre = name, color_ojos = eye_color)
+```
+
+Renames only singular variables. Existing variable name should go second.
+
+### Relocate
+
+```{r}
+starwars |>
+  relocate(species, .after = mass)
+```
+
+relocates species to after mass
+
+```{r}
+#| eval: FALSE
+starwars |>
+  relocate(species, .before = mass)
+```
+
+```{r}
+starwars |>
+  relocate(species, gender, .before = everything())
+```
+
+Puts the variables before everything.
+
+The order of the data does not matter in R or Python. It only matters for human reading the data.
+
+### Modify/Create
+
+```{r}
+starwars |>
+  mutate(new_name = 1)
+```
+
+New variable name = value. By default, the variable gets added to the end of the columns. Both quotes or no quotes for the new variable will work.
+
+Two options: constant variable (i.e. 1, 1, 1...) or a vector with the same length as the number of rows.
+
+```{r}
+starwars |>
+  mutate(new_name = 1, .before = everything())
+```
+
+```{r}
+starwars |>
+  rowid_to_column()
+```
+
+To create an ID for the rows, use rowid_to_column() function.
+
+```{r}
+starwars |>
+  mutate(height = height/100) |>
+  mutate(bmi = mass / (height^2), .before = everything())
+```
+
+If you use the same name for the variable, it will modify the existing variable. If you use a new name for the variable, it will create a new variable.
+
+```{r}
+starwars |>
+  pull(name)
+```
+
+Select creates a tibble from the selected data. Pull creates a vector from the selected data.
+
+```{r}
+  starwars |> 
+  drop_na(height) |> 
+  select(name, height, contains("color")) |>
+  rename(nombre = name, altura = height, cabello_color = hair_color, piel_color = skin_color, ojos_color = eye_color) |>
+  relocate(cabello_color, .after = nombre)
+```
+
+```{r}
+  a <- starwars |>
+   distinct(hair_color)
+  count(a)
+```
+
+### Flow Structures
+
+We have two structures, loops and conditional structures. Conditional structures are if-else statements.
+
+```{r}
+starwars |>
+  mutate("height_quali" = if_else(height < 150, "short", "tall"))
+```
+
+This code creates a new variable that validates if the height is greater than or less than 150. If it is 150 or greater, then it is given the value 'tall' and if it is less it is given the value 'short'.
+
+```{r}
+starwars |>
+  mutate("height_multi_quali" = 
+        if_else(height < 150, "tiny",
+        if_else(height <= 164, "perfect", 
+        "too much")),
+        .before = everything())
+```
+
+You can add multiple if_else conditions to the same flow structure.

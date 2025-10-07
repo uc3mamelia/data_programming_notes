@@ -1,0 +1,2 @@
+"0","starwars |>"
+"0","  mutate(""height_quali"" = if_else(height < 150, ""short"", ""tall""))"

@@ -1,0 +1,31 @@
+{
+    "id": "C53893EE",
+    "path": "~/Desktop/Data Programming/data_programming_notes/homepage.qmd",
+    "project_path": null,
+    "type": "quarto_markdown",
+    "hash": "1604585249",
+    "contents": "",
+    "dirty": false,
+    "created": 1759416760068.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "rmdVisualMode": "true",
+        "rmdVisualWrapConfigured": "true",
+        "source_window_id": "",
+        "Source": "Source",
+        "docOutlineVisible": "1",
+        "rmdVisualCollapsedChunks": "",
+        "rmdVisualModeLocation": "563:619.2000122070312",
+        "cursorPosition": "32,0",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1759419386,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1759419386667,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,7 @@
+"0","#| eval: FALSE"
+"0","facet_wrap("
+"0","  facets,"
+"0","  nrow = NULL,"
+"0","  ncol = NULL,)"
+"2","Error: object 'facets' not found
+"

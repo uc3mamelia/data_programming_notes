@@ -1,0 +1,35 @@
+---
+title: "Homepage"
+format: html
+editor: visual
+---
+
+## Resources
+
+-   [Execution Options](https://quarto.org/docs/computations/execution-options.html)
+
+## Topics
+
+#### [Study Sheet from Introduction to R](https://uc3mamelia.github.io/data_programming_notes/study_sheet.html)
+
+-   libraries, data types, dates, basic operators, logic, add elements, delete elements, glue, extract, data tables, tibble
+
+#### [Mock Case Study](https://uc3mamelia.github.io/data_programming_notes/case_study_mock_task.html)
+
+-   nrow, ncol, order(), unique(), mean(), sd()
+
+#### [Sept 11th](https://uc3mamelia.github.io/data_programming_notes/sept_11_class.html)
+
+-   tidy data, pivot_longer, pivot_wider
+
+#### [Sept 18th](https://uc3mamelia.github.io/data_programming_notes/sept_18_class.html)
+
+-   separate, unite, pivot_longer with extra specs, sampling
+
+#### [Sept 25](https://uc3mamelia.github.io/data_programming_notes/sept_28_class.html)
+
+-   remove NAs
+
+#### [Oct 2](https://uc3mamelia.github.io/data_programming_notes/oct_2_class.html)
+
+-   column functions: select, unselect, rename, relocate, mutate, flow structures

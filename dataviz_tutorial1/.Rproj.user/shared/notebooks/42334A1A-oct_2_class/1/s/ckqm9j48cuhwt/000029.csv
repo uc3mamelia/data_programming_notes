@@ -1,0 +1,8 @@
+"0","  starwars |>"
+"0","   count(distinct(hair_color))"
+"1","[1m[33mError[39m in `count()`:[22m
+[38;5;255m[36mℹ[38;5;255m In argument: `distinct(hair_color)`.[39m
+[1mCaused by error in `UseMethod()`:[22m
+[33m![39m no applicable method for 'distinct' applied to an object of class ""character""
+[90mRun `]8;;x-r-run:rlang::last_trace()rlang::last_trace()]8;;` to see where the error occurred.[39m
+"

@@ -1,0 +1,5 @@
+"0","  starwars |> "
+"0","  drop_na(height) |> "
+"0","  select(name, height, contains(""color"")) |>"
+"0","  rename(nombre = name, altura = height, cabello_color = hair_color, piel_color = skin_color, ojos_color = eye_color) |>"
+"0","  relocate(cabello_color, .after = nombre)"

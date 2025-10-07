@@ -1,0 +1,2 @@
+"0","starwars |>"
+"0","  select(last_col(), name)"
