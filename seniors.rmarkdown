@@ -1,0 +1,440 @@
+---
+title: "Seniors Example"
+format: html
+editor: visual
+---
+
+### Libraries
+
+```{r}
+#| eval: TRUE
+#| output: FALSE
+# ============================
+# Data Manipulation / Databases
+# ============================
+library(tidyverse)   # Collection of packages for data manipulation (dplyr, tidyr) and visualization (ggplot2)
+library(dplyr)       # Data manipulation: filtering, summarizing, joining
+library(plyr)        # Older data manipulation package (mostly superseded by dplyr)
+library(dbplyr)      # Interface to translate dplyr syntax to SQL for databases
+
+# ============================
+# Descriptive Statistics & Visualization
+# ============================
+library(ggplot2)     # Flexible and powerful plotting system
+library(ggpubr)      # Easy-to-use publication-ready plots with ggplot2 enhancements
+library(lattice)     # Alternative plotting system for multi-panel plots
+library(descr)       # Descriptive statistics: frequency tables, crosstabs
+library(Rmisc)       # Utility functions for summaries: mean, SE, CI
+library(knitr)       # Dynamic report generation, integration with R Markdown
+library(kableExtra)  # Enhanced tables for knitr and R Markdown
+
+# ============================
+# Classical Statistics / Inference
+# ============================
+library(MASS)        # Classical statistics functions, distributions, datasets, LDA, etc.
+library(car)         # Companion to Applied Regression: diagnostic tests, ANOVA, VIF
+
+# ============================
+# Regression & Machine Learning
+# ============================
+library(caret)       # Unified framework for regression, classification, and model training/tuning
+library(leaps)       # Subset selection in regression: best subset, forward/backward selection
+```
+
+### Import Data
+
+```{r}
+dataseniors<-read.csv2("seniors2.csv", sep=";", dec=",")#read data
+data.df<-data.frame(dataseniors[1:310,1:31])#data frame(rectangular data structures)
+```
+
+Description:
+
+-   Value: Degree to which people strive for an optimal value-for-money relation.
+
+-   Price: Degree to which consumers focus on finding and paying low prices.
+
+-   Coup: Tendency to respond to a sale, because the discount off the original price influence.
+
+-   Primav: Tendency to be a source of information for many products, services and places where lower prices may be found.
+
+-   Priqua: Tendency to consider prices as an indicator of quality.
+
+-   Prest: Degree to which higher prices are perceived to be a status symbol.
+
+-   Brand: Degree to which the consumer focuses on brands. \# Conv: Degree to which consumers feel that ease or convenience are important.
+
+-   Impuls: Degree to which consumers are impulse-driven.
+
+-   Risk: Degree to which consumers have a risk preference.
+
+-   Innov: Degree to which consumers would like to be innovative or are open to innovation.
+
+# Univariate Descriptive Analysis
+
+Describe the socieconomic characteristics of the sample: barcharts
+
+```{r}
+
+bxp <- ggplot(data.df, aes(x = gender)) +                       # x = gender -> Variable to plot
+  geom_bar(aes(y = after_stat(count) / sum(after_stat(count))), # after_stat(count) = absolute freq
+           fill = "orange") +                                   # after_stat(count) / sum(after_stat(count)) = relative freq
+  labs(y = "f_i")         
+  
+dp <- ggplot(data.df, aes(x = mrhp)) +                          # x = mrhp -> Variable to plot
+  geom_bar(aes(y = after_stat(count) / sum(after_stat(count))), # after_stat(count) = absolute freq
+           fill = "lightblue") +                                # after_stat(count) / sum(after_stat(count)) = relative freq
+  labs(y = "f_i") 
+
+dp1 <- ggplot(data.df, aes(x = place)) +
+  geom_bar(aes(y = after_stat(count) / sum(after_stat(count))),
+           fill = "red") +
+  labs(y = "f_i") 
+
+dp2 <- ggplot(data.df, aes(x = numfamily)) +
+  geom_bar(aes(y = after_stat(count) / sum(after_stat(count))),
+           fill = "green") +
+  labs(y = "f_i") 
+
+ggarrange(bxp, dp,dp1,dp2,
+          ncol = 2, nrow = 2)
+
+ggplot(data.df, aes(x=numfamily)) +
+  geom_bar(fill="red")
+
+
+bxp<-ggplot(data.df, aes(x=age)) +
+  geom_bar(fill="Orange")
+
+dp<-ggplot(data.df, aes(x=education)) +
+  geom_bar(fill="lightblue")
+
+dp1<-ggplot(data.df, aes(x=income)) +
+  geom_bar(fill="Red")
+
+
+
+ggarrange(bxp, dp,dp1,
+          ncol = 1, nrow = 3)
+```
+
+### Numerical measures for buying behavior
+
+```{r}
+data_df_summary <-data.df %>%
+  summarise_at(vars(conv:value), # conv:value selects all columns from conv to value
+               list(avg=mean, med=median)) # You can add other measures
+data_df_summary
+
+#Plot means for buying behavior
+data.fr<-data.frame(data.df[1:310,2:13])
+S<-colMeans(data.fr,dims=1)
+x<-c("conv","brand","coup","impuls","innov","prest","price","primav","priqua","risk","sale","value")
+DD<-data.frame(S,x)
+ggplot(DD,mapping=aes(x=x,y=S,group=1))+geom_line()
+
+```
+
+### Histograms for value
+
+```{r}
+ggplot(data.fr, aes(x = value)) + 
+  geom_histogram(bins=10, fill="lightblue", 
+                 color="black")
+
+
+
+ggplot(data.fr, aes(x = value)) + 
+  geom_histogram(aes(y = after_stat(count) / sum(after_stat(count))),
+                 bins=15, fill="steelblue", color="white") + 
+  labs(y = "relative freq")
+```
+
+### Density for Value
+
+```{r}
+ggplot(data.fr, aes(x = value)) + 
+  geom_density(fill="skyblue", alpha=0.5)
+```
+
+### Frequency table for Value (Discretization of continuous variable)
+
+```{r}
+datavalue<-case_when((data.df$value<=2) ~ "1",
+                     (data.df$value>2) &(data.df$value<=3) ~ "2",
+                     (data.df$value>3) &(data.df$value<=4) ~ "3",
+                     (data.df$value>4) &(data.df$value<=5) ~ "4",
+                     (data.df$value>5) &(data.df$value<=6) ~ "5",
+                     (data.df$value>6) &(data.df$value<=7) ~ "6",
+                     (data.df$value==7) ~ "7")
+
+datfreq<-freq(ordered(datavalue),plot=T)
+datfreq
+```
+
+### Frequency Table for Price (Discretization of continuous variable)
+
+```{r}
+dataprice<-case_when((data.df$price<=2) ~ "1",
+                     (data.df$price>2) &(data.df$price<=3) ~ "2",
+                     (data.df$price>3) &(data.df$price<=4) ~ "3",
+                     (data.df$price>4) &(data.df$price<=5) ~ "4",
+                     (data.df$price>5) &(data.df$price<=6) ~ "5",
+                     (data.df$price>6) &(data.df$price<=7) ~ "6",
+                     (data.df$price==7) ~ "7")
+
+datfreq<-freq(ordered(dataprice),plot=F)
+datfreq
+```
+
+### Frequency Table for Convenience (Discretization of continuous variable)
+
+```{r}
+dataconv<-case_when((data.df$conv<=2) ~ "1",
+                     (data.df$conv>2) &(data.df$conv<=3) ~ "2",
+                     (data.df$conv>3) &(data.df$conv<=4) ~ "3",
+                     (data.df$conv>4) &(data.df$conv<=5) ~ "4",
+                     (data.df$conv>5) &(data.df$conv<=6) ~ "5",
+                     (data.df$conv>6) &(data.df$conv<=7) ~ "6",
+                     (data.df$conv==7) ~ "7")
+
+datfreq<-freq(ordered(dataconv),plot=F)
+datfreq
+
+```
+
+### Boxplots for value, Price and Convenience
+
+```{r}
+bxp<-ggplot(data.df,mapping=aes(y=value))+geom_boxplot(fill="Orange")
+dp<-ggplot(data.df,mapping=aes(y=price))+geom_boxplot(fill="lightblue")
+dp1<-ggplot(data.df,mapping=aes(y=conv))+geom_boxplot(fill="Red")
+
+
+ggarrange(bxp, dp,dp1,
+          ncol = 3, nrow = 1)
+```
+
+# Bivariate Descriptive Analysis
+
+### Generate contingency tables
+
+```{r}
+ConTtable<-table(datavalue,data.df$gender)        #Joint absolute frequencies
+ConTtable
+RConTtable<-prop.table(ConTtable)*100             #Joint relative frequencies
+RConTtable
+colSums(RConTtable)                               #Marginal frequencies for gender
+rowSums(RConTtable)                               #Marginal frequencies for Value
+CConTtableG<-prop.table(ConTtable,margin=2)*100   #Conditional of Value for fixed gender
+CConTtableG
+CConTtableM<-prop.table(ConTtable,margin=1)*100   #Conditional of gender for fixed Value
+CConTtableM
+```
+
+### Box Plot for Conditional Distribution of Value, Price and Convenience (Fixed Gender)
+
+```{r}
+bxp<-ggplot(data.df,mapping=aes(y=value,x=gender))+geom_boxplot(fill="Orange")
+dp<-ggplot(data.df,mapping=aes(y=price,x=gender))+geom_boxplot(fill="lightblue")
+dp1<-ggplot(data.df,mapping=aes(y=conv,x=gender))+geom_boxplot(fill="Red")
+
+
+ggarrange(bxp, dp,dp1,
+          ncol = 3, nrow = 1)
+```
+
+### Box Plot for Conditional Distribution of Value, Price and Convenience (Fixed Age)
+
+```{r}
+bxp<-ggplot(data.df,mapping=aes(y=value,x=education))+geom_boxplot(fill="Orange")
+dp<-ggplot(data.df,mapping=aes(y=price,x=education))+geom_boxplot(fill="lightblue")
+dp1<-ggplot(data.df,mapping=aes(y=conv,x=education))+geom_boxplot(fill="Red")
+
+
+ggarrange(bxp, dp,dp1,
+          ncol = 3, nrow = 1)
+```
+
+### Conditional mean and sd for value and price, fixed gender
+
+```{r}
+data_df_grouped <- group_by(data.df,gender)
+
+sample_size <- data_df_grouped %>%
+  dplyr::summarise(n=n()) %>%
+  deframe()
+sample_size
+
+data_df_summary <-data_df_grouped %>%
+  summarise_at(vars(value, price),
+               list(avg=mean,stde=sd))
+data_df_summary
+```
+
+### Violin Plot
+
+```{r}
+ggplot(data.df, aes(x = gender, y = innov, fill=gender)) + 
+  geom_violin(alpha=0.7)
+```
+
+### Density comparison across groups
+
+```{r}
+ggplot(data.df, aes(x = innov, fill = gender)) +
+  geom_density(alpha=0.4) +
+  labs(title="Density comparison by group")
+```
+
+# Confidence Intervals
+
+### Confidence interval for the population mean (unknown variance)
+
+```{r}
+CI_m <- function (x, ci = 0.95)
+{
+  `%>%` <- magrittr::`%>%`
+  standard_deviation <- sd(x)
+  sample_size <- length(x)
+  Margin_Error <- abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
+  df_out <- data.frame( sample_size=length(x), Mean=mean(x), sd=sd(x),
+                        Margin_Error=Margin_Error,
+                        'CI lower limit'=(mean(x) - Margin_Error),
+                        'CI Upper limit'=(mean(x) + Margin_Error)) %>%
+    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:6 )
+  return(df_out)
+}
+```
+
+Example. Compute 95% confidence interval for the mean of 'Value' in the population
+
+```{r}
+CI_p <- function(x, ci = 95)
+{
+  `%>%` <- magrittr::`%>%`
+  vcat<-na.omit(x)
+  p<-mean(x)
+  standard_deviation <- sqrt(p*(1-p))
+  sample_size <- length(x)
+  Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
+  df_out <- data.frame( sample_size=length(x), p,
+                        Margin_Error=Margin_Error,
+                        'CI lower limit'=(p - Margin_Error),
+                        'CI Upper limit'=(p + Margin_Error)) %>%
+    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:5 )
+  return(df_out)
+} 
+```
+
+Example. Compute 95% confidence interval for the population proportion of consumers that give 5 or more to 'Value'
+
+```{r}
+prop <- ifelse(data.df$value>5, 1, 0) #Generate the Bernoulli sample with 1(meet the condition) and 0
+prop.table(table(prop))
+
+CI_p(prop ,ci=0.95)
+```
+
+Plot 95% confidence intervals for 'Value' divided by gender.Function "summarySE" in the library Rmisc allow us to summarise one variable divided in groups.
+
+```{r}
+df <- summarySE(data.df, measurevar="value", groupvars="gender", na.rm=T)
+
+graf.point1 <- ggplot(df, aes(x=gender, y=value)) + 
+  geom_point(size = 3) + ylim(3, 5)
+graf.point1
+graf.point <- graf.point1 +  geom_errorbar(aes(ymin=value-ci, ymax=value+ci), width = 0.2) +  ylab("Importance") + 
+  ggtitle("95% Confidence interval for the mean importance of Value by gender")
+graf.point
+```
+
+Plot 95% confidence intervals for 'Value' divided by gender and age.
+
+```{r}
+df <- summarySE(data.df, measurevar="value", groupvars=c("gender","age"), na.rm=T)
+
+graf.point1 <- ggplot(df, aes(x=age, y=value, colour=gender)) + 
+  geom_point(size = 3) + ylim(3, 5.5)
+graf.point1
+graf.point <- graf.point1 +  geom_errorbar(aes(ymin=value-ci, ymax=value+ci), width = 0.2) +  ylab("Importance") + 
+  ggtitle("95% Confidence interval for the mean importance of Value by gender and age")
+graf.point
+```
+
+Plot 95% confidence intervals for 'Coup' divided by gender and age.
+
+```{r}
+df <- summarySE(data.df, measurevar="coup", groupvars=c("gender","age"), na.rm=T)
+
+graf.point1 <- ggplot(df, aes(x=age, y=coup, colour=gender)) + 
+  geom_point(size = 2) + ylim(1, 5.5)
+graf.point1
+graf.point <- graf.point1 +  geom_errorbar(aes(ymin=coup-ci, ymax=coup+ci), width = 0.2) +  ylab("Importance") + 
+  ggtitle("95% Confidence interval for the mean importance of Coupons by gender and age")
+graf.point
+```
+
+# Hypothesis Testing
+
+Error type I, true mean equal to 5 (slide 7/33)
+
+```{r}
+aveg=5 #(true parameter)
+std=1.2 #(true parameter)
+s=std/sqrt(30)#(standard error of mean)
+lb=qnorm(0.95,aveg,s)
+ub=qnorm(0.999999999,aveg,s)
+x <- seq(-3,3,length=100)*s + aveg
+hx <- dnorm(x,mean=aveg,sd=s)
+
+plot(x, hx, type="n", xlab="sample means",ylab="",
+     main="Error type I in a 95% confidence test (true par. =5).", axes=FALSE)
+
+i <- x >= lb & x <= ub
+lines(x, hx)
+polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red") 
+
+area <- pnorm(ub, aveg, s) - pnorm(lb, aveg, s)
+result <- paste("P(H1/H0) =",
+                signif(area, digits=3))
+mtext(result,3)
+axis(1, at=seq(4, 6, 0.1), pos=0)
+```
+
+Error type II,true parameter mu=5.8 (slide 8/33)
+
+```{r}
+std=1.2
+n=30
+aveg=5.8
+s=std/sqrt(30)
+pot<-power.t.test(n=n,delta=0.8,sd=std,sig.level=0.05, type="one.sample",alternative="one.sided",strict = TRUE)
+
+ub=qnorm((1-pot$power),aveg,s)
+lb=qnorm(0.00001,aveg,s)
+x <- seq(-3,3,length=100)*s + aveg
+hx <- dnorm(x,mean=aveg,sd=s)
+
+plot(x, hx, type="n", xlab="sample means",ylab="",
+     main="Error type II in a 95% confidence test (true par. =5.8).", axes=FALSE)
+
+i <- x >= lb & x <= ub
+lines(x, hx)
+polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red") 
+
+area <- pnorm(ub, aveg, s) - pnorm(lb, aveg, s)
+result <- paste("P(H0/H1) =",
+                signif(area, digits=3))
+mtext(result,3)
+axis(1, at=seq(0, 10, 0.2), pos=0)
+```
+
+Hypothesis testing in senior's file
+
+Null=mu\_{price}=4; Alternative= mu\_{price}\<4 (slide 13/33 to 15/33)
+
+```{r}
+
+```
+
