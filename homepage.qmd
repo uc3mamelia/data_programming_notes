@@ -34,6 +34,10 @@ editor: visual
 
 -   column functions: select, unselect, rename, relocate, mutate, flow structures
 
+#### [Oct 9](https://uc3mamelia.github.io/data_programming_notes/oct-9.html)
+
+-   if_else, summarize()
+
 ## Data Programming Homework Assignments
 
 #### [Task 0](https://uc3mamelia.github.io/data_programming_notes/task-0.html)
