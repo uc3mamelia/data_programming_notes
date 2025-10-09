@@ -20,6 +20,8 @@ p <- ggplot(mtcars) +
 p
 ```
 
+![](images/clipboard-1299856470.png)
+
 In the example above, two position scales (**x** and **y**)
 
 -   detected that the data (`mpg` and `wt`) is **continuous**;
@@ -101,9 +103,40 @@ p
 
 It first creates a blue-scale color scheme, then renders an error, and then tells me I am applying a continuous value to a discrete scale.
 
-1.  Read the documentation for [`scale_x_continuous()`](https://ggplot2.tidyverse.org/reference/scale_continuous.html). How can you change the name of the axis? What happens if we manually specify the same scale twice (try adding different names)? Why?
+1.  Read the documentation for [`scale_x_continuous()`](https://ggplot2.tidyverse.org/reference/scale_continuous.html).
 
-2.  How can you change the position of the axes?
+How can you change the name of the axis?
+
+name = ""
+
+What happens if we manually specify the same scale twice (try adding different names)? Why?
+
+```{r}
+ggplot(mtcars) +
+  aes(mpg, wt) +
+  geom_point(aes(color=factor(cyl)))
+```
+
+OR
+
+```{r}
+ggplot(mtcars) +
+  aes(mpg, wt) +
+  geom_point(aes(color=factor(cyl))) +
+  scale_color_discrete(name = "Cylinders") +
+  scale_x_continuous(name = "Miles per Gallon")
+```
+
+Labs function is a shortcut to complete this with less code.
+
+```{r}
+ggplot(mtcars) +
+  aes(mpg, wt) +
+  geom_point(aes(color=factor(cyl))) +
+  labs(color = "Cylinders", x = "Miles per Gallon")
+```
+
+1.  How can you change the position of the axes?
 
 ```{r}
 
@@ -118,11 +151,15 @@ p +
   labs(
     x = "Fuel consumption in miles per gallon",
     y = "Weight in thousands of pounds",
-    color = "Number of cylinders"
+    color = "Number of \n cylinders"
   )
 ```
 
-In these strings, you can use `\n` to insert a line break, but you can also supply mathematical expressions and other formatting options wrapped in `quote()`. See `?plotmath` for documentation on which expressions can be used and how they are interpreted.
+In these strings, you can use `\n` to insert a line break, but you can also supply mathematical expressions and other formatting options wrapped in `quote()`.
+
+[ggtext](https://wilkelab.org/ggtext/articles/introduction.html) is a recommended package for formatting fonts and text.
+
+See `?plotmath` for documentation on which expressions can be used and how they are interpreted. You can also use mathematically expressions directly in ggplot. See below.
 
 ```{r}
 x <- seq(from = -2, to = 2, by = .01)
@@ -136,9 +173,42 @@ ggplot(data.frame(x=x, y=x^3)) +
 
 1.  How can you remove an axis label, or a legend title?
 
-2.  Read the documentation for [`labs()`](https://ggplot2.tidyverse.org/reference/labs.html). Investigate what other labels, apart from the aesthetics, can be set with this function. Experiment with them.
+Remove an axis label:
 
-3.  Read the documentation for `?plotmath`. How can you set a title with some words in bold, others in italics…? How can you wrap a very long subtitle with line breaks?
+```{r}
+ggplot(mtcars) +
+  aes(mpg, wt) +
+  geom_point(aes(color=factor(cyl))) +
+  labs(y = NULL)
+```
+
+Remove legend label
+
+```{r}
+ggplot(mtcars) +
+  aes(mpg, wt) +
+  geom_point(aes(color=factor(cyl))) +
+  labs(color = NULL)
+```
+
+1.  Read the documentation for [`labs()`](https://ggplot2.tidyverse.org/reference/labs.html). Investigate what other labels, apart from the aesthetics, can be set with this function. Experiment with them.
+
+captions, tags, dictionaries, titles, alt-text and subtitles
+
+1.  Read the documentation for `?plotmath`. How can you set a title with some words in bold, others in italics…? How can you wrap a very long subtitle with line breaks?
+
+bold(x), italic(x), bolditalic(x)
+
+```{r}
+x <- seq(from = -2, to = 2, by = .01)
+ggplot(data.frame(x=x, y=x^3)) +
+  aes(x, y) +
+  geom_path() +
+  labs(y = quote(f(x) == x^3),
+       x = expression(paste(bold("some"), " ", italic("text"))))
+```
+
+It is much easier to do this in ggtext.
 
 ## **Limits**
 
@@ -191,11 +261,36 @@ p +
   scale_y_continuous(limits=c(2, 4), oob=scales::oob_censor)
 ```
 
+`oob_censor()` replaces out of bounds values with `NA`s. This is the default `oob` argument for continuous scales.
+
 #### **Checkpoint 3**
 
 1.  Take the last example and add a `geom_smooth()` layer. What is the difference between applying the default `scales::oob_censor`, `scales::oob_squish` and `scales::oob_keep` to the position scales?
 
-2.  What happens if you provide a set of levels to the limits of the color scale that does not contain any of the categories present in the data?
+```{r}
+p +
+  scale_x_continuous(limits=c(20, 25), oob=scales::oob_keep) + #you keep them in their places
+  scale_y_continuous(limits=c(2, 4), oob=scales::oob_keep)+
+  geom_smooth(method = "lm") # this smoothes based on all the data. including those values we don't see
+```
+
+```{r}
+p +
+  scale_x_continuous(limits=c(20, 25), oob=scales::squish) +
+  scale_y_continuous(limits=c(2, 4), oob=scales::squish)
+```
+
+`oob_squish()` replaces out of bounds values with the nearest limit. This is the default `oob` argument for binned scales.
+
+```{r}
+p +
+  scale_x_continuous(limits=c(20, 25), oob=scales::oob_keep) +
+  scale_y_continuous(limits=c(2, 4), oob=scales::oob_keep)
+```
+
+`oob_keep()` does not adjust out of bounds values. In position scales, behaves as zooming limits without data removal.
+
+1.  What happens if you provide a set of levels to the limits of the color scale that does not contain any of the categories present in the data?
 
 ```{r}
 

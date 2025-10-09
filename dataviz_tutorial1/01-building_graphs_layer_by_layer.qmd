@@ -230,6 +230,11 @@ ggplot(mpg) +
 ```{r}
 ggplot(mpg, aes(cty)) + 
   geom_histogram(color = "red", fill = "red")
+
+ggplot(mpg) +
+  aes(displ, hwy) +
+  geom_line() +
+  geom_point(aes(color=displ, shape = class))
 ```
 
 ## **Faceting**
@@ -251,15 +256,15 @@ ggplot(mpg) +
 
 ```{r}
 ggplot(mpg) +
-  aes(hwy, displ) +
-  facet_wrap(~class) +
+  aes(displ, hwy) +
+  facet_wrap(~hwy) +
   geom_point()
 ```
 
 ```{r}
 ggplot(mpg) +
-  aes(displ, cyl) +
-  facet_wrap(~class) +
+  aes(displ, hwy) +
+  facet_wrap(~cyl) +
   geom_point()
 ```
 

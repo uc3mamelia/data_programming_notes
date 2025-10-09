@@ -294,49 +294,86 @@ ggplot(data.df, aes(x = innov, fill = gender)) +
 ```{r}
 CI_m <- function (x, ci = 0.95)
 {
-  `%>%` <- magrittr::`%>%`
   standard_deviation <- sd(x)
   sample_size <- length(x)
   Margin_Error <- abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
-  df_out <- data.frame( sample_size=length(x), Mean=mean(x), sd=sd(x),
-                        Margin_Error=Margin_Error,
-                        'CI lower limit'=(mean(x) - Margin_Error),
-                        'CI Upper limit'=(mean(x) + Margin_Error)) %>%
-    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:6 )
+df_out <- 
+  data.frame( 
+    sample_size=length(x),
+    Mean=mean(x), sd=sd(x),
+    Margin_Error=Margin_Error,
+    'CI lower limit'=(mean(x) - Margin_Error),
+    'CI Upper limit'=(mean(x) + Margin_Error)) |>
+    tidyr::pivot_longer(
+      names_to = "Measurements",
+      values_to ="values", 1:6
+      )
   return(df_out)
 }
+# Example. Compute 95% confidence interval for the mean of 'Value' in the population
+CI_m(data.df$value, ci=0.95)
 ```
 
-Example. Compute 95% confidence interval for the mean of 'Value' in the population
+### Creating a Sample from an Existing Population
+
+```{r}
+set.seed(1)
+sample1 <- 
+  rnorm(n=50, mean=5.44, sd=2)
+sample2 <- 
+  rnorm(n=75, mean=5.44, sd=2)
+sample3 <- 
+  rnorm(n=60, mean=5.44, sd=2)
+sample4 <- 
+  rnorm(n=100, mean=5.44, sd=2)
+sample5 <- 
+  rnorm(n=150, mean=5.44, sd=2)
+CI_m(sample1, ci=0.50)
+CI_m(sample2, ci=0.50)
+CI_m(sample3, ci=0.50)
+CI_m(sample4, ci=0.50)
+CI_m(sample5, ci=0.50)
+```
+
+### Confidence interval for the population proportion in a Bernoulli distribution
 
 ```{r}
 CI_p <- function(x, ci = 95)
 {
-  `%>%` <- magrittr::`%>%`
   vcat<-na.omit(x)
-  p<-mean(x)
+  p <- mean(x)
   standard_deviation <- sqrt(p*(1-p))
   sample_size <- length(x)
   Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
-  df_out <- data.frame( sample_size=length(x), p,
-                        Margin_Error=Margin_Error,
-                        'CI lower limit'=(p - Margin_Error),
-                        'CI Upper limit'=(p + Margin_Error)) %>%
-    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:5 )
+  df_out <- 
+    data.frame(
+      sample_size=length(x),
+      p,
+      Margin_Error=Margin_Error,
+      'CI lower limit'=(p - Margin_Error),
+      'CI Upper limit'=(p + Margin_Error)) |>
+    tidyr::pivot_longer(
+      names_to = "Measurements",
+      values_to ="values", 1:5
+      )
   return(df_out)
-} 
+}
 ```
+
+------------------------------------------------------------------------
 
 Example. Compute 95% confidence interval for the population proportion of consumers that give 5 or more to 'Value'
 
 ```{r}
-prop <- ifelse(data.df$value>5, 1, 0) #Generate the Bernoulli sample with 1(meet the condition) and 0
+prop <- ifelse(data.df$value > 5, 1, 0) #Generate the Bernoulli sample with 1(meet the condition) and 0
 prop.table(table(prop))
 
 CI_p(prop ,ci=0.95)
 ```
 
-Plot 95% confidence intervals for 'Value' divided by gender.Function "summarySE" in the library Rmisc allow us to summarise one variable divided in groups.
+Plot 95% confidence intervals for 'Value' divided by gender.
+
+Function "summarySE" in the library Rmisc allow us to summarise one variable divided in groups.
 
 ```{r}
 df <- summarySE(data.df, measurevar="value", groupvars="gender", na.rm=T)
