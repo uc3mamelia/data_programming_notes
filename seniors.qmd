@@ -414,63 +414,88 @@ graf.point
 
 # Hypothesis Testing
 
-Error type I, true mean equal to 5 (slide 7/33)
+#### One-Sided Hypothesis Testing
+
+The hypothesis is price = 4 and alternative price is greater than 4.
 
 ```{r}
-aveg=5 #(true parameter)
-std=1.2 #(true parameter)
-s=std/sqrt(30)#(standard error of mean)
-lb=qnorm(0.95,aveg,s)
-ub=qnorm(0.999999999,aveg,s)
-x <- seq(-3,3,length=100)*s + aveg
-hx <- dnorm(x,mean=aveg,sd=s)
+#H0: mu_{price}=4; H1: mu_{price}<4 (slide 13/33 to 15/33)
+t.test(data.df$price, y=NULL,alternative="less",mu=4)
+qt(0.05,309) 
 
-plot(x, hx, type="n", xlab="sample means",ylab="",
-     main="Error type I in a 95% confidence test (true par. =5).", axes=FALSE)
-
-i <- x >= lb & x <= ub
-lines(x, hx)
-polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red") 
-
-area <- pnorm(ub, aveg, s) - pnorm(lb, aveg, s)
-result <- paste("P(H1/H0) =",
-                signif(area, digits=3))
-mtext(result,3)
-axis(1, at=seq(4, 6, 0.1), pos=0)
+#H0: mu_{price}=4; H1: mu_{price}>4
+t.test(data.df$price, y=NULL,alternative="greater",mu=4)
+qt(0.95,309) 
 ```
 
-Error type II,true parameter mu=5.8 (slide 8/33)
+#### Two-Sided Hypothesis Testing
 
 ```{r}
-std=1.2
-n=30
-aveg=5.8
-s=std/sqrt(30)
-pot<-power.t.test(n=n,delta=0.8,sd=std,sig.level=0.05, type="one.sample",alternative="one.sided",strict = TRUE)
-
-ub=qnorm((1-pot$power),aveg,s)
-lb=qnorm(0.00001,aveg,s)
-x <- seq(-3,3,length=100)*s + aveg
-hx <- dnorm(x,mean=aveg,sd=s)
-
-plot(x, hx, type="n", xlab="sample means",ylab="",
-     main="Error type II in a 95% confidence test (true par. =5.8).", axes=FALSE)
-
-i <- x >= lb & x <= ub
-lines(x, hx)
-polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red") 
-
-area <- pnorm(ub, aveg, s) - pnorm(lb, aveg, s)
-result <- paste("P(H0/H1) =",
-                signif(area, digits=3))
-mtext(result,3)
-axis(1, at=seq(0, 10, 0.2), pos=0)
+#H0: mu_{price}=4; H1: mu_{price}/=4
+t.test(data.df$price, y=NULL,alternative="two.sided",mu=4)
+qt(0.975,309)
+qt(0.025,309)
 ```
 
-Hypothesis testing in senior's file
-
-Null=mu\_{price}=4; Alternative= mu\_{price}\<4 (slide 13/33 to 15/33)
+#### Proportional Hypothesis Testing
 
 ```{r}
+#H0: p{price>4}=0.35; H1: p_{price>4}>0.35 (slide 16/33)
+prop <- ifelse(data.df$price>4, 1, 0) #Generate the Bernoulli sample with 1(meet the condition) and 0
+t.test(prop, y=NULL,alternative="greater",mu=0.35)
+qnorm(0.95)
+```
 
+#### Paired T-Test
+
+```{r}
+#Paired test for equal mean importance for price and value (slide 18/33 to 19/33)
+#----------------------------------------------------------
+t.test(data.df$price, y=data.df$value,paired=TRUE,alternative="greater")
+qt(0.95,309)
+# opposite
+t.test(data.df$value, y=data.df$price,paired=TRUE,alternative="greater")
+```
+
+#### Proportional Paired T-Test (Slide 25)
+
+```{r}
+#Paired test for differences among the proportion of consumers giving importance >4 to price and value bigger than 0.2 (slide 20/33)
+#---------------------------------------------------------------------------
+propP <- ifelse(data.df$price>4, 1, 0)
+propV <- ifelse(data.df$value>4, 1, 0)
+t.test(propV, y=propP,paired=TRUE,alternative="greater",mu=0.2)
+qnorm(0.95)
+```
+
+#### Independent T-Test
+
+```{r}
+#Independent t-test for equal means of price for male and females (slides 22-23)
+#--------------------------------------------------------------------------------
+
+s<-split(data.df$price,data.df$gender)#splits the variable price in two groups by gender
+#first step: test for equal variances
+var.test(s$male, s$female, alternative = "two.sided")
+qf(0.975,108,200)
+#second step: test for differences of means
+t.test(s$male, y=s$female,alternative="two.sided",mu=0,var.equal=TRUE)
+qt(0.975,308)
+qt(0.025,308)
+```
+
+#### Proportional Independent T-Test
+
+```{r}
+#Independent t-test for equal proportions of price>5 for male and females (slides 24-25)
+#---------------------------------------------------------------------------------------
+propP <- ifelse(data.df$price>5, 1, 0)
+
+s<-split(propP,data.df$gender)#splits the variable price in two groups by gender
+#first step: test for equal variances
+var.test(s$male, s$female, alternative = "two.sided")
+qf(0.975,108,200)
+#second step: test for differences of means
+t.test(s$male, y=s$female,alternative="two.sided",mu=0,var.equal=FALSE)
+qt(0.975,308)
 ```
