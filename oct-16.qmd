@@ -1,0 +1,211 @@
+---
+title: "oct 16"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+## Summarize
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  reframe("quantiles" = quantile(mass))
+```
+
+Mean and Median of Mass
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  summarize("mean_mass" = mean(mass),
+            "median_mass" = median(mass))
+```
+
+## Summarize by Groups
+
+To get male and female means. "group_by" could be a condition or a variable.
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  group_by(sex) |>
+  summarize("mean_mass" = mean(mass),
+            "median_mass" = median(mass))
+```
+
+The same code written differently below
+
+```{r}
+starwars |>
+  drop_na(mass, birth_year) |>
+  summarize("mean_mass" = mean(mass),
+            "median_mass" = median(mass),
+            .by = sex)
+```
+
+You can add multiple into the below
+
+```{r}
+starwars |>
+  drop_na(mass, birth_year) |>
+  summarize("mean_mass" = mean(mass),
+            "median_mass" = median(mass),
+            .by = c(gender, sex))
+```
+
+Gives you the highest mass
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  slice_max(mass)
+```
+
+Gives you the highest mass by sex
+
+```{r}
+starwars |>
+  drop_na(mass) |>
+  slice_max(mass, by = sex)
+```
+
+## Stratified Sample
+
+Obtain a sample with 20% of the database stratified by sex
+
+```{r}
+# filters just by sex
+starwars_fm <- 
+  starwars |>
+  filter(sex %in% c("male", "female"))
+
+# checks how many you have and compute manually how many you are expecting
+starwars_fm |>
+  count(sex)
+
+# takes a stratified sample
+starwars |> slice_sample(prop = 0.2, by = sex)
+```
+
+Takes a sample preserving the proportions between the groups.
+
+Some functions are with .by = sex and some are by = sex. Double check before using.
+
+```{r}
+# compute the absolute frequencies of variable sex
+starwars |>
+  count(sex, sort = TRUE)
+
+# Afterwards, include relative frequency
+rf_table <- starwars |>
+  count(sex, sort = TRUE) |>
+  mutate("freq_rel" = n / sum(n))
+
+# Aftewards, plot the relative frequency with a bar diagram (sorted from highest to lowest freq)
+starwars |>
+  count(sex, sort = TRUE) |>
+  mutate("freq_rel" = n / sum(n)) |>
+  ggplot() +
+  geom_col(aes(x = sex, y = freq_rel, fill = sex))
+```
+
+Geom_bar is a count, and geom_col is a variable by another variable. Geom_bar you can only include one variable (X or Y).
+
+## Changing Color of the Graph
+
+```{r}
+starwars |>
+  count(sex, sort = TRUE) |>
+  mutate("freq_rel" = n / sum(n)) |>
+  ggplot() +
+  geom_col(aes(x = sex, y = freq_rel, fill = sex), alpha = 0.7) + 
+  scale_fill_manual(values = c("yellow", "pink", "black", "darkblue", "orange"))
+```
+
+concatenate the colors in the order you want them to appear. NA is always grey, so orange is not applied.
+
+```{r}
+# this includes a package for colorblind colors
+# scale_fill_colorblind()
+# install.packages("ggthemes")
+```
+
+#### [Slide 261](https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/tu-turno-4-1)
+
+1.  Calculate how many characters there are of each species, ordered from most to least frequent.
+
+```{r}
+starwars |>
+  count(species, sort=TRUE)
+```
+
+2.  After eliminating missing variables for weight and height, add a new variable to calculate the BMI of each character, and determine the average BMI of our characters disaggregated by gender.
+
+```{r}
+starwars |>
+  drop_na(height) |>
+  drop_na(mass) |>
+  mutate(BMI = mass / (height/100)^2) |>
+  group_by(sex) |>
+  summarize(mean_bmi = mean(BMI))
+```
+
+3.  Obtain the youngest character for each gender.
+
+```{r}
+starwars |>
+  drop_na(birth_year) |>
+  slice_min(birth_year, by = gender)
+```
+
+4.  Get the age of the youngest and oldest character of each sex.
+
+```{r}
+starwars |>
+  drop_na(birth_year) |>
+  slice_min(birth_year, by = sex) |>
+  slice_max(birth_year, by = sex)
+```
+
+5.  Determine the number of characters in each decade (take a look at `round()`, first without disaggregating and then disaggregated by sex.
+
+```{r}
+starwars |>
+  count(birth_decade = round(birth_year, -1))
+```
+
+#### [Case Study II: Soccer](https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/caso-practico-4-2)
+
+[Case Study](https://javieralvarezliebana.quarto.pub/tidyverse-mucss/)
+
+```{r}
+data <- read_csv(file = "./futbol.csv")
+data
+```
+
+The variables capture the following information:
+
+-   `season`, `team`, `league`: season, team and league.
+
+-   `player`, `country`, `position`, `date_birth`: name, country, position and birth of year of each player.
+
+-   `minutes_playing`, `matches`: total minutes playing and 90’ matches played
+
+-   `goals`, `assist`: goals and assists.
+
+-   `pk`, `pk_attemp`, `goals_minus_pk`: penalties, penalties attempted and goals excluding penalties.
+
+-   `yellow_card`, `red_card`: yellow/red cards.
+
+1.  Include a new variable indicating the age of each player in each season (e.g. if he was born in 1989 and the season is 2017, he is put 18 years old). Place this column after the date of birth.
+
+```{r}
+data |>
+  mutate("playing_age" = season - date_birth) |>
+  relocate(playing_age, .after = date_birth)
+```

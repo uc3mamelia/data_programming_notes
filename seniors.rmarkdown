@@ -626,3 +626,4 @@ corrplot(res, type = "upper", order = "hclust",
 my_data <- data.dfB[ c('price','coup','sale','value','primav')]
 chart.Correlation(my_data, histogram=TRUE,pch="+")
 ```
+

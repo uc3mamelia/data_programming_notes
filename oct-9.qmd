@@ -212,6 +212,8 @@ starwars |>
 
 The above is a bivariate summary table.
 
+## Summarize Function
+
 ```{r}
 starwars |>
   summarize("mean_mass" = mean(mass, na.rm = TRUE))
