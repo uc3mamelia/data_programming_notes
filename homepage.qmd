@@ -36,7 +36,15 @@ editor: visual
 
 #### [Oct 9](https://uc3mamelia.github.io/data_programming_notes/oct-9.html)
 
--   if_else, summarize()
+-   if_else, summarize(), case_when
+
+#### [Oct 16](https://uc3mamelia.github.io/data_programming_notes/oct-16.html)
+
+-   summarize, slice_max, stratified sample, slice sample, change graph color
+
+#### [Oct 23](https://uc3mamelia.github.io/data_programming_notes/oct-23.html)
+
+-   Joins
 
 ## Data Programming Homework Assignments
 
