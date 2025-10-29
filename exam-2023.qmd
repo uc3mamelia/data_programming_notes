@@ -116,6 +116,7 @@ Approximately half of the sample has participated in previous programs, while th
 #### 2. Give ranges for mean weight loss of potential patients in different age groups and different income categories.
 
 ```{r}
+# code for defining by age groups
 # Create different age groups
 data$Age_groups = case_when(
   data$Age <= 25 ~ "20-25",
@@ -125,13 +126,14 @@ data$Age_groups = case_when(
   data$Age > 40 & data$Age <= 45 ~ "40-45",
   data$Age > 45 & data$Age <= 50 ~ "45-50"
 )
+# other variable weigthdiff already exists
 
-# We can slightly modify the CI function to include it in summarise_at
+# Slightly modify the CI function to include it in summarise_at
 CI_m_lower <- function(x, ci = 0.95) {
   
   standard_deviation <- sd(x)
   sample_size <- length(x)
-  Margin_Error <-  abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
+  Margin_Error <- abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
   
   lower <- mean(x) - Margin_Error
   return(lower = lower)
@@ -147,16 +149,19 @@ CI_m_upper <- function(x, ci = 0.95) {
   return(upper = upper)
 }
 
-
+# groups data by age groups (defined above)
 df_grouped_byage <- group_by(data,Age_groups)
 
-df_summary_byage <- df_grouped_byage %>% 
+# runs summary of data by age group
+df_summary_byage <- df_grouped_byage |>
   summarise_at(vars(Weigthdiff), 
                list(avg=mean,median=median,std=sd,
                     ci_l=CI_m_lower,ci_u=CI_m_upper))
 
+# prints summary
 df_summary_byage
 
+# plots data
 ggplot(data, aes(x = Age_groups, y = Weigthdiff)) +
   geom_boxplot(fill="lightblue") 
 ```
@@ -164,51 +169,43 @@ ggplot(data, aes(x = Age_groups, y = Weigthdiff)) +
 As age increases, the expected amount of weight loss decreases (around 13–14 kilograms for younger participants compared to less than 1 kilogram for older ones. The standard deviation (i.e., the dispersion) remains fairly consistent across age groups.
 
 ```{r}
+# code for defining by income groups
+
+# groups data by income groups
 df_grouped_byincome <- group_by(data,Income)
 
-df_summary_byincome <- df_grouped_byincome %>% # Mean and sd of var1 in each group
+# runs summary of data by income group
+df_summary_byincome <- df_grouped_byincome |>
   summarise_at(vars(Weigthdiff), # You can add more variables!!!
                list(avg=mean,median=median,std=sd,
                     ci_l=CI_m_lower,ci_u=CI_m_upper))
 
+# prints summary
 df_summary_byincome
 
+# plots data
 ggplot(data, aes(x = as.factor(Income), y = Weigthdiff)) +
   geom_boxplot(fill="lightblue") 
 ```
 
 This time, the relationship appears to be the opposite: participants with higher incomes tend to experience greater weight loss. Although the difference among the first three income groups is almost negligible, for the highest earners, the weight loss can be nearly twice as large.
 
-#### 3. Talking about the proportion of potential recommendations of the program, Is this proportion different forhighly educated patients (master and doctorate)?
+#### 3. Talking about the proportion of potential recommendations of the program, Is this proportion different for highly educated patients (master and doctorate)?
 
 ```{r}
+# proportions
 data_master = data[which(data$Education_class == "Master"),]
 data_doctorate = data[which(data$Education_class == "Doctorate"),]
 
 (prop_reccom_master = mean(data_master$Recommendation))
 (prop_reccom_doctorate = mean(data_doctorate$Recommendation))
-# At first glance, the proportions appear to differ. 
-# But, is that difference statistically significant? Let’s find out.
-
-# Option 1: Using confidence intervals
-CI_p <- function(x, ci = 95){
-  `%>%` <- magrittr::`%>%`
-  vcat<-na.omit(x)
-  p<-mean(x)
-  standard_deviation <- sqrt(p*(1-p))
-  sample_size <- length(x)
-  Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
-  df_out <- data.frame( sample_size=length(x), p,
-                        Margin_Error=Margin_Error,
-                        'CI lower limit'=(p - Margin_Error),
-                        'CI Upper limit'=(p + Margin_Error)) %>%
-    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:5 )
-  return(df_out)
-}
-
-CI_p(data_master$Recommendation, ci=0.95) 
-CI_p(data_doctorate$Recommendation, ci=0.95) 
 ```
+
+At first glance, the proportions appear to differ.
+
+But, is that difference statistically significant? Let’s find out.
+
+#### Option 1: Using confidence intervals
 
 We aim to test the following hypothesis:
 
@@ -216,11 +213,30 @@ We aim to test the following hypothesis:
 
 -   H1: p_master /= p_doctorate
 
+```{r}
+CI_p <- function(x, ci = 95){
+  vcat<-na.omit(x) # removes NAs
+  p<-mean(x) # mean of x
+  standard_deviation <- sqrt(p*(1-p)) # standard deviation
+  sample_size <- length(x) # sample size n
+  Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
+  df_out <- data.frame( sample_size=length(x), p,
+                        Margin_Error=Margin_Error,
+                        'CI lower limit'=(p - Margin_Error),
+                        'CI Upper limit'=(p + Margin_Error)) |>
+    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:5 )
+  return(df_out) # prints data
+}
+
+CI_p(data_master$Recommendation, ci=0.95) 
+CI_p(data_doctorate$Recommendation, ci=0.95) 
+```
+
 Using a 95% confidence interval, we find that the interval for Master’s graduates is (0.342, 0.618), while for Doctorate graduates it is (0.283, 0.557). Since the intervals overlap, although the recommendation proportions appear different in our sample, there may be no difference in the population as a whole. Therefore, we do not have sufficient evidence to reject H_0.
 
-```{r}
-# Option 2: Using t-test:
+#### Option 2: Using t-test:
 
+```{r}
 var.test(data_master$Recommendation, data_doctorate$Recommendation, alternative = "two.sided") #first step: test for equal variances
 t.test(data_master$Recommendation, y=data_doctorate$Recommendation, alternative="two.sided", mu=0, var.equal=TRUE) 
 
@@ -232,9 +248,13 @@ Since the p-value is 0.5512, for the usual significance levels (alpha = 0.01, 0.
 
 Here, we want to test whether the program leads to a significant reduction in BMI, that is:
 
--   H0: mu_BMI_prior \<= mu_BMI_post (Post-program BMI is greater than or equal to pre-program BMI = no weight loss)
+-   H0: mu_BMI_prior \<= mu_BMI_post
 
--   H1: mu_BMI_prior \> mu_BMI_post. (Post-program BMI is lower than pre-program BMI = weight loss)
+    -   (Post-program BMI is greater than or equal to pre-program BMI = no weight loss)
+
+-   H1: mu_BMI_prior \> mu_BMI_post.
+
+    -   (Post-program BMI is lower than pre-program BMI = weight loss)
 
 In this case, the means are paired: for each individual, we have both the before and after measurements.
 
@@ -244,15 +264,18 @@ t.test(data$InitialBMI, y= data$newbmi, paired=TRUE, alternative="greater")
 
 The p-value is effectively 0, providing strong evidence to reject H0. We can conclude that participation in the program leads to weight loss.
 
-#### 5. Would the potential proportion of recommendations vary with education, income category and the interaction ofboth?
+#### 5. Would the potential proportion of recommendations vary with education, income category and the interaction of both?
 
 ```{r}
+# groups data by income and education
 data_df_grouped_income_educ <- group_by(data,Income,Education_class)
 
-data_df_summary_income_educ <-data_df_grouped_income_educ %>%
+# creates the summary we want
+data_df_summary_income_educ <- data_df_grouped_income_educ |>
   summarise_at(vars(Recommendation),
                list(avg=mean,stde=sd))
 
+# prints the summary
 data_df_summary_income_educ
 ```
 
@@ -261,6 +284,7 @@ Overall, we can observe considerable variability in the proportion of recommenda
 ```{r}
 # Compute the analysis of variance
 res.aov <- aov(Recommendation ~ Income*Education_class, data = data)
+
 # Summary of the analysis
 summary(res.aov) 
 ```
@@ -297,11 +321,12 @@ cramersV(ConTab)
 
 The Cramér's V value is very low (0.0408), indicating a very weak association.
 
-#### 7. Find a predictive procedure able to give the expected weight loss during the program as a function of relevantinformation on the patient.
+#### 7. Find a predictive procedure able to give the expected weight loss during the program as a function of relevant information on the patient.
 
-Here, we are asked to develop a predictive model for weight loss (Weigthdiff). We will build a multiple linear regression model and aim to identify the best possible model. To avoid multicollinearity issues, we remove variables that are redundant:
+Here, we are asked to develop a predictive model for weight loss (Weigthdiff). We will build a multiple linear regression model and aim to identify the best possible model.
 
 ```{r}
+# To avoid multicollinearity issues, we remove variables that are redundant
 data$Education = NULL
 data$Income = NULL
 data$Age_groups = NULL

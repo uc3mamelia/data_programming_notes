@@ -274,46 +274,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="give-ranges-for-mean-weight-loss-of-potential-patients-in-different-age-groups-and-different-income-categories." class="level4">
 <h4 class="anchored" data-anchor-id="give-ranges-for-mean-weight-loss-of-potential-patients-in-different-age-groups-and-different-income-categories.">2. Give ranges for mean weight loss of potential patients in different age groups and different income categories.</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create different age groups</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Age_groups <span class="ot">=</span> <span class="fu">case_when</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">25</span> <span class="sc">~</span> <span class="st">"20-25"</span>,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">25</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">30</span> <span class="sc">~</span> <span class="st">"25-30"</span>,</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">30</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">35</span> <span class="sc">~</span> <span class="st">"30-35"</span>,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">35</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">40</span> <span class="sc">~</span> <span class="st">"35-40"</span>,</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">40</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">45</span> <span class="sc">~</span> <span class="st">"40-45"</span>,</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">45</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">50</span> <span class="sc">~</span> <span class="st">"45-50"</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># We can slightly modify the CI function to include it in summarise_at</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>CI_m_lower <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">ci =</span> <span class="fl">0.95</span>) {</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  standard_deviation <span class="ot">&lt;-</span> <span class="fu">sd</span>(x)</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(x)</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  Margin_Error <span class="ot">&lt;-</span>  <span class="fu">abs</span>(<span class="fu">qt</span>((<span class="dv">1</span><span class="sc">-</span>ci)<span class="sc">/</span><span class="dv">2</span>,<span class="at">df=</span>sample_size<span class="dv">-1</span>))<span class="sc">*</span> standard_deviation<span class="sc">/</span><span class="fu">sqrt</span>(sample_size)</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  lower <span class="ot">&lt;-</span> <span class="fu">mean</span>(x) <span class="sc">-</span> Margin_Error</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="at">lower =</span> lower)</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>CI_m_upper <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">ci =</span> <span class="fl">0.95</span>) {</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  standard_deviation <span class="ot">&lt;-</span> <span class="fu">sd</span>(x)</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(x)</span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  Margin_Error <span class="ot">&lt;-</span>  <span class="fu">abs</span>(<span class="fu">qt</span>((<span class="dv">1</span><span class="sc">-</span>ci)<span class="sc">/</span><span class="dv">2</span>,<span class="at">df=</span>sample_size<span class="dv">-1</span>))<span class="sc">*</span> standard_deviation<span class="sc">/</span><span class="fu">sqrt</span>(sample_size)</span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  upper <span class="ot">&lt;-</span> <span class="fu">mean</span>(x) <span class="sc">+</span> Margin_Error</span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="at">upper =</span> upper)</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>df_grouped_byage <span class="ot">&lt;-</span> <span class="fu">group_by</span>(data,Age_groups)</span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>df_summary_byage <span class="ot">&lt;-</span> df_grouped_byage <span class="sc">%&gt;%</span> </span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_at</span>(<span class="fu">vars</span>(Weigthdiff), </span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>               <span class="fu">list</span>(<span class="at">avg=</span>mean,<span class="at">median=</span>median,<span class="at">std=</span>sd,</span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>                    <span class="at">ci_l=</span>CI_m_lower,<span class="at">ci_u=</span>CI_m_upper))</span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>df_summary_byage</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># code for defining by age groups</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Create different age groups</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Age_groups <span class="ot">=</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">25</span> <span class="sc">~</span> <span class="st">"20-25"</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">25</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">30</span> <span class="sc">~</span> <span class="st">"25-30"</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">30</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">35</span> <span class="sc">~</span> <span class="st">"30-35"</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">35</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">40</span> <span class="sc">~</span> <span class="st">"35-40"</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">40</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">45</span> <span class="sc">~</span> <span class="st">"40-45"</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>Age <span class="sc">&gt;</span> <span class="dv">45</span> <span class="sc">&amp;</span> data<span class="sc">$</span>Age <span class="sc">&lt;=</span> <span class="dv">50</span> <span class="sc">~</span> <span class="st">"45-50"</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># other variable weigthdiff already exists</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Slightly modify the CI function to include it in summarise_at</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>CI_m_lower <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">ci =</span> <span class="fl">0.95</span>) {</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  standard_deviation <span class="ot">&lt;-</span> <span class="fu">sd</span>(x)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(x)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  Margin_Error <span class="ot">&lt;-</span> <span class="fu">abs</span>(<span class="fu">qt</span>((<span class="dv">1</span><span class="sc">-</span>ci)<span class="sc">/</span><span class="dv">2</span>,<span class="at">df=</span>sample_size<span class="dv">-1</span>))<span class="sc">*</span> standard_deviation<span class="sc">/</span><span class="fu">sqrt</span>(sample_size)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  lower <span class="ot">&lt;-</span> <span class="fu">mean</span>(x) <span class="sc">-</span> Margin_Error</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="at">lower =</span> lower)</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>CI_m_upper <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">ci =</span> <span class="fl">0.95</span>) {</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  standard_deviation <span class="ot">&lt;-</span> <span class="fu">sd</span>(x)</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(x)</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  Margin_Error <span class="ot">&lt;-</span>  <span class="fu">abs</span>(<span class="fu">qt</span>((<span class="dv">1</span><span class="sc">-</span>ci)<span class="sc">/</span><span class="dv">2</span>,<span class="at">df=</span>sample_size<span class="dv">-1</span>))<span class="sc">*</span> standard_deviation<span class="sc">/</span><span class="fu">sqrt</span>(sample_size)</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>  upper <span class="ot">&lt;-</span> <span class="fu">mean</span>(x) <span class="sc">+</span> Margin_Error</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="at">upper =</span> upper)</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co"># groups data by age groups (defined above)</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>df_grouped_byage <span class="ot">&lt;-</span> <span class="fu">group_by</span>(data,Age_groups)</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="co"># runs summary of data by age group</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>df_summary_byage <span class="ot">&lt;-</span> df_grouped_byage <span class="sc">|&gt;</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_at</span>(<span class="fu">vars</span>(Weigthdiff), </span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>               <span class="fu">list</span>(<span class="at">avg=</span>mean,<span class="at">median=</span>median,<span class="at">std=</span>sd,</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>                    <span class="at">ci_l=</span>CI_m_lower,<span class="at">ci_u=</span>CI_m_upper))</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a><span class="co"># prints summary</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>df_summary_byage</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 6
   Age_groups    avg median   std   ci_l  ci_u
@@ -325,8 +329,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 5 40-45       1.95   1.31   6.25 -0.166  4.06
 6 45-50       0.723  0.881  5.41 -1.16   2.61</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Age_groups, <span class="at">y =</span> Weigthdiff)) <span class="sc">+</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill=</span><span class="st">"lightblue"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plots data</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> Age_groups, <span class="at">y =</span> Weigthdiff)) <span class="sc">+</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill=</span><span class="st">"lightblue"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -337,14 +342,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>As age increases, the expected amount of weight loss decreases (around 13–14 kilograms for younger participants compared to less than 1 kilogram for older ones. The standard deviation (i.e., the dispersion) remains fairly consistent across age groups.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>df_grouped_byincome <span class="ot">&lt;-</span> <span class="fu">group_by</span>(data,Income)</span>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># code for defining by income groups</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>df_summary_byincome <span class="ot">&lt;-</span> df_grouped_byincome <span class="sc">%&gt;%</span> <span class="co"># Mean and sd of var1 in each group</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_at</span>(<span class="fu">vars</span>(Weigthdiff), <span class="co"># You can add more variables!!!</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>               <span class="fu">list</span>(<span class="at">avg=</span>mean,<span class="at">median=</span>median,<span class="at">std=</span>sd,</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">ci_l=</span>CI_m_lower,<span class="at">ci_u=</span>CI_m_upper))</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>df_summary_byincome</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># groups data by income groups</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>df_grouped_byincome <span class="ot">&lt;-</span> <span class="fu">group_by</span>(data,Income)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># runs summary of data by income group</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>df_summary_byincome <span class="ot">&lt;-</span> df_grouped_byincome <span class="sc">|&gt;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_at</span>(<span class="fu">vars</span>(Weigthdiff), <span class="co"># You can add more variables!!!</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>               <span class="fu">list</span>(<span class="at">avg=</span>mean,<span class="at">median=</span>median,<span class="at">std=</span>sd,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                    <span class="at">ci_l=</span>CI_m_lower,<span class="at">ci_u=</span>CI_m_upper))</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># prints summary</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>df_summary_byincome</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 6
   Income   avg median   std  ci_l  ci_u
@@ -355,8 +365,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 4      4  7.87   9.33  6.35  6.10  9.64
 5      5 10.5   10.9   7.17  8.55 12.5 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.factor</span>(Income), <span class="at">y =</span> Weigthdiff)) <span class="sc">+</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill=</span><span class="st">"lightblue"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plots data</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.factor</span>(Income), <span class="at">y =</span> Weigthdiff)) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill=</span><span class="st">"lightblue"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -367,13 +378,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>This time, the relationship appears to be the opposite: participants with higher incomes tend to experience greater weight loss. Although the difference among the first three income groups is almost negligible, for the highest earners, the weight loss can be nearly twice as large.</p>
 </section>
-<section id="talking-about-the-proportion-of-potential-recommendations-of-the-program-is-this-proportion-different-forhighly-educated-patients-master-and-doctorate" class="level4">
-<h4 class="anchored" data-anchor-id="talking-about-the-proportion-of-potential-recommendations-of-the-program-is-this-proportion-different-forhighly-educated-patients-master-and-doctorate">3. Talking about the proportion of potential recommendations of the program, Is this proportion different forhighly educated patients (master and doctorate)?</h4>
+<section id="talking-about-the-proportion-of-potential-recommendations-of-the-program-is-this-proportion-different-for-highly-educated-patients-master-and-doctorate" class="level4">
+<h4 class="anchored" data-anchor-id="talking-about-the-proportion-of-potential-recommendations-of-the-program-is-this-proportion-different-for-highly-educated-patients-master-and-doctorate">3. Talking about the proportion of potential recommendations of the program, Is this proportion different for highly educated patients (master and doctorate)?</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>data_master <span class="ot">=</span> data[<span class="fu">which</span>(data<span class="sc">$</span>Education_class <span class="sc">==</span> <span class="st">"Master"</span>),]</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>data_doctorate <span class="ot">=</span> data[<span class="fu">which</span>(data<span class="sc">$</span>Education_class <span class="sc">==</span> <span class="st">"Doctorate"</span>),]</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>(<span class="at">prop_reccom_master =</span> <span class="fu">mean</span>(data_master<span class="sc">$</span>Recommendation))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># proportions</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>data_master <span class="ot">=</span> data[<span class="fu">which</span>(data<span class="sc">$</span>Education_class <span class="sc">==</span> <span class="st">"Master"</span>),]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>data_doctorate <span class="ot">=</span> data[<span class="fu">which</span>(data<span class="sc">$</span>Education_class <span class="sc">==</span> <span class="st">"Doctorate"</span>),]</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>(<span class="at">prop_reccom_master =</span> <span class="fu">mean</span>(data_master<span class="sc">$</span>Recommendation))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.48</code></pre>
 </div>
@@ -381,26 +393,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.42</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># At first glance, the proportions appear to differ. </span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># But, is that difference statistically significant? Let’s find out.</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Option 1: Using confidence intervals</span></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>CI_p <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">ci =</span> <span class="dv">95</span>){</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">%&gt;%</span><span class="st">`</span> <span class="ot">&lt;-</span> magrittr<span class="sc">::</span><span class="st">`</span><span class="at">%&gt;%</span><span class="st">`</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  vcat<span class="ot">&lt;-</span><span class="fu">na.omit</span>(x)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  p<span class="ot">&lt;-</span><span class="fu">mean</span>(x)</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  standard_deviation <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(p<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p))</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(x)</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  Margin_Error <span class="ot">&lt;-</span> <span class="fu">abs</span>(<span class="fu">qnorm</span>((<span class="dv">1</span><span class="sc">-</span>ci)<span class="sc">/</span><span class="dv">2</span>))<span class="sc">*</span> standard_deviation<span class="sc">/</span><span class="fu">sqrt</span>(sample_size)</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  df_out <span class="ot">&lt;-</span> <span class="fu">data.frame</span>( <span class="at">sample_size=</span><span class="fu">length</span>(x), p,</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>                        <span class="at">Margin_Error=</span>Margin_Error,</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'CI lower limit'</span><span class="ot">=</span>(p <span class="sc">-</span> Margin_Error),</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'CI Upper limit'</span><span class="ot">=</span>(p <span class="sc">+</span> Margin_Error)) <span class="sc">%&gt;%</span></span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">names_to =</span> <span class="st">"Measurements"</span>, <span class="at">values_to =</span><span class="st">"values"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span> )</span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df_out)</span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="fu">CI_p</span>(data_master<span class="sc">$</span>Recommendation, <span class="at">ci=</span><span class="fl">0.95</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>At first glance, the proportions appear to differ.</p>
+<p>But, is that difference statistically significant? Let’s find out.</p>
+</section>
+<section id="option-1-using-confidence-intervals" class="level4">
+<h4 class="anchored" data-anchor-id="option-1-using-confidence-intervals">Option 1: Using confidence intervals</h4>
+<p>We aim to test the following hypothesis:</p>
+<ul>
+<li><p>H0: p_master = p_doctorate</p></li>
+<li><p>H1: p_master /= p_doctorate</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>CI_p <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">ci =</span> <span class="dv">95</span>){</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  vcat<span class="ot">&lt;-</span><span class="fu">na.omit</span>(x) <span class="co"># removes NAs</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  p<span class="ot">&lt;-</span><span class="fu">mean</span>(x) <span class="co"># mean of x</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  standard_deviation <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(p<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p)) <span class="co"># standard deviation</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  sample_size <span class="ot">&lt;-</span> <span class="fu">length</span>(x) <span class="co"># sample size n</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  Margin_Error <span class="ot">&lt;-</span> <span class="fu">abs</span>(<span class="fu">qnorm</span>((<span class="dv">1</span><span class="sc">-</span>ci)<span class="sc">/</span><span class="dv">2</span>))<span class="sc">*</span> standard_deviation<span class="sc">/</span><span class="fu">sqrt</span>(sample_size)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  df_out <span class="ot">&lt;-</span> <span class="fu">data.frame</span>( <span class="at">sample_size=</span><span class="fu">length</span>(x), p,</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">Margin_Error=</span>Margin_Error,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'CI lower limit'</span><span class="ot">=</span>(p <span class="sc">-</span> Margin_Error),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'CI Upper limit'</span><span class="ot">=</span>(p <span class="sc">+</span> Margin_Error)) <span class="sc">|&gt;</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">names_to =</span> <span class="st">"Measurements"</span>, <span class="at">values_to =</span><span class="st">"values"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span> )</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df_out) <span class="co"># prints data</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="fu">CI_p</span>(data_master<span class="sc">$</span>Recommendation, <span class="at">ci=</span><span class="fl">0.95</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 2
   Measurements   values
@@ -423,16 +442,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 5 CI.Upper.limit  0.557</code></pre>
 </div>
 </div>
-<p>We aim to test the following hypothesis:</p>
-<ul>
-<li><p>H0: p_master = p_doctorate</p></li>
-<li><p>H1: p_master /= p_doctorate</p></li>
-</ul>
 <p>Using a 95% confidence interval, we find that the interval for Master’s graduates is (0.342, 0.618), while for Doctorate graduates it is (0.283, 0.557). Since the intervals overlap, although the recommendation proportions appear different in our sample, there may be no difference in the population as a whole. Therefore, we do not have sufficient evidence to reject H_0.</p>
+</section>
+<section id="option-2-using-t-test" class="level4">
+<h4 class="anchored" data-anchor-id="option-2-using-t-test">Option 2: Using t-test:</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Option 2: Using t-test:</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">var.test</span>(data_master<span class="sc">$</span>Recommendation, data_doctorate<span class="sc">$</span>Recommendation, <span class="at">alternative =</span> <span class="st">"two.sided"</span>) <span class="co">#first step: test for equal variances</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var.test</span>(data_master<span class="sc">$</span>Recommendation, data_doctorate<span class="sc">$</span>Recommendation, <span class="at">alternative =</span> <span class="st">"two.sided"</span>) <span class="co">#first step: test for equal variances</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     F test to compare two variances
@@ -467,8 +482,14 @@ mean of x mean of y
 <h4 class="anchored" data-anchor-id="would-the-mean-bmi-for-potential-patients-decrease-significantly-during-the-program">4. Would the mean BMI for potential patients decrease significantly during the program?</h4>
 <p>Here, we want to test whether the program leads to a significant reduction in BMI, that is:</p>
 <ul>
-<li><p>H0: mu_BMI_prior &lt;= mu_BMI_post (Post-program BMI is greater than or equal to pre-program BMI = no weight loss)</p></li>
-<li><p>H1: mu_BMI_prior &gt; mu_BMI_post. (Post-program BMI is lower than pre-program BMI = weight loss)</p></li>
+<li><p>H0: mu_BMI_prior &lt;= mu_BMI_post</p>
+<ul>
+<li>(Post-program BMI is greater than or equal to pre-program BMI = no weight loss)</li>
+</ul></li>
+<li><p>H1: mu_BMI_prior &gt; mu_BMI_post.</p>
+<ul>
+<li>(Post-program BMI is lower than pre-program BMI = weight loss)</li>
+</ul></li>
 </ul>
 <p>In this case, the means are paired: for each individual, we have both the before and after measurements.</p>
 <div class="cell">
@@ -489,16 +510,19 @@ mean difference
 </div>
 <p>The p-value is effectively 0, providing strong evidence to reject H0. We can conclude that participation in the program leads to weight loss.</p>
 </section>
-<section id="would-the-potential-proportion-of-recommendations-vary-with-education-income-category-and-the-interaction-ofboth" class="level4">
-<h4 class="anchored" data-anchor-id="would-the-potential-proportion-of-recommendations-vary-with-education-income-category-and-the-interaction-ofboth">5. Would the potential proportion of recommendations vary with education, income category and the interaction ofboth?</h4>
+<section id="would-the-potential-proportion-of-recommendations-vary-with-education-income-category-and-the-interaction-of-both" class="level4">
+<h4 class="anchored" data-anchor-id="would-the-potential-proportion-of-recommendations-vary-with-education-income-category-and-the-interaction-of-both">5. Would the potential proportion of recommendations vary with education, income category and the interaction of both?</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>data_df_grouped_income_educ <span class="ot">&lt;-</span> <span class="fu">group_by</span>(data,Income,Education_class)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>data_df_summary_income_educ <span class="ot">&lt;-</span>data_df_grouped_income_educ <span class="sc">%&gt;%</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_at</span>(<span class="fu">vars</span>(Recommendation),</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>               <span class="fu">list</span>(<span class="at">avg=</span>mean,<span class="at">stde=</span>sd))</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>data_df_summary_income_educ</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># groups data by income and education</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>data_df_grouped_income_educ <span class="ot">&lt;-</span> <span class="fu">group_by</span>(data,Income,Education_class)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co"># creates the summary we want</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>data_df_summary_income_educ <span class="ot">&lt;-</span> data_df_grouped_income_educ <span class="sc">|&gt;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_at</span>(<span class="fu">vars</span>(Recommendation),</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>               <span class="fu">list</span>(<span class="at">avg=</span>mean,<span class="at">stde=</span>sd))</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="co"># prints the summary</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>data_df_summary_income_educ</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 25 × 4
 # Groups:   Income [5]
@@ -521,8 +545,9 @@ mean difference
 <div class="cell">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the analysis of variance</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>res.aov <span class="ot">&lt;-</span> <span class="fu">aov</span>(Recommendation <span class="sc">~</span> Income<span class="sc">*</span>Education_class, <span class="at">data =</span> data)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of the analysis</span></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(res.aov) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of the analysis</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(res.aov) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                        Df Sum Sq Mean Sq F value  Pr(&gt;F)    
 Income                   1   2.96  2.9646  13.672 0.00027 ***
@@ -575,17 +600,18 @@ X-squared = 0.41684, df = 1, p-value = 0.5185</code></pre>
 </div>
 <p>The Cramér’s V value is very low (0.0408), indicating a very weak association.</p>
 </section>
-<section id="find-a-predictive-procedure-able-to-give-the-expected-weight-loss-during-the-program-as-a-function-of-relevantinformation-on-the-patient." class="level4">
-<h4 class="anchored" data-anchor-id="find-a-predictive-procedure-able-to-give-the-expected-weight-loss-during-the-program-as-a-function-of-relevantinformation-on-the-patient.">7. Find a predictive procedure able to give the expected weight loss during the program as a function of relevantinformation on the patient.</h4>
-<p>Here, we are asked to develop a predictive model for weight loss (Weigthdiff). We will build a multiple linear regression model and aim to identify the best possible model. To avoid multicollinearity issues, we remove variables that are redundant:</p>
+<section id="find-a-predictive-procedure-able-to-give-the-expected-weight-loss-during-the-program-as-a-function-of-relevant-information-on-the-patient." class="level4">
+<h4 class="anchored" data-anchor-id="find-a-predictive-procedure-able-to-give-the-expected-weight-loss-during-the-program-as-a-function-of-relevant-information-on-the-patient.">7. Find a predictive procedure able to give the expected weight loss during the program as a function of relevant information on the patient.</h4>
+<p>Here, we are asked to develop a predictive model for weight loss (Weigthdiff). We will build a multiple linear regression model and aim to identify the best possible model.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Education <span class="ot">=</span> <span class="cn">NULL</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Income <span class="ot">=</span> <span class="cn">NULL</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Age_groups <span class="ot">=</span> <span class="cn">NULL</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="co"># We start by building a model with all explanatory variables.</span></span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>model <span class="ot">=</span> <span class="fu">lm</span>(Weigthdiff<span class="sc">~</span>. , <span class="at">data =</span> data)</span>
-<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To avoid multicollinearity issues, we remove variables that are redundant</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Education <span class="ot">=</span> <span class="cn">NULL</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Income <span class="ot">=</span> <span class="cn">NULL</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Age_groups <span class="ot">=</span> <span class="cn">NULL</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="co"># We start by building a model with all explanatory variables.</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>model <span class="ot">=</span> <span class="fu">lm</span>(Weigthdiff<span class="sc">~</span>. , <span class="at">data =</span> data)</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
