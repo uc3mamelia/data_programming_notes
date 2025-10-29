@@ -626,3 +626,81 @@ corrplot(res, type = "upper", order = "hclust",
 my_data <- data.dfB[ c('price','coup','sale','value','primav')]
 chart.Correlation(my_data, histogram=TRUE,pch="+")
 ```
+
+Regression Analysis
+
+```{r}
+ggplot(data.df,aes(x=price, y=coup)) +
+  geom_point() +
+  geom_smooth(method='lm') 
+model <- lm(data.df$coup~data.df$price) # linear model function
+summary(model) # returns residuals, coefficients, etc
+```
+
+Model for coup over price
+
+(Coup is the tendency to respond to a sale, because the discount off the original price influence.)
+
+```{r}
+predict(model, newdata = data.df) # predictions?
+yhat = predict(model, newdata = data.df) # yhat is the regression line
+e = data.df$coup - yhat # residual which is difference between observation and prediction (line)
+e
+mean(e) # mathematically is zero, but returns close to zero because of computational errors
+```
+
+##### Predictions and Confidence Intervals for New Values (1 and 90)
+
+```{r}
+x<-data.df$price
+model<-lm(data.df$coup~x)
+predict(model,data.frame(x=c(1,90)), interval ="confidence")
+predict(model,data.frame(x=c(1,90)), interval ="prediction")
+```
+
+##### Hypothesis testing in Multiple Regression
+
+```{r}
+data<-read.csv2("seniors2.csv")
+data.df<-data.frame(data[1:310,2:31])
+model<-lm(coup~price+education+value+sale+gender+age,data=data.df) # coup is y and all other are x variables
+summary(model)
+```
+
+As we increase one unit in price, the average value of coup will increase 0.18.
+
+We use the residual variance, but you could use a confidence variable or use a hypothesis test for this. This will come later.
+
+##### ANOVA P-Value for Every Variable
+
+```{r}
+# Fit the full model 
+full.model <- lm(coup ~., data = data.df)
+summary(full.model)
+```
+
+Asterisk variables might be significant based on significance codes.
+
+Pr (\>\|t\|) is the p value. If the p-value is below 0.05 and has asterisk, then it is significant.
+
+Multiple R squared means the variables used only explain 57.44% of the model.
+
+At least one of the variables is significant because the p-value is large.
+
+```{r}
+# Fit the full model 
+new.model <- lm(coup ~conv+price+sale, data = data.df)
+summary(new.model)
+```
+
+The p value is lower than the significance level alpha.
+
+```{r}
+full.model <- regsubsets(coup ~., data = data.df,method="exhaustive")
+summary(full.model)$adjr2
+plot(full.model, scale = "adjr2", main = "Adjusted R^2")
+summary.out <- summary(full.model)
+as.data.frame(summary.out$outmat)##shows different models for 1 to 8 variables
+which.max(summary.out$adjr2)#how many variables###
+summary.out$which[8,]# variables that should be included
+```
