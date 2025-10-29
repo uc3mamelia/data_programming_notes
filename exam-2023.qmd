@@ -1,0 +1,339 @@
+---
+title: "2023-exam"
+format: html
+editor: visual
+---
+
+###### Libraries
+
+```{r}
+#| output: false
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(tibble)
+library(lsr)
+```
+
+###### Dataset
+
+```{r}
+data = read.csv(file = "DataExam2324.csv",header = T,sep = ";",dec = ",")
+```
+
+###### Remove NAs
+
+```{r}
+data <-
+  data |>
+    drop_na()
+```
+
+### Exam Questions
+
+#### 1. Describe the 250 patient’s sample defining how is the typical patient in the sample and main features of the distributions for relevant variables (age, income, education, initial BMI,Priorprograms…)
+
+```{r}
+summary(data)
+```
+
+The typical (median) patient is a 35–36-year-old individual with an initial BMI of 30, a college education, and an annual income between \$25,000 and \$50,000. This person has not participated in previous programs, reports an income of \$60,000 (suggesting a possible inconsistency between the Income and Incomethousand variables), stays in the program for 5 weeks, and exercises 2 hours per week. After the program, their BMI decreases to 27.26, corresponding to a weight loss of approximately 7.1 kg. The patient does not take any medication and would not recommend the program.
+
+##### **Age**
+
+This is a discrete quantitative variable. Since it takes on many \# different values, it can be effectively visualized using a histogram.
+
+```{r}
+ggplot(data, aes(x = Age)) +
+  geom_histogram(bins=15, fill="steelblue",
+                 color="white") 
+
+ggplot(data, aes(y = Age)) +
+  geom_boxplot(fill="orange", alpha=0.7) 
+```
+
+Through the summary statistics, histogram, and boxplot, we can see that the minimum age is 20 and the maximum is 50. The ages are distributed quite heterogeneously, with some ages being more frequent than others and no clear pattern of uniformity. The data do not follow a normal distribution. From the boxplot, no outliers are observed, and the distribution appears to be slightly left-skewed (the mean is lower than the median).
+
+##### **Incomethousand**
+
+quantitative cont. variable
+
+```{r}
+ggplot(data, aes(x = Incomethousands)) +
+  geom_histogram(bins=15, fill="steelblue",
+                 color="white") 
+
+ggplot(data, aes(y = Incomethousands)) +
+  geom_boxplot(fill="orange", alpha=0.7)
+```
+
+Based on the summary statistics, histogram, and boxplot, we can observe that incomes are distributed in a roughly uniform manner, except for a few values. Incomes around \$40,000 and \$70,000 are less frequent, while the most common (modal) interval is surprisingly around \$100,000. The overall distribution is fairly uniform and differs from a normal distribution. Nevertheless, it shows a good degree of symmetry (as seen in the boxplot) and no apparent outliers.
+
+##### **Education**
+
+qualitative variable.
+
+```{r}
+data$Education_class = case_when(
+  data$Education == 1 ~ "Basic",
+  data$Education == 2 ~ "High School",
+  data$Education == 3 ~ "College",
+  data$Education == 4 ~ "Master",
+  data$Education == 5 ~ "Doctorate"
+)
+ggplot(data, aes(x=Education_class)) +
+  geom_bar(fill="Red") 
+```
+
+Regarding education level, the most common category is College, while High School is the least common. Nevertheless, the frequencies across categories are fairly similar.
+
+##### **Initial BMI**
+
+continuous quantitative variable
+
+```{r}
+ggplot(data, aes(x = InitialBMI)) +
+  geom_histogram(bins=10, fill="steelblue",
+                 color="white") 
+
+ggplot(data, aes(y = InitialBMI)) +
+  geom_boxplot(fill="orange", alpha=0.7) 
+```
+
+Initial BMI values are fairly homogeneous, although their frequency tends to increase as BMI rises. Two noticeable peaks are observed around BMI values of 28 and 35. The minimum and maximum values are 25 and 35, respectively. The distribution appears to be slightly left-skewed, with no apparent outliers.
+
+##### **Prior Programs**
+
+Categorical data
+
+```{r}
+ggplot(data, aes(x=Priorprograms)) +
+  geom_bar(fill="Red")
+```
+
+Approximately half of the sample has participated in previous programs, while the other half has not. However, those who have not participated in prior programs are slightly more numerous. According to the summary statistics (mean), 47.2% of participants have taken part in previous programs.
+
+#### 2. Give ranges for mean weight loss of potential patients in different age groups and different income categories.
+
+```{r}
+# Create different age groups
+data$Age_groups = case_when(
+  data$Age <= 25 ~ "20-25",
+  data$Age > 25 & data$Age <= 30 ~ "25-30",
+  data$Age > 30 & data$Age <= 35 ~ "30-35",
+  data$Age > 35 & data$Age <= 40 ~ "35-40",
+  data$Age > 40 & data$Age <= 45 ~ "40-45",
+  data$Age > 45 & data$Age <= 50 ~ "45-50"
+)
+
+# We can slightly modify the CI function to include it in summarise_at
+CI_m_lower <- function(x, ci = 0.95) {
+  
+  standard_deviation <- sd(x)
+  sample_size <- length(x)
+  Margin_Error <-  abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
+  
+  lower <- mean(x) - Margin_Error
+  return(lower = lower)
+}
+
+CI_m_upper <- function(x, ci = 0.95) {
+  
+  standard_deviation <- sd(x)
+  sample_size <- length(x)
+  Margin_Error <-  abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
+  
+  upper <- mean(x) + Margin_Error
+  return(upper = upper)
+}
+
+
+df_grouped_byage <- group_by(data,Age_groups)
+
+df_summary_byage <- df_grouped_byage %>% 
+  summarise_at(vars(Weigthdiff), 
+               list(avg=mean,median=median,std=sd,
+                    ci_l=CI_m_lower,ci_u=CI_m_upper))
+
+df_summary_byage
+
+ggplot(data, aes(x = Age_groups, y = Weigthdiff)) +
+  geom_boxplot(fill="lightblue") 
+```
+
+As age increases, the expected amount of weight loss decreases (around 13–14 kilograms for younger participants compared to less than 1 kilogram for older ones. The standard deviation (i.e., the dispersion) remains fairly consistent across age groups.
+
+```{r}
+df_grouped_byincome <- group_by(data,Income)
+
+df_summary_byincome <- df_grouped_byincome %>% # Mean and sd of var1 in each group
+  summarise_at(vars(Weigthdiff), # You can add more variables!!!
+               list(avg=mean,median=median,std=sd,
+                    ci_l=CI_m_lower,ci_u=CI_m_upper))
+
+df_summary_byincome
+
+ggplot(data, aes(x = as.factor(Income), y = Weigthdiff)) +
+  geom_boxplot(fill="lightblue") 
+```
+
+This time, the relationship appears to be the opposite: participants with higher incomes tend to experience greater weight loss. Although the difference among the first three income groups is almost negligible, for the highest earners, the weight loss can be nearly twice as large.
+
+#### 3. Talking about the proportion of potential recommendations of the program, Is this proportion different forhighly educated patients (master and doctorate)?
+
+```{r}
+data_master = data[which(data$Education_class == "Master"),]
+data_doctorate = data[which(data$Education_class == "Doctorate"),]
+
+(prop_reccom_master = mean(data_master$Recommendation))
+(prop_reccom_doctorate = mean(data_doctorate$Recommendation))
+# At first glance, the proportions appear to differ. 
+# But, is that difference statistically significant? Let’s find out.
+
+# Option 1: Using confidence intervals
+CI_p <- function(x, ci = 95){
+  `%>%` <- magrittr::`%>%`
+  vcat<-na.omit(x)
+  p<-mean(x)
+  standard_deviation <- sqrt(p*(1-p))
+  sample_size <- length(x)
+  Margin_Error <- abs(qnorm((1-ci)/2))* standard_deviation/sqrt(sample_size)
+  df_out <- data.frame( sample_size=length(x), p,
+                        Margin_Error=Margin_Error,
+                        'CI lower limit'=(p - Margin_Error),
+                        'CI Upper limit'=(p + Margin_Error)) %>%
+    tidyr::pivot_longer(names_to = "Measurements", values_to ="values", 1:5 )
+  return(df_out)
+}
+
+CI_p(data_master$Recommendation, ci=0.95) 
+CI_p(data_doctorate$Recommendation, ci=0.95) 
+```
+
+We aim to test the following hypothesis:
+
+-   H0: p_master = p_doctorate
+
+-   H1: p_master /= p_doctorate
+
+Using a 95% confidence interval, we find that the interval for Master’s graduates is (0.342, 0.618), while for Doctorate graduates it is (0.283, 0.557). Since the intervals overlap, although the recommendation proportions appear different in our sample, there may be no difference in the population as a whole. Therefore, we do not have sufficient evidence to reject H_0.
+
+```{r}
+# Option 2: Using t-test:
+
+var.test(data_master$Recommendation, data_doctorate$Recommendation, alternative = "two.sided") #first step: test for equal variances
+t.test(data_master$Recommendation, y=data_doctorate$Recommendation, alternative="two.sided", mu=0, var.equal=TRUE) 
+
+```
+
+Since the p-value is 0.5512, for the usual significance levels (alpha = 0.01, 0.05, 0.1), we do not have sufficient evidence to reject H0.
+
+#### 4. Would the mean BMI for potential patients decrease significantly during the program?
+
+Here, we want to test whether the program leads to a significant reduction in BMI, that is:
+
+-   H0: mu_BMI_prior \<= mu_BMI_post (Post-program BMI is greater than or equal to pre-program BMI = no weight loss)
+
+-   H1: mu_BMI_prior \> mu_BMI_post. (Post-program BMI is lower than pre-program BMI = weight loss)
+
+In this case, the means are paired: for each individual, we have both the before and after measurements.
+
+```{r}
+t.test(data$InitialBMI, y= data$newbmi, paired=TRUE, alternative="greater")
+```
+
+The p-value is effectively 0, providing strong evidence to reject H0. We can conclude that participation in the program leads to weight loss.
+
+#### 5. Would the potential proportion of recommendations vary with education, income category and the interaction ofboth?
+
+```{r}
+data_df_grouped_income_educ <- group_by(data,Income,Education_class)
+
+data_df_summary_income_educ <-data_df_grouped_income_educ %>%
+  summarise_at(vars(Recommendation),
+               list(avg=mean,stde=sd))
+
+data_df_summary_income_educ
+```
+
+Overall, we can observe considerable variability in the proportion of recommendations, both across educational levels and income groups. The recommendation proportion ranges from 0 to 0.6. Let's further examine the potential relationship using ANOVA.
+
+```{r}
+# Compute the analysis of variance
+res.aov <- aov(Recommendation ~ Income*Education_class, data = data)
+# Summary of the analysis
+summary(res.aov) 
+```
+
+We can observe that, at a significance level of alpha = 0.05, both income and education level are relevant factors for studying the proportion of recommendations. In contrast, their interaction does not appear to be a significant factor.
+
+#### 6. Could you say if there is a relation between the potential recommendation of the program and the prior enrollmentof the patient in other weight loss programs?
+
+Here, we are asked about a possible non-monotonic association (presence/absence) between recommendation and prior enrollment in other programs. We can construct a contingency table to check whether a dependency exists.
+
+```{r}
+# We create the contingency table.
+ConTab= table("Reccom"=data$Recommendation,"Prior"=data$Priorprograms)
+
+# We create a table of relative frequencies conditioned on prior program participation.
+prop.table(ConTab,margin = 2) 
+```
+
+We can observe that there is no strong relationship between prior program participation and giving a recommendation. However, those who have previously participated in a program tend to recommend it slightly more, although the difference is very small. We check it using the Chi-squared test of independence:
+
+-   H0: the variables are independent
+
+-   H1: there is a dependency relationship
+
+```{r}
+chisq.test(ConTab)
+```
+
+Since the p-value is 0.5185, we do not have sufficient evidence to reject H0; there is no relationship between Recommendation and Priorprograms.
+
+```{r}
+cramersV(ConTab)
+```
+
+The Cramér's V value is very low (0.0408), indicating a very weak association.
+
+#### 7. Find a predictive procedure able to give the expected weight loss during the program as a function of relevantinformation on the patient.
+
+Here, we are asked to develop a predictive model for weight loss (Weigthdiff). We will build a multiple linear regression model and aim to identify the best possible model. To avoid multicollinearity issues, we remove variables that are redundant:
+
+```{r}
+data$Education = NULL
+data$Income = NULL
+data$Age_groups = NULL
+
+# We start by building a model with all explanatory variables.
+model = lm(Weigthdiff~. , data = data)
+summary(model)
+
+# We see that only InitialBMI, Age, newbmi, and WeightDiff are relevant. 
+# We select these variables.
+model_2 = lm(Weigthdiff~. , data = data[,c(1,2,7,9)])
+summary(model_2)
+
+# We see that Age is not relevant in this new model, so we remove it.
+model_3 = lm(Weigthdiff~. , data = data[,c(1,7,9)])
+summary(model_3)
+```
+
+We obtain a model that can predict weight loss using both the old and new BMI, but this is trivial. Naturally, knowing this difference makes it obvious what the weight loss is, since BMI = weight / height\^2. Assuming the person's height remains constant, the difference in BMI is: (old weight - current weight) / height\^2 = WeightDiff / height\^2, so WeightDiff = height\^2 \* old BMI - height\^2 \* new BMI.
+
+Therefore, we will assume we are at the beginning of the program, knowing all the information except the new BMI, in order to predict the expected weight loss.
+
+```{r}
+model_4 = lm(Weigthdiff~. , data = data[,-c(7)])
+summary(model_4)
+```
+
+We see that, at alpha = 0.05, InitialBMI, Incomethousands, and Prescription are no longer relevant, so we remove them.
+
+```{r}
+model_5 = lm(Weigthdiff~. , data = data[,-c(1,4,7,8)])
+summary(model_5)
+```
+
+We obtain a model with R\^2 = 0.9182, explaining 91.82% of the variability in our variable of interest.
