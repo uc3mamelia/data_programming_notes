@@ -60,8 +60,6 @@ editor: visual
 
 -   associative analysis, volume plots, correlograms, matrix of scatterplots, simple linear regression, residuals, coefficients, multiple linear regression, ANOVA for every variable
 
-#### [2023-2024 Exam](https://uc3mamelia.github.io/data_programming_notes/exam-2023.html)
-
 ## Data Visualization Notes
 
 #### [Tutorial 1](https://uc3mamelia.github.io/data_programming_notes/dataviz_tutorial1/01-building_graphs_layer_by_layer.html)
@@ -88,8 +86,20 @@ editor: visual
 
 ## Assignments
 
-#### [Task 0 - Intro to R Exam](https://uc3mamelia.github.io/data_programming_notes/task-0.html)
+#### Data Programming
 
--   Taylor Swift data, Intro to R exam
+-   [Task 0 - Intro to R Exam](https://uc3mamelia.github.io/data_programming_notes/task-0.html)
 
-#### [Second Stats I Assignment](https://uc3mamelia.github.io/data_programming_notes/second_assignment_amelia_shuler.html)
+-   First Data Programming Assignment
+
+#### Stats
+
+-   [2023-2024 Exam](https://uc3mamelia.github.io/data_programming_notes/exam-2023.html)
+
+-   First Stats I Assignment
+
+-   [Second Stats I Assignment](https://uc3mamelia.github.io/data_programming_notes/second_assignment_amelia_shuler.html)
+
+-   Stats I Exam
+
+-   Third Stats I Assignment
