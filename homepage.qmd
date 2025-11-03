@@ -62,6 +62,18 @@ editor: visual
 
 -   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
 
+#### [Descriptive Statistics](https://uc3mamelia.github.io/data_programming_notes/descriptive-stats.html)
+
+-   types of variables, univariate descriptive analysis, measures of variability, measures of central tendency, frequency tables, bivariate descriptive analysis
+
+#### [Inferential Statistics](https://uc3mamelia.github.io/data_programming_notes/inferential-stats.html)
+
+-   point estimators, create a sample from an existing population, confidence intervals, hypothesis testing, z-test, t-test, Chi-squared test, paired t-test, independent t-test, ANOVA
+
+#### [Associative Statistics](https://uc3mamelia.github.io/data_programming_notes/associative-stats.html)
+
+-   associative analysis, volume plots, correlograms, matrix of scatterplots, simple linear regression, residuals, coefficients, multiple linear regression, ANOVA for every variable
+
 #### [2023-2024 Exam](https://uc3mamelia.github.io/data_programming_notes/exam-2023.html)
 
 ## Data Visualization Notes
