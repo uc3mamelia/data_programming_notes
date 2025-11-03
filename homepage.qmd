@@ -46,21 +46,7 @@ editor: visual
 
 -   Joins
 
-## Data Programming Homework Assignments
-
-#### [Task 0](https://uc3mamelia.github.io/data_programming_notes/task-0.html)
-
--   Taylor Swift data, Intro to R exam
-
 ## Statistics Notes
-
-#### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)
-
--   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
-
-#### [Seniors Stats](https://uc3mamelia.github.io/data_programming_notes/seniors.html)
-
--   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
 
 #### [Descriptive Statistics](https://uc3mamelia.github.io/data_programming_notes/descriptive-stats.html)
 
@@ -89,3 +75,21 @@ editor: visual
 #### [Tutorial 3](https://uc3mamelia.github.io/data_programming_notes/data-viz-3.html)
 
 -   coordinate systems, coord_cartesian(), coord_flip(), coord_fixed(), pie charts, clipping, transformations, maps
+
+## Retired
+
+#### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)
+
+-   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
+
+#### [Seniors Stats](https://uc3mamelia.github.io/data_programming_notes/seniors.html)
+
+-   Univariate descriptive analysis, bivariate descriptive analysis, confidence intervals
+
+## Assignments
+
+#### [Task 0 - Intro to R Exam](https://uc3mamelia.github.io/data_programming_notes/task-0.html)
+
+-   Taylor Swift data, Intro to R exam
+
+#### [Second Stats I Assignment](https://uc3mamelia.github.io/data_programming_notes/second_assignment_amelia_shuler.html)

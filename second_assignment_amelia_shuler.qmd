@@ -1,0 +1,269 @@
+---
+title: "Second Assignment"
+author: "Amelia Shuler"
+format: html
+editor: visual
+---
+
+###### Libraries
+
+```{r}
+#| eval: TRUE
+#| output: FALSE
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(descr)
+library(ggplot2)
+library(dbplyr)
+library(ggpubr)
+library(Rmisc)
+library(lattice)
+library(plyr)
+```
+
+###### Import Data
+
+```{r}
+population <- read.csv2("~/Desktop/assignment-2/sgdata.csv", header=TRUE, sep=",")
+```
+
+#### 1. Choose one or two variables that are relevant to your research.
+
+sex –\> 0 is female, and 1 is male. I am going to clean this up to male and female.
+
+```{r}
+# edit population sex data from 0 and 1
+population <- population |>
+  mutate(Sex = str_replace(Sex, "0", "female")) |>
+  mutate(Sex = str_replace(Sex, "1", "male"))
+```
+
+age –\> age of participant
+
+age_range -\> this is a variable I have created by grouping the ages into brackets of 10 years
+
+```{r}
+# create the age_range variable
+population <- population |>
+  mutate("age_range" = case_when(
+    Age <= 10 ~ "under 10",
+    Age <= 20 ~ "11-20",
+    Age <= 30 ~ "21-30",
+    Age <= 40 ~ "31-40",
+    Age <= 50 ~ "41-50",
+    Age <= 60 ~ "51-60",
+    Age <= 70 ~ "61-70",
+    Age <= 80 ~ "71-80",
+    Age > 80 ~ "81-+"))
+```
+
+income –\> Annual income in monetary units
+
+Research question: As age increases, does income increase? Does sex have an affect on income across age brackets?
+
+#### 2. Estimate parameters and test hypotheses for the selected variable(s), both individually and in relation to other variables, including socioeconomic variables if available.
+
+I am going to look at our two continuous variables and estimate the population parameters.
+
+##### Age Distribution
+
+```{r}
+ggplot(data = population, mapping = aes(Age)) + 
+  geom_histogram()
+```
+
+The data does not have a normal distribution, and has an unknown mean and unknown variance. We would use the formula
+
+CI(μx)(1-α)%= x̄ ∓ zα/2 \* sx / √n
+
+##### Age Confidence Intervals
+
+```{r}
+confidence_interval_variable <- function (x, ci = 0.95)
+{
+  standard_deviation <- sd(x)
+  sample_size <- length(x)
+  Margin_Error <- abs(qt((1-ci)/2,df=sample_size-1))* standard_deviation/sqrt(sample_size)
+df_out <- 
+  data.frame( 
+    sample_size=length(x),
+    Mean=mean(x), sd=sd(x),
+    Margin_Error=Margin_Error,
+    'CI lower limit'=(mean(x) - Margin_Error),
+    'CI Upper limit'=(mean(x) + Margin_Error)) |>
+    tidyr::pivot_longer(
+      names_to = "Measurements",
+      values_to ="values", 1:6
+      )
+  return(df_out)
+}
+confidence_interval_variable(population$Age, ci=0.95)
+```
+
+We can say with 95% confidence that the population's actual mean is between 35.395 and 36.423. The dataset does not say which population this is from, but the average world age is 30.9 and the average US age is 39.1. So this seems more or less accurate.
+
+##### Income Distribution
+
+```{r}
+ggplot(data = population, mapping = aes(Income)) + 
+  geom_histogram()
+```
+
+The data does not have a normal distribution, and has an unknown mean and unknown variance. We would use the formula
+
+CI(μx)(1-α)%= x̄ ∓ zα/2 \* sx / √n
+
+##### Income Confidence Intervals
+
+```{r}
+confidence_interval_variable(population$Income, ci=0.95)
+```
+
+We can say with 95% confidence that the population's actual Income mean is between 119,283.25 and 122,625.59 monetary units.
+
+##### Age by Sex Confidence Intervals
+
+```{r}
+confidence_interval_gender <- summarySE(
+  population,
+  measurevar="Age",
+  groupvars="Sex", na.rm=T,
+  conf.interval = .95
+  )
+confidence_interval_gender$lower_bound <- confidence_interval_gender$Age - confidence_interval_gender$ci
+confidence_interval_gender$upper_bound <- confidence_interval_gender$Age + confidence_interval_gender$ci
+
+confidence_interval_gender
+graf.point1 <- 
+  ggplot(
+    confidence_interval_gender,
+    aes(x=Sex, y=Age)) + 
+  geom_point(size = 3) + 
+  ylim(30,40)
+graf.point1
+graf.point <- 
+  graf.point1 +
+  geom_errorbar(
+    aes(ymin=Age-ci, ymax=Age+ci)) +
+  ylab("Age") + 
+  ggtitle("95% Confidence interval for the mean age by gender")
+graf.point
+```
+
+We can say with 95% confidence that the population's actual age for males is between 32.83 and 34.32 years. We can say with 95% confidence that the population's actual age for females is between 37.19 and 38.56 years.
+
+##### Income by Age by Gender
+
+```{r}
+ci_gender_income <- 
+  summarySE(
+    population,
+    measurevar = "Income",
+    groupvars = c("Sex","age_range"),
+    na.rm=T)
+ci_gender_income$lower_bound <- 
+  ci_gender_income$Income - ci_gender_income$ci
+ci_gender_income$upper_bound <- 
+  ci_gender_income$Income + ci_gender_income$ci
+ci_gender_income
+graf.point1 <- 
+  ggplot(
+    ci_gender_income,
+    aes(x=age_range, y=Income, colour=Sex)) +
+  geom_point()
+graf.point2 <- 
+  graf.point1 +
+  geom_errorbar(
+    aes(ymin = Income-ci, ymax = Income+ci),
+    width = 0.2) +
+  ylab("Income") +
+  ggtitle("95% Confidence Interval for the Mean Income by Sex and Age Range")
+graf.point2
+```
+
+We can say with 95% confidence that the population's mean income for females is between 94,395.15 and 213,940.80 monetary units. We can say with 95% confidence that the population's mean income for males is between 96558.39 and 211,597.4 monetary units. As age increases, income increases for both males and females.
+
+##### Hypothesis Testing
+
+```{r}
+population |>
+  summarize("mean_income" = mean(Income, na.rm = TRUE))
+```
+
+Null hypothesis (H0)
+
+The average income for the population is 120,954.40 monetary units.
+
+Alternative hypothesis (H1)
+
+The average income for the population is less than 120,954.40 monetary units.
+
+```{r}
+t.test(population$Income, y=NULL,alternative="less",mu=120954.4)
+```
+
+Because p is greater than 0.05, there is no evidence to reject the null hypothesis. The population's average income is consistent with the sample average income of 120,954.40 monetary units.
+
+```{r}
+population |>
+  summarize("mean_age" = mean(Age, na.rm = TRUE))
+```
+
+Null hypothesis (H0)
+
+The average age for the population is 35.91 years.
+
+Alternative hypothesis (H1)
+
+The average age for the population is less than 35.91 years.
+
+```{r}
+t.test(population$Age, y=NULL,alternative="less",mu=35.91)
+```
+
+Because p is greater than 0.05, there is no evidence to reject the null hypothesis. The population's average age is consistent with the sample average age of 35.91 years.
+
+##### ANOVA Test
+
+```{r}
+ggboxplot(population, x = "age_range", y = "Income", color = "Sex",
+          palette = c("#00AFBB", "#E7B800","orange"))
+```
+
+We are going to look at a two-way ANOVA test, since there are 3 variables: age, income, and sex.
+
+Hypothesis 1: Mean income is the same for males and females.
+
+Hypothesis 2: Mean income is the same across age ranges.
+
+Hypothesis 3: There is no interaction between sex and age range.
+
+On visual inspection, it seems like income is higher for both sexes at 71-80. Additionally, in all age ranges but 11-20, women earn on average more than men.
+
+```{r}
+res.aov <- aov(Income ~ age_range+Sex, data = population)
+summary(res.aov)
+```
+
+Age range has a p-value of 2e-16 which is extremely significant. This means we can reject Hypothesis 2, that mean income is the same across age ranges.
+
+Sex has a p-value of 1.6e-11 which is also extremely significant. This means we can reject Hypothesis 1, that mean income is the same across sexes.
+
+#### 3. Provide final interpretations and conclusions.
+
+The data for age is positively skewed.
+
+The data for income is positively skewed.
+
+We can say with 95% confidence that the population’s actual mean age is between 35.395 and 36.423 years.
+
+We can say with 95% confidence that the population’s actual Income mean is between 119,283.25 and 122,625.59 monetary units.
+
+We can say with 95% confidence that the population’s actual age for males is between 32.83 and 34.32 years. We can say with 95% confidence that the population’s actual age for females is between 37.19 and 38.56 years.
+
+Females earn more in every age bracket except 11-20. As age increases, so does income.
+
+The population’s average income is consistent with the sample average income of 120,954.40 monetary units.
+
+Both age and sex have an impact on income in this sample.
