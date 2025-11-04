@@ -120,4 +120,64 @@ join4 <- join3 |>
             suffix = c("_origin", "_dest"))
 ```
 
-Complete exercise 5 and 6 and Case Study III
+5.  Filter from `airports` only those airports from which flights depart.
+
+```{r}
+airports |>
+  semi_join(flights, by = c("faa" = "origin"))
+```
+
+Repeat the process filtering only those airports where flights arrive.
+
+```{r}
+airports |>
+  semi_join(flights, by = c("faa" = "dest"))
+```
+
+6.  How many flights do we not have information about the aircraft? Eliminate flights that do not have an aircraft ID (other than NA) beforehand.
+
+```{r}
+flights |>
+  drop_na(tailnum) |>
+  anti_join(planes, by = "tailnum") |>
+  count(tailnum, sort = TRUE) |>
+  count()
+```
+
+#### Semi-Join and Anti-Join
+
+These are what Javi calls "fake joins". These work the same way as previous joins, but are different because they are not actually joins.
+
+Assume we have two tables:
+
+```{r}
+table1 <- tibble(id = c("a", "b", "c", "d"),
+                 "var1" = 1:4)
+table2 <- tibble(id = c("a", "d", "e", "f"),
+                 "var2" = c(-1, 0, 3, 2))
+```
+
+The **semi join** leaves us in the **first table the records whose key is also in the second table** (like an inner join but without adding the info from the second table).
+
+```{r}
+table1 |>
+  semi_join(table2, by = "id")
+```
+
+This "filters" the data by whatever exists in table2.
+
+```{r}
+table1 |> filter(id %in% table2$id)
+# filter table 1 by id in table 2
+```
+
+This does the same as the above code.
+
+Because this join does not include new columns, it is not a real join.
+
+And the second one, the anti join, does just the opposite (those that are not).
+
+```{r}
+table1 |>
+  anti_join(table2, by = "id")
+```

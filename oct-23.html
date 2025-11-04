@@ -382,12 +382,116 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>join4 <span class="ot">&lt;-</span> join3 <span class="sc">|&gt;</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(airports <span class="sc">|&gt;</span> <span class="fu">select</span>(faa, lat, lon),</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"origin"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">lat_origin =</span> lat, <span class="at">lon_origin =</span> lon) <span class="sc">|&gt;</span> </span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(airports <span class="sc">|&gt;</span> <span class="fu">select</span>(faa, lat, lon),</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dest"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">lat_dest =</span> lat, <span class="at">lon_dest =</span> lon)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># selects 3 columns I need and maps faa to origin information</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(airports <span class="sc">|&gt;</span> </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">select</span>(lat, lon, faa),</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"origin"</span> <span class="ot">=</span> <span class="st">"faa"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># selects 3 columns I need and maps faa to destination information</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(airports <span class="sc">|&gt;</span> </span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>            <span class="fu">select</span>(lat, lon, faa),</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"dest"</span> <span class="ot">=</span> <span class="st">"faa"</span>),</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">suffix =</span> <span class="fu">c</span>(<span class="st">"_origin"</span>, <span class="st">"_dest"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol start="5" type="1">
+<li>Filter from <code>airports</code> only those airports from which flights depart.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>airports <span class="sc">|&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(flights, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"faa"</span> <span class="ot">=</span> <span class="st">"origin"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 8
+  faa   name                  lat   lon   alt    tz dst   tzone           
+  &lt;chr&gt; &lt;chr&gt;               &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;           
+1 EWR   Newark Liberty Intl  40.7 -74.2    18    -5 A     America/New_York
+2 JFK   John F Kennedy Intl  40.6 -73.8    13    -5 A     America/New_York
+3 LGA   La Guardia           40.8 -73.9    22    -5 A     America/New_York</code></pre>
+</div>
+</div>
+<p>Repeat the process filtering only those airports where flights arrive.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>airports <span class="sc">|&gt;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(flights, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"faa"</span> <span class="ot">=</span> <span class="st">"dest"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 101 × 8
+   faa   name                                lat    lon   alt    tz dst   tzone 
+   &lt;chr&gt; &lt;chr&gt;                             &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+ 1 ABQ   Albuquerque International Sunport  35.0 -107.   5355    -7 A     Ameri…
+ 2 ACK   Nantucket Mem                      41.3  -70.1    48    -5 A     Ameri…
+ 3 ALB   Albany Intl                        42.7  -73.8   285    -5 A     Ameri…
+ 4 ANC   Ted Stevens Anchorage Intl         61.2 -150.    152    -9 A     Ameri…
+ 5 ATL   Hartsfield Jackson Atlanta Intl    33.6  -84.4  1026    -5 A     Ameri…
+ 6 AUS   Austin Bergstrom Intl              30.2  -97.7   542    -6 A     Ameri…
+ 7 AVL   Asheville Regional Airport         35.4  -82.5  2165    -5 A     Ameri…
+ 8 BDL   Bradley Intl                       41.9  -72.7   173    -5 A     Ameri…
+ 9 BGR   Bangor Intl                        44.8  -68.8   192    -5 A     Ameri…
+10 BHM   Birmingham Intl                    33.6  -86.8   644    -6 A     Ameri…
+# ℹ 91 more rows</code></pre>
+</div>
+</div>
+<ol start="6" type="1">
+<li>How many flights do we not have information about the aircraft? Eliminate flights that do not have an aircraft ID (other than NA) beforehand.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>flights <span class="sc">|&gt;</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(tailnum) <span class="sc">|&gt;</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(planes, <span class="at">by =</span> <span class="st">"tailnum"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(tailnum, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 1
+      n
+  &lt;int&gt;
+1   721</code></pre>
+</div>
+</div>
+</section>
+<section id="semi-join-and-anti-join" class="level4">
+<h4 class="anchored" data-anchor-id="semi-join-and-anti-join">Semi-Join and Anti-Join</h4>
+<p>These are what Javi calls “fake joins”. These work the same way as previous joins, but are different because they are not actually joins.</p>
+<p>Assume we have two tables:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>table1 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">id =</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>, <span class="st">"d"</span>),</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"var1"</span> <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>table2 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">id =</span> <span class="fu">c</span>(<span class="st">"a"</span>, <span class="st">"d"</span>, <span class="st">"e"</span>, <span class="st">"f"</span>),</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"var2"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <strong>semi join</strong> leaves us in the <strong>first table the records whose key is also in the second table</strong> (like an inner join but without adding the info from the second table).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>table1 <span class="sc">|&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(table2, <span class="at">by =</span> <span class="st">"id"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  id     var1
+  &lt;chr&gt; &lt;int&gt;
+1 a         1
+2 d         4</code></pre>
+</div>
+</div>
+<p>This “filters” the data by whatever exists in table2.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>table1 <span class="sc">|&gt;</span> <span class="fu">filter</span>(id <span class="sc">%in%</span> table2<span class="sc">$</span>id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  id     var1
+  &lt;chr&gt; &lt;int&gt;
+1 a         1
+2 d         4</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># filter table 1 by id in table 2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This does the same as the above code.</p>
+<p>Because this join does not include new columns, it is not a real join.</p>
+<p>And the second one, the anti join, does just the opposite (those that are not).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>table1 <span class="sc">|&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(table2, <span class="at">by =</span> <span class="st">"id"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  id     var1
+  &lt;chr&gt; &lt;int&gt;
+1 b         2
+2 c         3</code></pre>
+</div>
 </div>
 </section>
 </section>

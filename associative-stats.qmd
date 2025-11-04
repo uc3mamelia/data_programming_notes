@@ -135,7 +135,21 @@ H1: RankA and age are related.
 | old   | 50   | 0      | 50  |
 |       | 50   | 50     |     |
 
-##### Volume Plot
+##### Balloon Plot
+
+A balloon plot is a data visualization that uses a grid to represent a contingency table, where the size of a colored circle (or "balloon") in each cell corresponds to the magnitude of the data in that cell. They are useful for comparing multiple groups and visualizing the relative frequencies of different categories, especially in large datasets. 
+
+-   A **larger blue circle** means there are **more people** in that gender–education group.
+
+-   A **smaller circle** means **fewer people** in that group.
+
+This kind of visualization helps you quickly see:
+
+-   Whether **categories are evenly distributed** across groups.
+
+-   If there’s a **relationship** (association) between variables — e.g., if one gender is more likely to have higher education.
+
+-   Whether some category combinations are rare or overrepresented.
 
 ```{r}
 library(gplots) # For balloonplot

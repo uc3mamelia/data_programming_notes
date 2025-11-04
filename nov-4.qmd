@@ -1,0 +1,163 @@
+---
+title: "November 4th"
+author: "Amelia Shuler"
+format: html
+editor: visual
+---
+
+###### Libraries
+
+```{r}
+library(tidyverse)
+```
+
+## Import/Export
+
+So far we have only used data already loaded in packages but many times **we will need to import data externally**. One of the main **strengths** of `R` is that we can import data very easily in different formats:
+
+### R native formats
+
+`.rda`, `.RData` and `.rds` formats. You can only open this in R.
+
+[Import]{.underline}
+
+```{r}
+#| eval: false
+load(file = "./data/discursos.RData")
+```
+
+one . is one level, two .. is two levels, and ... is three
+
+[Export]{.underline}
+
+```{r}
+#| eval: false
+starwars_database <- dplyr::starwars
+save(starwars_database, file = "./starwars_table.RData")
+```
+
+In save, include the name of the variable first. Then, specify the path and the name of the file. This works for tables and also for small variables. Save is the only one that can export ggplots (including the relevant data to make the code run), variables, etc. beyond tables.
+
+### Rectangular (tabular) data
+
+`.csv` and `.tsv` formats. Comma Separated Values.
+
+[Import CSV]{.underline}
+
+read.csv() imports into data frame, rather than a tibble. It also imports dates and numbers as characters, it cannot interpret them. Read_csv separates with commas and read_csv2 separates with semicolons.
+
+```{r}
+#| eval: false
+read_csv(file = "./data/surveys.csv")
+```
+
+read_csv imports as a tibble and also imports data types. [There is more information in the slides.](https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/tabular-data-.csv-.tsv)
+
+[Export CSV]{.underline}
+
+```{r}
+#| eval: false
+write_csv(starwars,
+          file = "./export_data/guerrita_de_estrellas.csv")
+```
+
+Include the folder, the name, and the extension. The extension should be the same as the function.
+
+### Data in excel
+
+`.xls` and `.xlsx` formats.
+
+[Import Excel]{.underline}
+
+By default, excel only imports the first tab. To import more than one, you need to do two imports.
+
+```{r}
+#| eval: false
+# install.packages("readxl")
+library(readxl)
+read_xlsx(path = "./data/deaths.xlsx",
+          skip = 4, # skip specifies how many rows you want skipped
+          range = "A4:C13", # specifies a range of cells you want selected
+          sheet = 2 # or specify by name, this picks the sheet you want imported
+)
+```
+
+[Export Excel]{.underline}
+
+It is not recommended to export, but the package is openexcel. It is not currently available for this version of R. It is recommended to export as a CSV, even if you opened it in excel.
+
+```{r}
+# install.packages("openexcel")
+```
+
+### Untabulated data
+
+`.txt` format.
+
+### Data from SAS/Stata/SPSS
+
+`.sas7bdat`, `.sav` and `.dat` formats. We can import these files into R.
+
+SPSS is common in Spain in hospitals and sociology.
+
+SAS is common with cryptobros.
+
+Stata is common with old people.
+
+[Import]{.underline}
+
+```{r}
+#| eval: false
+# install.packages("haven")
+library(haven)
+read_sav(file = "./data/iris.sav") # SPSS
+read_sas(data_file = "./data/iris.sas7bdat") # SAS
+read_dta(file = "./data/iris.dta") # STATA
+```
+
+[Export]{.underline}
+
+```{r}
+#| eval: false
+write_sav(starwars, path = "./data/iris.sav") # SPSS
+write_sas(starwars, path = "./data/iris.sas7bdat") # SAS
+write_dta(starwars, path = "./data/iris.dta") # STATA
+```
+
+### Data from Google Drive
+
+Another option available (especially if we work with other people working) is to **import from a Google Drive spreadsheet**, making use of `read_sheet()` from the `{googlesheets4}` package.
+
+The first time you will be asked for a tidyverse permission to interact with your drive.
+
+```{r}
+# install.packages("googlesheets4")
+library(googlesheets4)
+google_sheet <-
+  read_sheet("https://docs.google.com/spreadsheets/d/1Ev7Kn2T3kifLt08u02qj3smMWvxJzHIpCiHSjEz4EmI/edit?usp=sharing")
+google_sheet
+```
+
+### Data from Websites
+
+One of the main advantages of `R` is that we can make use of all the previous functions of **import but directly from a web**, without the need to perform the manual download: instead of passing it the local path we will indicate the **link**.
+
+From github: Find the file you want, click in, and then select 'RAW' to see the raw data. Copy that link.
+
+```{r}
+read_csv(file = "https://raw.githubusercontent.com/dadosdelaplace/pollspain-data/refs/heads/main/data/02-congress/02198606/raw_candidacies_congress_1986_06.csv")
+```
+
+This will automatically pull the data when it is updated when the script is run.
+
+### **Data from API’s**
+
+aemet, catastro, twitter, spotify, etc.
+
+## How to Create a Project
+
+File \> New Project... \> New Directory \> New Project \> Choose Path \> Name \> Create Project
+
+You now have a folder with all the files and Rproj file. After creating the project, move the files into the folder.
+
+Another person can now open your folder and not need to rewrite the paths.

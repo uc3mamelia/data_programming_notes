@@ -46,6 +46,10 @@ editor: visual
 
 -   Joins
 
+#### [Nov 4](https://uc3mamelia.github.io/data_programming_notes/nov-4.html)
+
+-   imports and exports
+
 ## Statistics Notes
 
 #### [Descriptive Statistics](https://uc3mamelia.github.io/data_programming_notes/descriptive-stats.html)
