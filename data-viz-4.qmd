@@ -1,10 +1,8 @@
 ---
-title: "Tutorial 4"
+title: "Faceting"
 format: html
 editor: visual
 ---
-
-# Faceting
 
 Faceting is a way to trade off some discrete aesthetic (e.g. hue) for position. It generates multiple subsets of the data (filtered by the values of some typically categorical variable) and shows them side by side. In this tutorial, the three kinds of facets available are explored as well as how they interact with position scales.
 

@@ -78,6 +78,18 @@ editor: visual
 
 -   coordinate systems, coord_cartesian(), coord_flip(), coord_fixed(), pie charts, clipping, transformations, maps
 
+#### [Tutorial 4](https://uc3mamelia.github.io/data_programming_notes/data-viz-4.html)
+
+-   faceting
+
+#### [Tutorial 5](https://uc3mamelia.github.io/data_programming_notes/data-viz-5.html)
+
+-   themes
+
+#### [Tutorial 6](https://uc3mamelia.github.io/data_programming_notes/data-viz-6.html)
+
+-   annotations
+
 ## Retired
 
 #### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)

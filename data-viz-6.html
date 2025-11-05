@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>data-viz-6</title>
+<title>Annotations</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">data-viz-6</h1>
+<h1 class="title">Annotations</h1>
 </div>
 
 
@@ -134,21 +134,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>long_string <span class="ot">&lt;-</span> stringi<span class="sc">::</span><span class="fu">stri_rand_lipsum</span>(<span class="dv">1</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>long_string</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "Lorem ipsum dolor sit amet, consequat luctus suspendisse, nec dictum accumsan. Vivamus laoreet lacinia himenaeos gravida. Mollis nisl gravida sed tincidunt nibh quis lorem sociis vel sed. Cum in nec in nec nulla quam sem aptent quis. Arcu varius urna duis felis per turpis dictumst in. Sed vitae, congue gravida amet sed per luctus. Netus vitae a, a, nunc. Duis mi lorem varius fermentum commodo dui, nam fusce volutpat vestibulum. Per, id at gravida eu blandit venenatis ante. Sollicitudin risus elit lorem nisl nisi sit. Interdum mauris non, sem neque est lectus diam."</code></pre>
+<pre><code>[1] "Lorem ipsum dolor sit amet, velit sed tellus elementum dignissim purus ut, facilisi. Eleifend ante, dapibus pellentesque ut, dui ut. Efficitur litora in ligula pulvinar mauris, a a iaculis erat. Urna, habitant elit, per quisque tellus quam nisi porttitor, ac bibendum semper. Purus ac. Nec lacus eget habitant augue pharetra luctus tincidunt ad, nec sagittis quisque habitant consectetur efficitur sed conubia. Felis iaculis dui odio nisl leo sodales turpis eleifend himenaeos, eu, enim orci vestibulum. Et, auctor gravida eu et aliquam, duis egestas. Ex lobortis, conubia ut massa. Blandit sagittis vestibulum in. Commodo habitasse mauris commodo, ipsum ante donec dictum aliquam curabitur luctus. Arcu non ante feugiat dui ipsum. Sed integer. Aptent augue eleifend feugiat."</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>short_strings <span class="ot">&lt;-</span> <span class="fu">strwrap</span>(long_string, <span class="at">width=</span><span class="dv">60</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>short_strings</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Lorem ipsum dolor sit amet, consequat luctus suspendisse,"  
- [2] "nec dictum accumsan. Vivamus laoreet lacinia himenaeos"     
- [3] "gravida. Mollis nisl gravida sed tincidunt nibh quis lorem" 
- [4] "sociis vel sed. Cum in nec in nec nulla quam sem aptent"    
- [5] "quis. Arcu varius urna duis felis per turpis dictumst in."  
- [6] "Sed vitae, congue gravida amet sed per luctus. Netus vitae" 
- [7] "a, a, nunc. Duis mi lorem varius fermentum commodo dui, nam"
- [8] "fusce volutpat vestibulum. Per, id at gravida eu blandit"   
- [9] "venenatis ante. Sollicitudin risus elit lorem nisl nisi"    
-[10] "sit. Interdum mauris non, sem neque est lectus diam."       </code></pre>
+<pre><code> [1] "Lorem ipsum dolor sit amet, velit sed tellus elementum"     
+ [2] "dignissim purus ut, facilisi. Eleifend ante, dapibus"       
+ [3] "pellentesque ut, dui ut. Efficitur litora in ligula"        
+ [4] "pulvinar mauris, a a iaculis erat. Urna, habitant elit, per"
+ [5] "quisque tellus quam nisi porttitor, ac bibendum semper."    
+ [6] "Purus ac. Nec lacus eget habitant augue pharetra luctus"    
+ [7] "tincidunt ad, nec sagittis quisque habitant consectetur"    
+ [8] "efficitur sed conubia. Felis iaculis dui odio nisl leo"     
+ [9] "sodales turpis eleifend himenaeos, eu, enim orci"           
+[10] "vestibulum. Et, auctor gravida eu et aliquam, duis egestas."
+[11] "Ex lobortis, conubia ut massa. Blandit sagittis vestibulum" 
+[12] "in. Commodo habitasse mauris commodo, ipsum ante donec"     
+[13] "dictum aliquam curabitur luctus. Arcu non ante feugiat dui" 
+[14] "ipsum. Sed integer. Aptent augue eleifend feugiat."         </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse with newlines</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>p <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="fu">paste</span>(short_strings, <span class="at">collapse=</span><span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
