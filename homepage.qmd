@@ -7,6 +7,14 @@ editor: visual
 ## Resources
 
 -   [Execution Options](https://quarto.org/docs/computations/execution-options.html)
+-   [dplyr cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/dplyr.pdf)
+-   [forcats cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/forcats.pdf)
+-   [ggplot2 cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/ggplot2.pdf)
+-   [lubridate cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/lubridate.pdf)
+-   [purrr cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/purrr.pdf)
+-   [readr cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/readr.pdf)
+-   [stringr cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/stringr.pdf)
+-   [tidyr cheatsheet](https://uc3mamelia.github.io/data_programming_notes/Cheatsheets/tidyr.pdf)
 
 ## Data Programming Notes
 

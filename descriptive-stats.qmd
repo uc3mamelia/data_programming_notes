@@ -389,7 +389,7 @@ bxp
 
 **Other Measures of Central Tendency:** Shape forms as Asymmetry or Kurtosis
 
-## Absolute Frequency Table
+## Univariate Frequency Tables
 
 A **frequency distribution** is a tabulation of the number of times that each different value appears in a particular set of values.
 
@@ -401,16 +401,38 @@ A **frequency distribution** is a tabulation of the number of times that each di
 
 ### Absolute Frequency Table
 
+An absolute frequency table is a statistical table that shows the exact count or number of times each value or category appears in a dataset. It is a simple way to organize data, providing a clear "how many" for each item, which can be used for both qualitative and quantitative data.
+
+#### Frequency Distribution
+
+-   **Category**, i = k, are the different categories of the variable we are describing. (Be aware of the difference between n and k)
+
+-   **Absolute frequency**, ni, counts the number of times that the category appears in the sampled data
+
+    -   Σki=1 ni = n
+
+-   **Percent**, fi, is the percentage of times that the category appears in the sample 
+
+    -   fi = ni/n × 100. Σki=1fi = 100
+
+-   **Cumulative Absolute Frequency Percent**, Fr , is the accumulated percentage for categories up to r 
+
+    -   Fr = Σri=1 fi = f1 + f2 + . . . + fr−1 + fr
+
+![](images/clipboard-2277023770.png){width="362"}
+
 ```{r}
 age_af <-freq(ordered(dataseniors$age),plot=F)
 age_af
 ```
 
-### Absolute Frequency Table (Discretization of continuous variable)
+#### Absolute Frequency Table (Discretization of continuous variable)
 
--   Can be used for continuous variables as well
+-   Absolute frequency can be used for continuous variables
 
 -   Usually the value that is included in the category uses brackets
+
+![](images/clipboard-1025963370.png){width="403"}
 
 ```{r}
 datavalue<-case_when((data.df$value<=2) ~ "1",
@@ -424,14 +446,16 @@ datfreq<-freq(ordered(datavalue),plot=F)
 datfreq
 ```
 
-### Absolute Frequency Table (plotted)
+#### Absolute Frequency Table (plotted histogram)
+
+You would plot an absolute frequency table to visually represent the raw count of each category or value in a dataset, allowing for a quick comparison of their popularity or prevalence. Plotting this data, often with a bar chart or histogram, makes it easier to identify patterns, understand the distribution of data, and see which values are the most or least common without having to scan a raw data list. 
 
 ```{r}
 datfreq<-freq(ordered(datavalue),plot=T)
 datfreq
 ```
 
-Absolute Frequency Table (plotted bar chart)
+#### Absolute Frequency Table (plotted bar chart)
 
 ```{r}
 dp2 <- ggplot(data.df, aes(x = numfamily)) +
@@ -441,34 +465,22 @@ dp2 <- ggplot(data.df, aes(x = numfamily)) +
 dp2
 ```
 
-### Frequency Distribution
-
--   Categ., i = k are the different categories of the variable we are describing. (Be aware of the difference between n and k.)
-
--   Frequency, ni, counts the number of times that the category appears in the sampled data. 
-
-    -   Σki=1 ni = n.
-
--   Percent, fi, is the percentage of times that the category appears in the sample 
-
-    -   fi = ni/n × 100. Σki=1fi = 100.
-
--   Cum Percent, Fr , is the accumulated percentage for categories up to r . 
-
-    -   Fr = Σri=1 fi = f1 + f2 + . . . + fr−1 + fr .
-
 ### Relative Frequency Tables
 
-**Relative frequency** is the proportion of times a specific event occurs out of the total number of trials, calculated by dividing the number of times an event occurs by the total number of trials. It is often expressed as a decimal or a percentage and provides a way to understand the distribution of data within a set. 
+**Relative frequency** is the proportion of times a specific event occurs out of the total number of trials, calculated by dividing the number of times an event occurs by the total number of trials. It is often expressed as a decimal or a percentage and provides a way to understand the distribution of data within a set.
+
+Relative frequencies allow us to compare the results of two studies with different sample sizes.
+
+![](images/clipboard-1458327240.png){width="412"}
 
 ```{r}
 rel_freq <- prop.table(table(dataseniors$age))
 rel_freq
 ```
 
-## Interpretation of Univariate Analysis
+### Interpretation of Plotted Frequency Tables
 
-### Skew of Data
+#### Skew of Data
 
 -   negatively skewed means the mean is less than the median
 
@@ -486,29 +498,39 @@ rel_freq
 
 **Bivariate Analysis** (Conditional Univariate Analysis) is analysis of how one variable is distributed when another variable is held constant
 
-## Joint Absolute Frequency Tables
+## Frequency Tables
+
+Frequency tables can also be used with two variables. These are called **two-way tables** and show joint frequencies of the variables. When at least one of the variables is qualitative, it is called a **contingency table**.
+
+### Joint Absolute Frequency Tables
 
 **Joint Absolute Frequency** is the ratio of the count for a specific category combination in a two-way frequency table to the total number of observations, representing the proportion of data points that share both characteristics
 
 Joint absolute frequency for classes ci of X and c′j of Y : nij
+
+![](images/clipboard-2567130493.png)
 
 ```{r}
 ConTtable<-table(datavalue,data.df$gender)        #Joint absolute frequencies
 ConTtable
 ```
 
-## Joint Relative Frequency Tables
+### Joint Relative Frequency Tables
 
 A **joint relative frequency table** shows the proportion of the total data set that falls into a specific category for two variables at the same time. It is created by dividing the joint frequency (the number of occurrences for two paired variables) by the grand total of all data points in the table.
 
+![](images/clipboard-2390135144.png)
+
+Relative frequencies allow us to compare the results of two studies with different sample sizes.
+
 ```{r}
-RConTtable<-prop.table(ConTtable)*100             #Joint relative frequencies
+RConTtable<-prop.table(ConTtable)*100 #Joint relative frequencies
 RConTtable
 ```
 
-## Marginal Absolute Frequency Tables
+#### Marginal Frequencies
 
-**Marginal Absolute Frequency** is the total number of observations within a specific row or column of a two-way frequency table, representing the sum of the joint frequencies for that category, regardless of the other variable.
+**Marginal Frequencies** are the total number of observations within a specific row or column of a two-way frequency table, representing the sum of the joint frequencies for that category, regardless of the other variable.
 
 -   Marginal absolute frequency for class ci of X: ni = ni1 + · · · + nim
 
@@ -519,11 +541,47 @@ colSums(RConTtable) #Marginal frequencies for gender
 rowSums(RConTtable) #Marginal frequencies for Value
 ```
 
-## Conditional Frequency Tables
+### Conditional Frequency Tables
 
-**Conditional Frequency** is a statistical measure that describes the proportion of a subgroup within a dataset that meets a specific criterion, calculated by dividing the frequency of that outcome by the total frequency of the subgroup
+**Conditional Frequency** is a statistical measure that describes the proportion of a subgroup within a dataset that meets a specific criterion, calculated by dividing the frequency of that outcome by the total frequency of the subgroup.
 
 Y \| X = ci or X \| Y = c′j
+
+[Some questions that can be answered with conditional frequencies:]{.underline}
+
+-   What percentage of sampled individuals who attained a post-secondary education level are unemployed?
+
+-   What percentage of sampled individuals who have attained secondary OR post-secondary education level are unemployed?
+
+Example:
+
+What percentage of individuals who have obtained a post-secondary education level are unemployed?
+
+variable X = education level
+
+variable Y = employment status
+
+| Y \| X = post-secondary | Employed | Unemployed | Inactive | Total |
+|-------------------------|----------|------------|----------|-------|
+| Absolute frequency      | 317      | 8          | 89       | 474   |
+| Relative Frequency      | .7657    | .0193      | .2150    | 1     |
+
+Total relative frequency is always equal to one. To get percentages, multiple by 100. The answer would be 1.93%.
+
+Sometimes multiple rows or columns from a two-way table meet a condition - in this case, we sum these rows or columns to get the absolute frequencies for our conditional frequency table. Example:
+
+What percentage of sampled individuals who have obtained a secondary education level **or higher** are unemployed?
+
+Variable X = education level (both secondary and post-secondary)
+
+Variable Y = employment status
+
+| Y \| X = post-secondary | Employed | Unemployed | Inactive | Total |
+|-------------------------|----------|------------|----------|-------|
+| Absolute frequency      | 710      | 36         | 346      | 1092  |
+| Relative Frequency      | .6502    | .0330      | .3168    | 1     |
+
+3.3% of sampled individuals who attained a secondary or higher level of education are unemployed.
 
 ```{r}
 CConTtableG<-prop.table(ConTtable,margin=2)*100   #Conditional of Value for fixed gender
