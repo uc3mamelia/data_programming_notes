@@ -244,11 +244,10 @@ p_zoom <- p1 +
     axis.title = element_blank(),
     plot.background = element_blank(),
     plot.margin = unit(c(0, 0, 0, 0), "mm")
-  )
+  ) # this part zooms in on the graph
 
 p1 +
-  annotate("rect", xmin=xlim[1], xmax=xlim[2], ymin=ylim[1], ymax=ylim[2],
-           fill=NA, color="black") +
+  annotate("rect", xmin=xlim[1], xmax=xlim[2], ymin=ylim[1], ymax=ylim[2], fill=NA, color="black") +
   annotate("segment", x=xlim[2], xend=5.2, y=ylim[1], yend=29, linetype="dashed") +
   annotate("segment", x=xlim[1], xend=4.5, y=ylim[2], yend=45, linetype="dashed") +
   inset_element(p_zoom, left=0.5, bottom=0.45, right=0.65, top=0.95)
