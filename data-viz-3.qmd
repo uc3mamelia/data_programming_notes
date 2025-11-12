@@ -1,10 +1,8 @@
 ---
-title: "Tutorial 3"
+title: "Coordinate Systems"
 format: html
 editor: visual
 ---
-
-# **Coordinate Systems**
 
 ```{r}
 library(ggplot2)

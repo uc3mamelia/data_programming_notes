@@ -134,19 +134,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>long_string <span class="ot">&lt;-</span> stringi<span class="sc">::</span><span class="fu">stri_rand_lipsum</span>(<span class="dv">1</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>long_string</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "Lorem ipsum dolor sit amet, donec curae egestas iaculis fames suspendisse nullam. Dignissim ultrices justo, pharetra ac mi fringilla, sapien aenean odio. Posuere justo nibh vitae libero, aliquam placerat a primis ipsum. Sem quis ac, sed facilisis. Ac et fusce suscipit arcu ullamcorper magnis sed montes. Purus commodo sed semper conubia vehicula, et quis maecenas. Mi nibh id natoque id tempus. Id eros."</code></pre>
+<pre><code>[1] "Lorem ipsum dolor sit amet, ac duis facilisi, elit porta vehicula, sit consectetur leo nisi. Odio porttitor ultricies hendrerit tincidunt aliquam in. Ut cum ac augue ipsum sed sed. Lorem fringilla lectus eu, viverra, erat sem, ultrices maecenas ridiculus. Vel non quam, magna ultricies efficitur. Inceptos ultricies porttitor mauris semper ut ut posuere, ligula sapien lectus. Eget id hendrerit tempus id mollis arcu sed varius. Ultricies quis nec sit ligula, non sed, tempor augue urna. Commodo eu et eleifend, ipsum dolor ridiculus viverra ullamcorper."</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>short_strings <span class="ot">&lt;-</span> <span class="fu">strwrap</span>(long_string, <span class="at">width=</span><span class="dv">60</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>short_strings</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "Lorem ipsum dolor sit amet, donec curae egestas iaculis"    
-[2] "fames suspendisse nullam. Dignissim ultrices justo,"        
-[3] "pharetra ac mi fringilla, sapien aenean odio. Posuere justo"
-[4] "nibh vitae libero, aliquam placerat a primis ipsum. Sem"    
-[5] "quis ac, sed facilisis. Ac et fusce suscipit arcu"          
-[6] "ullamcorper magnis sed montes. Purus commodo sed semper"    
-[7] "conubia vehicula, et quis maecenas. Mi nibh id natoque id"  
-[8] "tempus. Id eros."                                           </code></pre>
+<pre><code> [1] "Lorem ipsum dolor sit amet, ac duis facilisi, elit porta"  
+ [2] "vehicula, sit consectetur leo nisi. Odio porttitor"        
+ [3] "ultricies hendrerit tincidunt aliquam in. Ut cum ac augue" 
+ [4] "ipsum sed sed. Lorem fringilla lectus eu, viverra, erat"   
+ [5] "sem, ultrices maecenas ridiculus. Vel non quam, magna"     
+ [6] "ultricies efficitur. Inceptos ultricies porttitor mauris"  
+ [7] "semper ut ut posuere, ligula sapien lectus. Eget id"       
+ [8] "hendrerit tempus id mollis arcu sed varius. Ultricies quis"
+ [9] "nec sit ligula, non sed, tempor augue urna. Commodo eu et" 
+[10] "eleifend, ipsum dolor ridiculus viverra ullamcorper."      </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse with newlines</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>p <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="fu">paste</span>(short_strings, <span class="at">collapse=</span><span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -451,20 +453,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define divisions</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>divisions <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.6</span>, <span class="fl">4.1</span>)</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co"># define dataframe</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>df.rect <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, divisions),<span class="co"># makes the rectangles cover the whole area</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmax =</span> <span class="fu">c</span>(divisions, <span class="cn">Inf</span>), <span class="co"># makes the rectangles cover the whole area</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="sc">-</span><span class="cn">Inf</span>, <span class="co"># makes the rectangles cover the whole area</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymax =</span> <span class="cn">Inf</span>, <span class="co"># makes the rectangles cover the whole area</span></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">cyl =</span>  <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">8</span>)</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co"># plotting data</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(mpg) <span class="sc">+</span></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">fill=</span><span class="fu">factor</span>(cyl)) <span class="sc">+</span></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rect</span>(<span class="fu">aes</span>(<span class="at">xmin=</span>xmin, <span class="at">xmax=</span>xmax, <span class="at">ymin=</span>ymin, <span class="at">ymax=</span>ymax),</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>            df.rect, <span class="at">alpha=</span><span class="fl">0.2</span>, <span class="at">show.legend=</span><span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(displ, hwy, <span class="at">color=</span><span class="fu">factor</span>(cyl))) <span class="sc">+</span></span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>divisions <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">2.6</span>, <span class="fl">4.1</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>df.rect <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, divisions), <span class="co"># inf makes the rectangle cover the whole area</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmax =</span> <span class="fu">c</span>(divisions, <span class="cn">Inf</span>),</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="sc">-</span><span class="cn">Inf</span>,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymax =</span> <span class="cn">Inf</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">cyl =</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">8</span>), <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">8</span>))</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co"># plotting data</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(mpg) <span class="sc">+</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rect</span>(<span class="fu">aes</span>(<span class="at">xmin=</span>xmin, <span class="at">xmax=</span>xmax, <span class="at">ymin=</span>ymin, <span class="at">ymax=</span>ymax, <span class="at">fill=</span>cyl),</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>            df.rect, <span class="at">alpha=</span>.<span class="dv">2</span>, <span class="at">show.legend=</span><span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_discrete</span>(<span class="at">drop=</span><span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(displ, hwy, <span class="at">color=</span><span class="fu">factor</span>(cyl))) <span class="sc">+</span></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">

@@ -228,18 +228,20 @@ The division of the panel area into regions can be further stressed by adding sl
 # define divisions
 divisions <- c(2.6, 4.1)
 # define dataframe
+divisions <- c(2.6, 4.1)
 df.rect <- data.frame(
-  xmin = c(-Inf, divisions),# makes the rectangles cover the whole area
-  xmax = c(divisions, Inf), # makes the rectangles cover the whole area
-  ymin = -Inf, # makes the rectangles cover the whole area
-  ymax = Inf, # makes the rectangles cover the whole area
-  cyl =  c(4, 6, 8)
+  xmin = c(-Inf, divisions), # inf makes the rectangle cover the whole area
+  xmax = c(divisions, Inf),
+  ymin = -Inf,
+  ymax = Inf,
+  cyl = factor(c(4, 6, 8), levels=c(4, 5, 6, 8))
 )
+
 # plotting data
 ggplot(mpg) +
-  aes(fill=factor(cyl)) +
-  geom_rect(aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
-            df.rect, alpha=0.2, show.legend=FALSE) +
+  geom_rect(aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, fill=cyl),
+            df.rect, alpha=.2, show.legend=FALSE) +
+  scale_fill_discrete(drop=FALSE) +
   geom_point(aes(displ, hwy, color=factor(cyl))) +
   theme_bw()
 ```
