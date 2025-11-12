@@ -4,6 +4,10 @@ format: html
 editor: visual
 ---
 
+```{r}
+library(ggplot2)
+```
+
 The grammar presented so far is concerned with creating single plots. However, it is often necessary to assemble several different plots together in order to build a story. In this tutorial, we will learn to produce such arrangements in an automated manner without requiring external graphic design tools and non-reproducible manual work.
 
 ## **Compositions**
@@ -122,7 +126,7 @@ wrap_plots(plots, design=layout)
 
 ### **Fixed-aspect plots**
 
-Plots created with `coord_fixed()`, `coord_polar()` and `coord_sf()` cannot be resized to align with other plots. By default, `patchwork` aligns the other plots to them when possible.
+Plots created with `coord_fixed()`, `coord_polar()` and `coord_sf()` cannot be resized to align with other plots. This happens frequently with maps. By default, `patchwork` aligns the other plots to them when possible.
 
 ```{r}
 p_fixed <- ggplot(mpg) +
@@ -137,6 +141,7 @@ p_fixed + p1 + p2 + p3
 But if we try to force the width, then the plot cannot be aligned.
 
 ```{r}
+p_fixed + p1 + p2 + p3 + plot_layout(heights = 1)
 p_fixed + p1 + p2 + p3 + plot_layout(widths=1)
 ```
 
@@ -146,13 +151,13 @@ When composing plots with multiple guides, it is often useful to collect all the
 
 ```{r}
 p1 + p2 + p3 + p4
-p1 + p2 + p3 + p4 + plot_layout(guides="collect")
+p1 + p2 + p3 + p4 + plot_layout(guides="collect") # this has a bug, it doesn't play well with ggplot. But it is supposed to search through the plots to see if they have the same legends, but it doens't seem to be working
 ```
 
 Note that guides were not only collected, but duplicates were removed. This option can be specified at several points for a finer control:
 
 ```{r}
-p1 + p2 + (p3 + plot_layout(guides="keep")) + p4 + plot_layout(guides="collect")
+p1 + p2 + (p3 + plot_layout(guides="keep")) + p4 + plot_layout(guides="collect") # this is keeping a legend for p3
 ```
 
 By default, guides are collected on the right of the composition, but a `guide_area()` can be specified as a place to put them:
@@ -164,7 +169,7 @@ CEB
 CDD
 "
 p1 + p2 + p3 + p4 + guide_area() +
-  plot_layout(design=layout, guides="collect")
+  plot_layout(design=layout, guides="collect") # we should only have one centered, but instead we have 2 because of the bug
 ```
 
 #### **Checkpoint 2**
@@ -181,8 +186,8 @@ The `wrap_elements()` function can be used to wrap arbitrary grid grobs and add 
 text <- wrap_elements(grid::textGrob("Some really important text"))
 table <- wrap_elements(gridExtra::tableGrob(mtcars[1:10, c("mpg", "disp")]))
 
-p1 + table
-text + p1
+p1 + table # adds a table to the graph
+text + p1 # add text to the plot
 ```
 
 The [`ggplotify`](https://cran.r-project.org/package=ggplotify) package provides functions for converting different graphics (base graphics, lattice graphics and others) to grobs, so that they can be composed too with ggplot objects.
@@ -201,4 +206,54 @@ p1 + p2 + p3 + p4 +
     tag_suffix = ")",
     theme = theme(plot.title=element_text(color="red"))
   )
+# annotations with the layout
 ```
+
+## **Insets**
+
+`custom_annotation()` will also let you inset a graph with the grob. It is more flexible, but insets are easier.
+
+Insets are essentially plot annotations, i.e., a plot on top of another plot. This can be achieved with multiple overlapping `area()` specifications, but the specific function `inset_element()` makes this task much easier. It allows us to freely position the inset relative either to the panel, plot of full area of the plot by specifying the left, bottom, right and top edges of the inset:
+
+```{r}
+p1 + inset_element(p2, left=0.6, bottom=0.6, right=1, top=1, align_to="panel") # alignment to the panel
+p1 + inset_element(p2, left=0.6, bottom=0.6, right=1, top=1, align_to="plot") # alignment to the plot
+p1 + inset_element(p2, left=0.6, bottom=0.6, right=1, top=1, align_to="full") # alignment to the full plot
+```
+
+And autotagging works as expected:
+
+```{r}
+p1 + inset_element(p2, left=0.6, bottom=0.6, right=1, top=1, align_to="full") +
+  plot_annotation(tag_levels="a")
+```
+
+With `inset_element()` can do insets within the panel and also outside the panel.
+
+One interesting use case of this technique is to zoom in a particular region:
+
+```{r}
+xlim <- c(2.9, 3.2)
+ylim <- c(21, 28)
+
+p_zoom <- p1 +
+  coord_cartesian(xlim=xlim, ylim=ylim, expand=FALSE) +
+  labs(title=NULL) +
+  theme_light() +
+  theme(
+    axis.title = element_blank(),
+    plot.background = element_blank(),
+    plot.margin = unit(c(0, 0, 0, 0), "mm")
+  )
+
+p1 +
+  annotate("rect", xmin=xlim[1], xmax=xlim[2], ymin=ylim[1], ymax=ylim[2],
+           fill=NA, color="black") +
+  annotate("segment", x=xlim[2], xend=5.2, y=ylim[1], yend=29, linetype="dashed") +
+  annotate("segment", x=xlim[1], xend=4.5, y=ylim[2], yend=45, linetype="dashed") +
+  inset_element(p_zoom, left=0.5, bottom=0.45, right=0.65, top=0.95)
+```
+
+#### **Checkpoint 3**
+
+1.  Open the last plot in RStudio’s zoom panel. Play with the aspect ratio of the pop-up window. What is the issue with the segment specification above? How could this be improved? Investigate ggplot’s `annotation_custom()` for this task.
