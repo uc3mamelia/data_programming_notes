@@ -257,22 +257,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 16 × 14
    name     height  mass hair_color skin_color eye_color birth_year sex   gender
    &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
- 1 Quarsh …    183  NA   black      dark       brown           62   male  mascu…
- 2 Lobot       175  79   none       light      blue            37   male  mascu…
- 3 Cliegg …    183  NA   brown      fair       blue            82   male  mascu…
- 4 Ackbar      180  83   none       brown mot… orange          41   male  mascu…
- 5 Lando C…    177  79   black      dark       brown           31   male  mascu…
- 6 Boba Fe…    183  78.2 black      fair       brown           31.5 male  mascu…
- 7 Kit Fis…    196  87   none       green      black           NA   male  mascu…
- 8 Tion Me…    206  80   none       grey       black           NA   male  mascu…
- 9 Mace Wi…    188  84   none       dark       brown           72   male  mascu…
-10 Bail Pr…    191  NA   black      tan        brown           67   male  mascu…
-11 Biggs D…    183  84   black      light      brown           24   male  mascu…
-12 Darth M…    175  80   none       red        yellow          54   male  mascu…
-13 BB8          NA  NA   none       none       black           NA   none  mascu…
-14 Padmé A…    185  45   brown      light      brown           46   fema… femin…
-15 Ayla Se…    178  55   none       blue       hazel           48   fema… femin…
-16 Luminar…    170  56.2 black      yellow     blue            58   fema… femin…
+ 1 Finis V…    170    NA blond      fair       blue            91   male  mascu…
+ 2 Dud Bolt     94    45 none       blue, grey yellow          NA   male  mascu…
+ 3 Poggle …    183    80 none       green      yellow          NA   male  mascu…
+ 4 Bib For…    180    NA none       pale       pink            NA   male  mascu…
+ 5 Darth V…    202   136 none       white      yellow          41.9 male  mascu…
+ 6 Kit Fis…    196    87 none       green      black           NA   male  mascu…
+ 7 Bail Pr…    191    NA black      tan        brown           67   male  mascu…
+ 8 Ki-Adi-…    198    82 white      pale       yellow          92   male  mascu…
+ 9 Palpati…    170    75 grey       pale       yellow          82   male  mascu…
+10 Owen La…    178   120 brown, gr… light      blue            52   male  mascu…
+11 Yarael …    264    NA none       white      yellow          NA   male  mascu…
+12 Lobot       175    79 none       light      blue            37   male  mascu…
+13 R4-P17       96    NA none       silver, r… red, blue       NA   none  femin…
+14 Shaak Ti    178    57 none       red, blue… black           NA   fema… femin…
+15 Leia Or…    150    49 brown      light      brown           19   fema… femin…
+16 Jocasta…    167    NA white      fair       blue            NA   fema… femin…
 # ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
 #   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
 </div>
@@ -339,7 +339,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="slide-261" class="level4">
 <h4 class="anchored" data-anchor-id="slide-261"><a href="https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/tu-turno-4-1">Slide 261</a></h4>
-<p>Calculate how many characters there are of each species, ordered from most to least frequent.</p>
+<ol type="1">
+<li>Calculate how many characters there are of each species, ordered from most to least frequent.</li>
+</ol>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(species, <span class="at">sort=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -360,7 +362,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 # ℹ 28 more rows</code></pre>
 </div>
 </div>
-<p>After eliminating missing variables for weight and height, add a new variable to calculate the BMI of each character, and determine the average BMI of our characters disaggregated by gender.</p>
+<ol start="2" type="1">
+<li>After eliminating missing variables for weight and height, add a new variable to calculate the BMI of each character, and determine the average BMI of our characters disaggregated by gender.</li>
+</ol>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(height) <span class="sc">|&gt;</span></span>
@@ -377,6 +381,143 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 3 male               25.5
 4 none               32.7
 5 &lt;NA&gt;               24.6</code></pre>
+</div>
+</div>
+<ol start="3" type="1">
+<li>Obtain the youngest character for each gender.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(birth_year) <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_min</span>(birth_year, <span class="at">by =</span> gender)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 14
+  name      height  mass hair_color skin_color eye_color birth_year sex   gender
+  &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+1 Wicket S…     88    20 brown      brown      brown              8 male  mascu…
+2 Leia Org…    150    49 brown      light      brown             19 fema… femin…
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<ol start="4" type="1">
+<li>Get the age of the youngest and oldest character of each sex.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(birth_year) <span class="sc">|&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_min</span>(birth_year, <span class="at">by =</span> sex) <span class="sc">|&gt;</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(birth_year, <span class="at">by =</span> sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 14
+  name      height  mass hair_color skin_color eye_color birth_year sex   gender
+  &lt;chr&gt;      &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+1 Wicket S…     88    20 brown      brown      brown              8 male  mascu…
+2 IG-88        200   140 none       metal      red               15 none  mascu…
+3 Leia Org…    150    49 brown      light      brown             19 fema… femin…
+4 Jabba De…    175  1358 &lt;NA&gt;       green-tan… orange           600 herm… mascu…
+# ℹ 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+#   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+</div>
+<ol start="5" type="1">
+<li>Determine the number of characters in each decade (take a look at <code>round()</code>, first without disaggregating and then disaggregated by sex.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>starwars <span class="sc">|&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(<span class="at">birth_decade =</span> <span class="fu">round</span>(birth_year, <span class="sc">-</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15 × 2
+   birth_decade     n
+          &lt;dbl&gt; &lt;int&gt;
+ 1           10     1
+ 2           20     6
+ 3           30     4
+ 4           40     6
+ 5           50     8
+ 6           60     4
+ 7           70     4
+ 8           80     2
+ 9           90     3
+10          100     1
+11          110     1
+12          200     1
+13          600     1
+14          900     1
+15           NA    44</code></pre>
+</div>
+</div>
+</section>
+<section id="case-study-ii-soccer" class="level4">
+<h4 class="anchored" data-anchor-id="case-study-ii-soccer"><a href="https://javieralvarezliebana.es/docencia/mucss-data-programming/slides/#/caso-practico-4-2">Case Study II: Soccer</a></h4>
+<p><a href="https://javieralvarezliebana.quarto.pub/tidyverse-mucss/">Case Study</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">"./futbol.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 40393 Columns: 16
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (5): team, league, player, country, position
+dbl (11): season, date_birth, minutes_playing, minutes_per_match_playing, go...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 40,393 × 16
+   season team    league  player     country position date_birth minutes_playing
+    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;   &lt;chr&gt;         &lt;dbl&gt;           &lt;dbl&gt;
+ 1   2005 Ajaccio Ligue 1 Djamel Ab… ALG     MF             1986              30
+ 2   2005 Ajaccio Ligue 1 Gaspar Az… POR     DF             1975            1224
+ 3   2005 Ajaccio Ligue 1 Yacine Be… ALG     MF             1981             140
+ 4   2005 Ajaccio Ligue 1 Nicolas B… FRA     MF             1976             892
+ 5   2005 Ajaccio Ligue 1 Marcelinh… BRA     MF             1971             704
+ 6   2005 Ajaccio Ligue 1 Cyril Cha… FRA     FW             1979            1308
+ 7   2005 Ajaccio Ligue 1 Xavier Co… FRA     DF             1974            2734
+ 8   2005 Ajaccio Ligue 1 Renaud Co… FRA     MF             1980             896
+ 9   2005 Ajaccio Ligue 1 Yohan Dem… FRA     DF,MF          1978            2658
+10   2005 Ajaccio Ligue 1 Christoph… FRA     DF             1973              74
+# ℹ 40,383 more rows
+# ℹ 8 more variables: minutes_per_match_playing &lt;dbl&gt;, goals &lt;dbl&gt;,
+#   assist &lt;dbl&gt;, goals_minus_pk &lt;dbl&gt;, pk &lt;dbl&gt;, pk_attemp &lt;dbl&gt;,
+#   yellow_card &lt;dbl&gt;, red_card &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>The variables capture the following information:</p>
+<ul>
+<li><p><code>season</code>, <code>team</code>, <code>league</code>: season, team and league.</p></li>
+<li><p><code>player</code>, <code>country</code>, <code>position</code>, <code>date_birth</code>: name, country, position and birth of year of each player.</p></li>
+<li><p><code>minutes_playing</code>, <code>matches</code>: total minutes playing and 90’ matches played</p></li>
+<li><p><code>goals</code>, <code>assist</code>: goals and assists.</p></li>
+<li><p><code>pk</code>, <code>pk_attemp</code>, <code>goals_minus_pk</code>: penalties, penalties attempted and goals excluding penalties.</p></li>
+<li><p><code>yellow_card</code>, <code>red_card</code>: yellow/red cards.</p></li>
+</ul>
+<ol type="1">
+<li>Include a new variable indicating the age of each player in each season (e.g.&nbsp;if he was born in 1989 and the season is 2017, he is put 18 years old). Place this column after the date of birth.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">"playing_age"</span> <span class="ot">=</span> season <span class="sc">-</span> date_birth) <span class="sc">|&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(playing_age, <span class="at">.after =</span> date_birth)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 40,393 × 17
+   season team    league  player         country position date_birth playing_age
+    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt;
+ 1   2005 Ajaccio Ligue 1 Djamel Abdoun  ALG     MF             1986          19
+ 2   2005 Ajaccio Ligue 1 Gaspar Azevedo POR     DF             1975          30
+ 3   2005 Ajaccio Ligue 1 Yacine Bezzaz  ALG     MF             1981          24
+ 4   2005 Ajaccio Ligue 1 Nicolas Bonnal FRA     MF             1976          29
+ 5   2005 Ajaccio Ligue 1 Marcelinho Ca… BRA     MF             1971          34
+ 6   2005 Ajaccio Ligue 1 Cyril Chapuis  FRA     FW             1979          26
+ 7   2005 Ajaccio Ligue 1 Xavier Collin  FRA     DF             1974          31
+ 8   2005 Ajaccio Ligue 1 Renaud Connen  FRA     MF             1980          25
+ 9   2005 Ajaccio Ligue 1 Yohan Demont   FRA     DF,MF          1978          27
+10   2005 Ajaccio Ligue 1 Christophe De… FRA     DF             1973          32
+# ℹ 40,383 more rows
+# ℹ 9 more variables: minutes_playing &lt;dbl&gt;, minutes_per_match_playing &lt;dbl&gt;,
+#   goals &lt;dbl&gt;, assist &lt;dbl&gt;, goals_minus_pk &lt;dbl&gt;, pk &lt;dbl&gt;, pk_attemp &lt;dbl&gt;,
+#   yellow_card &lt;dbl&gt;, red_card &lt;dbl&gt;</code></pre>
 </div>
 </div>
 </section>

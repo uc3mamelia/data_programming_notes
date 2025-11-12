@@ -210,11 +210,14 @@ p + geom_point(data=annotation, shape=4, size=3)
 Any line can be used as an annotation, but horizontal, vertical and oblique reference lines that span the entire plot are commonly used to divide regions of the plot. This is achieved via the special geoms `geom_hline()`, `geom_vline()` and `geom_abline()` respectively.
 
 ```{r}
-# line to highlight the outliers above y=40
+# line to highlight the outliers above y=40 HORIZONTAL
 p + geom_hline(yintercept=40, linetype="dashed")
 
-# divide regions approximately by cyl
+# divide regions approximately by cyl VERTICAL
 p + geom_vline(xintercept=c(2.6, 4.1), linetype="dashed")
+
+# geom_abline DIAGONAL
+p + geom_abline(intercept = 0, slope = 10, linetype = "dashed")
 ```
 
 ### Reference areas
@@ -222,15 +225,17 @@ p + geom_vline(xintercept=c(2.6, 4.1), linetype="dashed")
 The division of the panel area into regions can be further stressed by adding slightly colored rectangles that expand towards infinity. In this case, such rectangles should be drawn **before the actual data** to avoid masking it.
 
 ```{r}
+# define divisions
 divisions <- c(2.6, 4.1)
+# define dataframe
 df.rect <- data.frame(
-  xmin = c(-Inf, divisions),
-  xmax = c(divisions, Inf),
-  ymin = -Inf,
-  ymax = Inf,
+  xmin = c(-Inf, divisions),# makes the rectangles cover the whole area
+  xmax = c(divisions, Inf), # makes the rectangles cover the whole area
+  ymin = -Inf, # makes the rectangles cover the whole area
+  ymax = Inf, # makes the rectangles cover the whole area
   cyl =  c(4, 6, 8)
 )
-
+# plotting data
 ggplot(mpg) +
   aes(fill=factor(cyl)) +
   geom_rect(aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
@@ -238,6 +243,8 @@ ggplot(mpg) +
   geom_point(aes(displ, hwy, color=factor(cyl))) +
   theme_bw()
 ```
+
+The problem with defining rectangles with exact limits means that ggplot adds space around the data. You cannot cover the whole area of the graph if you do not remove this space (or add Inf).
 
 ### Individual annotations
 

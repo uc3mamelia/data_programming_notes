@@ -25,6 +25,7 @@ library(plyr)
 ###### Import Data
 
 ```{r}
+#| eval: false
 population <- read.csv2("~/Desktop/assignment-2/sgdata.csv", header=TRUE, sep=",")
 ```
 

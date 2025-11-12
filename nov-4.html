@@ -229,12 +229,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   '100575891@alumnos.uc3m.es'.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Auto-refreshing stale OAuth token.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>✔ Reading from "R-Example".</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>✔ Range 'Hoja 1'.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>google_sheet</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>google_sheet</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 3
     `1` hola      `4`
@@ -253,7 +256,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>One of the main advantages of <code>R</code> is that we can make use of all the previous functions of <strong>import but directly from a web</strong>, without the need to perform the manual download: instead of passing it the local path we will indicate the <strong>link</strong>.</p>
 <p>From github: Find the file you want, click in, and then select ‘RAW’ to see the raw data. Copy that link.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">"https://raw.githubusercontent.com/dadosdelaplace/pollspain-data/refs/heads/main/data/02-congress/02198606/raw_candidacies_congress_1986_06.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">"https://raw.githubusercontent.com/dadosdelaplace/pollspain-data/refs/heads/main/data/02-congress/02198606/raw_candidacies_congress_1986_06.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 62 Columns: 8
 ── Column specification ────────────────────────────────────────────────────────

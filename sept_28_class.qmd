@@ -1,5 +1,5 @@
 ---
-title: "sept_25_class"
+title: "Sept 25"
 format: html
 editor: visual
 ---

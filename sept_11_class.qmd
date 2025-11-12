@@ -1,5 +1,5 @@
 ---
-title: "Sept 11 class"
+title: "Sept 11"
 author: "Amelia Shuler"
 format: html
 editor: visual
@@ -10,7 +10,7 @@ editor: visual
 Tidyverse is a collection of R packages designed for data science, sharing a common design philosophy, grammar, and data structures for data manipulation, exploration, and visualization.
 
 |  |  |
-|----|----|
+|------------------------------------|------------------------------------|
 | {lubridate}: date management | {rvest}: web scraping |
 | {tidymodels}: modeling/prediction | {tibble}: optimizing data.frame |
 | {tidyr}: data cleaning | {readr}: load rectangular data (.csv) |

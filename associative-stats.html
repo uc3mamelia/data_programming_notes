@@ -258,8 +258,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<section id="volume-plot" class="level5">
-<h5 class="anchored" data-anchor-id="volume-plot">Volume Plot</h5>
+<section id="balloon-plot" class="level5">
+<h5 class="anchored" data-anchor-id="balloon-plot">Balloon Plot</h5>
+<p>A balloon plot is a data visualization that uses a grid to represent a contingency table, where the size of a colored circle (or “balloon”) in each cell corresponds to the magnitude of the data in that cell. They are useful for comparing multiple groups and visualizing the relative frequencies of different categories, especially in large datasets.&nbsp;</p>
+<ul>
+<li><p>A <strong>larger blue circle</strong> means there are <strong>more people</strong> in that gender–education group.</p></li>
+<li><p>A <strong>smaller circle</strong> means <strong>fewer people</strong> in that group.</p></li>
+</ul>
+<p>This kind of visualization helps you quickly see:</p>
+<ul>
+<li><p>Whether <strong>categories are evenly distributed</strong> across groups.</p></li>
+<li><p>If there’s a <strong>relationship</strong> (association) between variables — e.g., if one gender is more likely to have higher education.</p></li>
+<li><p>Whether some category combinations are rare or overrepresented.</p></li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gplots) <span class="co"># For balloonplot</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
