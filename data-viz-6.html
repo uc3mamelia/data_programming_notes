@@ -134,22 +134,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>long_string <span class="ot">&lt;-</span> stringi<span class="sc">::</span><span class="fu">stri_rand_lipsum</span>(<span class="dv">1</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>long_string</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "Lorem ipsum dolor sit amet, cursus varius, nec ridiculus nisl tortor, habitant imperdiet? Adipiscing fringilla libero sit sollicitudin quam eros accumsan! Ultrices suscipit fringilla. Tristique non sed adipiscing in eu mi ipsum. Cubilia nostra, phasellus. At id lacus senectus pulvinar ex. Egestas duis. Purus felis pharetra in ante taciti torquent sit libero quis lectus. Dui penatibus venenatis amet suspendisse porta conubia vel. Donec nec suspendisse natoque ac cum. Quam interdum, inceptos est sed sed dictumst in mus phasellus commodo penatibus. Erat enim class nec vitae luctus risus, vitae cras habitasse mi."</code></pre>
+<pre><code>[1] "Lorem ipsum dolor sit amet, donec curae egestas iaculis fames suspendisse nullam. Dignissim ultrices justo, pharetra ac mi fringilla, sapien aenean odio. Posuere justo nibh vitae libero, aliquam placerat a primis ipsum. Sem quis ac, sed facilisis. Ac et fusce suscipit arcu ullamcorper magnis sed montes. Purus commodo sed semper conubia vehicula, et quis maecenas. Mi nibh id natoque id tempus. Id eros."</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>short_strings <span class="ot">&lt;-</span> <span class="fu">strwrap</span>(long_string, <span class="at">width=</span><span class="dv">60</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>short_strings</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Lorem ipsum dolor sit amet, cursus varius, nec ridiculus"   
- [2] "nisl tortor, habitant imperdiet? Adipiscing fringilla"      
- [3] "libero sit sollicitudin quam eros accumsan! Ultrices"       
- [4] "suscipit fringilla. Tristique non sed adipiscing in eu mi"  
- [5] "ipsum. Cubilia nostra, phasellus. At id lacus senectus"     
- [6] "pulvinar ex. Egestas duis. Purus felis pharetra in ante"    
- [7] "taciti torquent sit libero quis lectus. Dui penatibus"      
- [8] "venenatis amet suspendisse porta conubia vel. Donec nec"    
- [9] "suspendisse natoque ac cum. Quam interdum, inceptos est sed"
-[10] "sed dictumst in mus phasellus commodo penatibus. Erat enim" 
-[11] "class nec vitae luctus risus, vitae cras habitasse mi."     </code></pre>
+<pre><code>[1] "Lorem ipsum dolor sit amet, donec curae egestas iaculis"    
+[2] "fames suspendisse nullam. Dignissim ultrices justo,"        
+[3] "pharetra ac mi fringilla, sapien aenean odio. Posuere justo"
+[4] "nibh vitae libero, aliquam placerat a primis ipsum. Sem"    
+[5] "quis ac, sed facilisis. Ac et fusce suscipit arcu"          
+[6] "ullamcorper magnis sed montes. Purus commodo sed semper"    
+[7] "conubia vehicula, et quis maecenas. Mi nibh id natoque id"  
+[8] "tempus. Id eros."                                           </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse with newlines</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>p <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="fu">paste</span>(short_strings, <span class="at">collapse=</span><span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

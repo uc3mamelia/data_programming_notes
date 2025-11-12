@@ -74,27 +74,27 @@ editor: visual
 
 ## Data Visualization Notes
 
-#### [Tutorial 1](https://uc3mamelia.github.io/data_programming_notes/dataviz_tutorial1/01-building_graphs_layer_by_layer.html)
+#### [Building Graphs Layer by Layer](https://uc3mamelia.github.io/data_programming_notes/data-viz-1.html)
 
 -   ggplot, aes, geom_point, geom_line, geom_histogram, color, fill, facet_wrap
 
-#### [Tutorial 2](https://uc3mamelia.github.io/data_programming_notes/data-viz-2.html)
+#### [Scales and Guides](https://uc3mamelia.github.io/data_programming_notes/data-viz-2.html)
 
 -   scale_x_continuous, scale_y_continuous, scale_color_discrete(), labs, range(), lims(), breaks, guides, transformations
 
-#### [Tutorial 3](https://uc3mamelia.github.io/data_programming_notes/data-viz-3.html)
+#### [Coordinate Systems](https://uc3mamelia.github.io/data_programming_notes/data-viz-3.html)
 
 -   coordinate systems, coord_cartesian(), coord_flip(), coord_fixed(), pie charts, clipping, transformations, maps
 
-#### [Tutorial 4](https://uc3mamelia.github.io/data_programming_notes/data-viz-4.html)
+#### [Faceting](https://uc3mamelia.github.io/data_programming_notes/data-viz-4.html)
 
 -   faceting
 
-#### [Tutorial 5](https://uc3mamelia.github.io/data_programming_notes/data-viz-5.html)
+#### [Themes](https://uc3mamelia.github.io/data_programming_notes/data-viz-5.html)
 
 -   themes
 
-#### [Tutorial 6](https://uc3mamelia.github.io/data_programming_notes/data-viz-6.html)
+#### [Annotations](https://uc3mamelia.github.io/data_programming_notes/data-viz-6.html)
 
 -   annotations
 

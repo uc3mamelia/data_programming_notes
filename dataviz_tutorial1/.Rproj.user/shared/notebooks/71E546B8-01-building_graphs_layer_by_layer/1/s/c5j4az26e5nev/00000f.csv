@@ -1,3 +1,0 @@
-"0","ggplot(mpg) +"
-"0","  aes(displ, hwy, color=class) +"
-"0","  geom_point()"

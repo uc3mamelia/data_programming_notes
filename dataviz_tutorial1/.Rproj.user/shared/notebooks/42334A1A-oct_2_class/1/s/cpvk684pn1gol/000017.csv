@@ -1,3 +1,0 @@
-"0","  a <- starwars |>"
-"0","   distinct(hair_color)"
-"0","  count(a)"

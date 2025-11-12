@@ -1,3 +1,0 @@
-"0","starwars |>"
-"0","  filter(height > 160) |>"
-"0","  select(mass, name)"

@@ -1,5 +1,5 @@
 ---
-title: "Tutorial 2"
+title: "Scales and Guides"
 format: html
 editor: visual
 ---

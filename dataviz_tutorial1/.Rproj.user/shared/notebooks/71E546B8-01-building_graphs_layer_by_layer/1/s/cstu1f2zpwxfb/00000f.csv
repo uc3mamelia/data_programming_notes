@@ -1,2 +1,0 @@
-"0","ggplot(mpg, aes(cty, hwy)) + "
-"0","  geom_point()"
