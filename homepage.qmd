@@ -88,15 +88,17 @@ editor: visual
 
 #### [Faceting](https://uc3mamelia.github.io/data_programming_notes/data-viz-4.html)
 
--   faceting
+-   facet_grid, facet_wrap, controlling scales, missing faceting values
 
 #### [Themes](https://uc3mamelia.github.io/data_programming_notes/data-viz-5.html)
 
--   themes
+-   predefined themes, built-in themes, modifying themes, modifying text elements, modifying line elements, modifying borders, plot elements, axis elements, legend elements, panel elements, faceting elements, exporting (DPI)
 
 #### [Annotations](https://uc3mamelia.github.io/data_programming_notes/data-viz-6.html)
 
--   annotations
+-   titles, subtitles, guides, text labels, highlighting points, reference lines, reference areas, individual annotations (segments), spatial coordinates, direct labeling, annotating groups of points, gghighlight
+
+#### [Arranging Plots](https://uc3mamelia.github.io/data_programming_notes/data-viz-7.html)
 
 ## Retired
 

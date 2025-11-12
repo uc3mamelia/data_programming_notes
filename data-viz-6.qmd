@@ -258,9 +258,20 @@ p +
   annotate("text", x=3, y=42, hjust=0, nudge_x=0.1, label="These are outliers")
 ```
 
+Consult geom_segment for aesthetics. Must define x, y, xend or yend.
+
+You can specify arrows.
+
 #### Checkpoint 2
 
 1.  Using the `mpg` dataset, make a scatterplot of `y=hwy` vs. `x=displ`, and highlight some points by placing a yellowish shadow under them.
+
+```{r}
+ggplot(mpg) +
+  aes(displ, hwy) +
+  geom_point(data=annotation, color="yellow", size=3) +
+  geom_point(aes(color=factor(cyl)))
+```
 
 2.  Using the previous plot as the base, investigate how to apply `geom_abline()` to trace an oblique dashed line that goes through the coordinates (2, 10) and (3, 30).
 
@@ -294,7 +305,7 @@ ggplot(world) +
 Instead, we need to transform those coordinates to the new projection beforehand:
 
 ```{r}
-ottawa <- sf::st_sfc(sf::st_point(ottawa), crs=4326)
+ottawa <- sf::st_sfc(sf::st_point(ottawa), crs=4326) # add coordinate reference system CRS, can get it from the map
 melbourne <- sf::st_sfc(sf::st_point(melbourne), crs=4326)
 ottawa <- sf::st_transform(ottawa, "+proj=robin")[[1]]
 melbourne <- sf::st_transform(melbourne, "+proj=robin")[[1]]
@@ -304,6 +315,12 @@ ggplot(world) +
   annotate("segment", x=ottawa[1], y=ottawa[2],
            xend=melbourne[1], yend=melbourne[2]) +
   coord_sf(crs="+proj=robin")
+```
+
+To get the reference system of any object, we use:
+
+```{r}
+sf::st_crs(world)
 ```
 
 ## Direct labeling
