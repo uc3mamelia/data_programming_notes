@@ -1,0 +1,161 @@
+---
+title: "Data explorer"
+author: "Emma Perez"
+date: "2025-11-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Installation
+
+```{r}
+#install.packages("DataExplorer")
+#load libraries 
+  library(DataExplorer)
+library(tidyverse)
+```
+
+Includes measurements for penguin species, island in Palmer Archipelago, size (flipper length, body mass, bill dimensions), and sex.
+
+```{r}
+#taking data set and libraries for that dataset
+install.packages("palmerpenguins")
+library(palmerpenguins)
+```
+
+## EDA
+
+# Basic info
+
+```{r}
+#Gives the basic details about dataset
+str(penguins)
+```
+
+The dataset has 8 variables with 344 observations.
+
+```{r}
+#visualize the dataset
+plot_intro(penguins)
+```
+
+Very quick visualization of how many continuous variables you have, All Missing Columns is a column with all NAs.
+
+```{r}
+introduce(penguins)
+```
+
+Very similar function, but in a table form.
+
+# Missing values
+
+```{r}
+#missing plot values 
+plot_missing(penguins)
+```
+
+Percentage of missing values per each column.
+
+# Distributions of numeric vars
+
+```{r}
+#visualize data in histograms
+plot_histogram(penguins)
+```
+
+This gives the histograms as a continuous variable, but you can see that it interprets year as a continuous variable. This would need to be changed before building the model.
+
+```{r}
+#visualize density plot
+plot_density(penguins)
+```
+
+```{r}
+## View quantile-quantile plot of all continuous variables
+plot_qq(penguins)
+```
+
+Normality of the data. If the dots are exactly around the line, it means the data is mostly normal. Year is a factor encoded as a continuous variable.
+
+```{r}
+# Scatterplot `body_mass_g` with all other continuous features
+plot_scatterplot(split_columns(penguins)$continuous, by = "body_mass_g")
+
+#TIP: use split_columns to divide the dataset in 2 parts: continuous and discrete variables
+```
+
+Three continuous variables plotted with body mass. It seems we have a positive linear relationship between these variables, but bill depth has two groups. There is probably another variable causing these groups.
+
+# Bivariate analysis
+
+# Numeric features by species
+
+```{r}
+#visualize boxlots per species
+plot_boxplot(penguins, by = "species")
+```
+
+Create a box plot with the continuous variables with respect to the discrete variables specified in the argument "by". This explains the grouping we saw before.
+
+# Categorical variables by species
+
+```{r}
+plot_bar(penguins, by = "species")
+```
+
+This shows us the distribution of the other categorical variables divided by species.
+
+# Correlation analysis
+
+```{r}
+#heatmap visualisation
+plot_correlation(penguins)
+```
+
+This is a correlation matrix. The grey is because of the visualization in R.
+
+# Create a report with summary EDA
+
+```{r}
+# plot_intro() with a theme and title
+create_report(penguins)
+
+```
+
+In this, the correlation matrix looks normal. This is not enough explanatory data analysis for her class. We need to do it step by step and provide written explanation. Ignore everything after principle component analysis.
+
+# Feature engineering
+
+## Var type
+
+```{r}
+penguins <- update_columns(penguins, c("year"), as.factor)
+```
+
+## Encoding
+
+```{r}
+# One-hot encoding of species
+dummify(penguins, select = "species")
+```
+
+Creates dummies for the categorical variables.
+
+## Feature engineering
+
+```{r}
+penguins <- penguins %>% mutate(bill_area = bill_length_mm*bill_depth_mm)
+```
+
+This converts existing variables to new variables.
+
+## Scale
+
+```{r}
+scale(split_columns(penguins)$continuous)
+```
+
+This standardizes the measurements of all the variables.

@@ -1,0 +1,277 @@
+---
+title: "Topic 1 - Exercise 1"
+author: "Emma Perez"
+date: "10/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+```{r}
+# install.packages("datarium")
+library(tidyverse)
+
+data("marketing", package = "datarium")
+```
+
+```{r}
+head(marketing)
+```
+
+# Explore the dataset
+
+```{r}
+library(DataExplorer)
+# data overview 
+plot_intro(marketing)
+plot_missing(marketing)
+```
+
+```{r}
+# different graphs to understand data
+plot_scatterplot(marketing, by = "sales")
+plot_histogram(marketing)
+plot_density(marketing)
+#create_report(marketing)
+```
+
+# Checking colinearity among explanatory vars
+
+```{r}
+library(corrplot)
+# get explanatory variables
+expVar <- marketing[c("youtube", "facebook", "newspaper")]
+
+# correlation matrix
+corMatrix <- round(cor(expVar), 2)
+corrplot(corMatrix,method="number")
+
+```
+
+# Matrix correlation (all vars)
+
+```{r}
+plot_correlation(marketing)# in this case we are using dataexplorer
+```
+
+# Modelling data
+
+```{r}
+model <- lm(sales ~ ., data = marketing)
+summary(model)
+```
+
+For a fixed amount of youtube and newspaper budget, spending 1 more dollar on facebook ads leads to an increase in sales of 0.186 sales units on average.
+
+# Testing multicollinearity in the model
+
+omcdiag function Computes different overall measures of multicollinearity diagnostics for matrix of regressors
+
+```{r}
+library(mctest)
+omcdiag(model)
+```
+
+imcdiag function computes different measures of multicollinearity diagnostics for each regressor
+
+```{r}
+imcdiag(model)
+```
+
+It does not seem there is a multicollinearity problem in this data.
+
+# Testing linearity
+
+```{r}
+plot(model, 1)
+```
+
+A random scatter of points around the horizontal axis suggests linearity. A pattern (e.g., curves or systematic deviations) indicates potential non-linearity.
+
+# Testing normality of residuals
+
+```{r}
+# Normality of residuals
+plot(model, 2)
+```
+
+Saphiro Wilk test Ho: data is normally distributed
+
+```{r}
+shapiro.test(model$residuals)
+```
+
+P-value: In conventional hypothesis testing, a p-value less than 0.05 is considered evidence against the null hypothesis.Thus, seems that residuals are not normally distributed.
+
+# Testing homoscedasticity
+
+```{r}
+plot(marketing$sales,model$fitted.values)
+```
+
+```{r}
+plot(model, 3)
+```
+
+```{r}
+library(car)
+ncvTest(model)
+```
+
+Given the small p-value, you would reject the null hypothesis of homoscedasticity. This means there is statistically significant evidence of heteroscedasticity in model's residuals – the variance of the residuals is not constant across the range of fitted values.
+
+# Testing independence assumption
+
+Durbin-Watson test Ho: autocorrelation = 0 (there is no autocorrelation)
+
+```{r}
+durbinWatsonTest(model)
+```
+
+The Durbin-Watson p-value larger than 0.05 suggests that there isn't a strong autocorrelation in residuals
+
+### PART 2 ------
+
+Expand data - feature generation. Multiple and do quadratics of the existing data.
+
+```{r}
+# add quadratic, cubic and interaction terms to initial data
+marketing2 <- marketing %>%
+  mutate(
+    youtube2 = youtube^2,
+    youtube3 = youtube^3,
+    facebook2 = facebook^2,
+    facebook3 = facebook^3,
+    newspaper2 = newspaper^2,
+    newspaper3 = newspaper^3,
+    you_face = youtube*facebook,
+    you_news = youtube*newspaper,
+    face_news = facebook*newspaper
+  )
+```
+
+# Scale explanatory variables
+
+*Scaling* When we have explanatory variables with very different magnitudes, those with larger ranges can dominate those with smaller ranges in some ML algorithms, skewing results and leading to poor model performance.
+
+In the case of the linear model:
+
+-   Without scaling, coefficients reflect both the feature’s relationship with the target and the scale of the feature itself, making it challenging to compare their importance.
+
+-   After scaling, coefficients reflect each feature’s relative impact on target independently of its original magnitude, so we can compare them to get an idea of their importance -- but we cannot interpret coefficients as usual.
+
+```{r}
+# separate target and explanatory vars
+sales <- marketing2$sales
+
+exp_vars <- marketing2 |> dplyr::select(-sales)
+exp_vars_scaled <-as.data.frame(scale(exp_vars))
+
+# put all back together
+df <- cbind(sales, exp_vars_scaled)
+```
+
+# Matrix correlation (all vars)
+
+```{r}
+library(DataExplorer)
+
+plot_correlation(df)
+```
+
+Notice that sales is highly correlated with youtube and all its interactions and transformations.
+
+# Modeling data
+
+```{r}
+model <- lm(sales ~ ., data = df)
+summary(model)
+```
+
+We can see that interaction term coefficients for you_face and you_news are significant, suggesting that there is an interaction relationship between them.
+
+# Testing multicollinearity in the model
+
+omcdiag function Computes different overall measures of multicollinearity diagnostics for matrix of regressors
+
+```{r}
+library(mctest)
+omcdiag(model)
+```
+
+imcdiag function computes different measures of multicollinearity diagnostics for each regressor
+
+```{r}
+imcdiag(model)
+```
+
+As we included many variables created from original ones, we have multicollinearity
+
+# Testing linearity
+
+```{r}
+plot(model, 1)
+```
+
+A random scatter of points around the horizontal axis suggests linearity, which is what we can see here. Adding transformed predictors improved linearity as we are better capturing the relationship between the target and explanatory vars (the relationship between sales and youtube is probably non-linear)
+
+# Testing normality of residuals
+
+```{r}
+# Normality of residuals
+plot(model, 2)
+```
+
+Saphiro Wilk test Ho: data is normally distributed
+
+```{r}
+shapiro.test(model$residuals)
+```
+
+Even though the plot looks good, there are a few outliers in the distribution. The p-value is near 0, so we reject the null hyphotesis (normality)
+
+# Testing homoscedasticity
+
+```{r}
+plot(marketing$sales,model$fitted.values)
+```
+
+This looks like a funnel, wider at the left side of the graph.
+
+```{r}
+plot(model, 3)
+```
+
+```{r}
+library(car)
+ncvTest(model)
+```
+
+Homoskedasticity plots have improved too, but the ncv test p-value is almost 0 so we reject homoscedasticity (again, probably because of outliers). Up until now we have not met any of the assumptions.
+
+# Testing independence assumption
+
+Durbin-Watson test Ho: autocorrelation = 0 (there is no autocorrelation)
+
+```{r}
+durbinWatsonTest(model)
+```
+
+The Durbin-Watson p-value larger than 0.05 suggests that there isn't a strong autocorrelation in residuals (same than in Exercise 1). We don't have auto-correlation among our observations.
+
+rho is how they are expressing the auto-correlation matrix.
+
+# Check outliers and influential points
+
+```{r}
+# Cook's distance
+plot(model,4)
+```
+
+We see a large extreme value (131)
+
+Observation 131 is probably an influential point as it is very close to the cook's distance equal 1 outer dashed line)
+
+Overall, we have improved our LM by improving new variables which capture non-linear relationships!

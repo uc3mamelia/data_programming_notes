@@ -1,0 +1,98 @@
+---
+title: "Hypothesis testing recap"
+author: "Emma Perez"
+date: "10/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(ggplot2)
+library(tidyverse)
+#install.packages("FSA")
+library(FSA)
+```
+
+# Read data
+
+```{r}
+dd<-fread("Fish.csv",stringsAsFactors = F)
+dd
+```
+
+Do different species of fish have different weights?
+
+```{r}
+# Basic box plot
+p <- ggplot(dd, aes(x=Species, y=Weight)) + 
+  geom_boxplot()
+p
+```
+
+Test for normality of each variable (Saphiro Wilk test) Ho: data is normally distributed
+
+```{r}
+dd |>
+  select(-Species) |>
+  apply(MARGIN = 2, FUN = shapiro.test)
+```
+
+Seems that weight is not normally distributed (p-value \< 0.05) but we have a medium sample (159 obs) and we are going to test means, so we can use the parametric tests.
+
+Let's try both approaches:
+
+# Differences between 2 groups - ttest / Wilcox
+
+```{r}
+dd %>%
+  filter(Species == "Pike" | Species == "Perch") %>%
+   wilcox.test(Weight ~ Species, , data=.)
+```
+
+```{r}
+dd %>%
+  filter(Species == "Pike" | Species == "Perch") %>%
+  t.test(Weight ~ Species, data=.)
+```
+
+If the p-value is close to 0 for the Wilcoxon/t test, this indicates a statistically significant difference between the two groups.
+
+You would use two tests if you are not entirely sure from one test, or if you need to use a non-parametric test.
+
+# Differences between more than 2 groups - ANOVA / Kruskal- Wallis
+
+Kruskal-Wallis: Non-parametric
+
+```{r}
+# Kruskal-Wallis test
+kruskal.test(Weight ~ Species, data = dd)
+```
+
+Dunn test for pair-wise comparison
+
+```{r}
+dunnTest(Weight ~ Species, data = dd, method = "bonferroni")
+```
+
+The adjusted one corrects for when groups are not independent. In this example, it doesn't matter which one we look at, but if we suspect that the groups are not independent, we should use the adjusted one.
+
+Dependent groups are individuals in the first time before taking the drug and and after taking the drug. Dependent groups can also be measuring different things in the same individuals. Independent groups are groups with different individuals.
+
+Gives us a lot of combinations because we have a lot. Looks at the p-value and if it is significant, they are different.
+
+ANOVA: Parametric
+
+```{r}
+dd %>%
+  aov(formula = Weight ~ Species, data=.) %>%
+  summary()
+```
+
+Tukey HSD for pairwise comparison
+
+```{r}
+dd %>%
+  aov(formula = Weight ~ Species, data=.) %>%
+  TukeyHSD()
+```
