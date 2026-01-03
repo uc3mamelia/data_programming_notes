@@ -1,0 +1,351 @@
+---
+title: "Stats Assignment 3"
+format: html
+editor: visual
+author: Amelia Shuler
+---
+
+###### Libraries
+
+```{r}
+#| eval: TRUE
+#| output: FALSE
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(descr)
+library(ggplot2)
+library(dbplyr)
+library(ggpubr)
+library(Rmisc)
+library(lattice)
+library(plyr)
+library(gplots) # For balloonplot
+library(lsr) # For Cramers'V
+library(Hmisc)
+library(corrplot)
+library(PerformanceAnalytics)
+```
+
+###### Import and Refine Data
+
+```{r}
+population <- read.csv2("~/Desktop/stats-3/sgdata.csv", header=TRUE, sep=",")
+```
+
+```{r}
+# edit population sex data from 0 and 1
+population <- population |>
+  mutate(Sex = str_replace(Sex, "0", "female")) |>
+  mutate(Sex = str_replace(Sex, "1", "male"))
+```
+
+```{r}
+# create the age_range variable
+population <- population |>
+  mutate("age_range" = case_when(
+    Age <= 10 ~ "under 10",
+    Age <= 20 ~ "11-20",
+    Age <= 30 ~ "21-30",
+    Age <= 40 ~ "31-40",
+    Age <= 50 ~ "41-50",
+    Age <= 60 ~ "51-60",
+    Age <= 70 ~ "61-70",
+    Age <= 80 ~ "71-80",
+    Age > 80 ~ "81-+"))
+```
+
+### Qualitative Analysis
+
+Sex, martial status, education, and occupation are all categorical values. We will conduct a chi-squared test on those.
+
+[Sex and Education]{.underline}
+
+Is sex proportional to education?
+
+H0: sex and education proportions are equal.
+
+H1: sex and education proportions are not equal.
+
+```{r}
+# 1. Contingency table for sex and education
+ConTtable <- table(population$Sex, population$Education)
+RConTtable<-prop.table(ConTtable)*100
+
+# 2. Graphical visualization of the table.
+balloonplot(t(RConTtable), main ="Sex", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+```
+
+Visually, we can see that high school has larger dots across both males and females.
+
+```{r}
+# chi square test
+chisq.test(population$Sex, y = population$Education)
+```
+
+The chi-square test tells us that the p-value (\<2.2e-16) is super low, meaning that can reject the null hypothesis and say that Sex and Education proportions are not equal.
+
+```{r}
+# cramers V
+cramersV(ConTtable)
+```
+
+The Cramer's V test tells us that Sex and Education have a moderate relationship, of 0.295.
+
+[Sex and Occupation]{.underline}
+
+Is sex proportional to occupation?
+
+H0: sex and occupation are proportional.
+
+H1: sex and occupation are not proportional.
+
+```{r}
+# 1. Contingency table for sex and occupation
+ConTtable <- table(population$Sex, population$Occupation)
+RConTtable<-prop.table(ConTtable)*100
+
+# 2. Graphical visualization of the table.
+balloonplot(t(RConTtable), main ="Sex", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+unique(population$Occupation)
+```
+
+Visually, we can see that skilled employee / official has larger dots for both males and females.
+
+```{r}
+# chi square test
+chisq.test(population$Sex, y = population$Occupation)
+```
+
+The chi-square test tells us that the p-value (\<2.2e-16) is super low, meaning that we can reject the null hypothesis and say that Sex and Occupation are not proportional.
+
+```{r}
+# cramers V
+cramersV(ConTtable)
+```
+
+The Cramer's V test tells us that Sex and Education have a moderate relationship, of 0.206.
+
+[Education and Occupation]{.underline}
+
+Is Education proportional to Occupation?
+
+H0: Education and occupation are proportional.
+
+H1: Education and occupation are not proportional.
+
+```{r}
+# 1. Contingency table for education and occupation
+ConTtable <- table(population$Education, population$Occupation)
+RConTtable<-prop.table(ConTtable)*100
+
+# 2. Graphical visualization of the table.
+balloonplot(t(RConTtable), main ="Education", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+unique(population$Occupation)
+```
+
+Visually, we can see that high school education has the largest dots for all occupations.
+
+```{r}
+# chi square test
+chisq.test(population$Education, y = population$Occupation)
+```
+
+The chi-square test tells us that the p-value (6.793e-07) is super high, meaning that we can accept the null hypothesis and say that Education and Occupation are proportional.
+
+```{r}
+# cramers V
+cramersV(ConTtable)
+```
+
+The Cramer's V test also tells us the variables are not related, since the value is close to zero (0.1).
+
+### Quantitative Analysis
+
+Age and Income are quantitative variables. We will run a linear regression on them.
+
+[Age and Income]{.underline}
+
+```{r}
+data.dfB<-data.frame(population$Age, population$Income)
+#Correlation matrix
+res <- round(cor(data.dfB),2)
+#correlation matrix with p-values
+res2 <- rcorr(as.matrix(data.dfB))
+res2
+```
+
+Before using the correlation matrix plot, I've checked to see if the variables have a relationship before modeling and check for multi-collinearity. The first four points are the correlation coefficient: we can see that there is a moderate positive linear relationship (0.34) between age and income. The p-value is 0, meaning that the results are highly statistically significant.
+
+```{r}
+#Visualization of the data matrix
+corrplot(res, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+We can also see in the plot that age and income have larger / darker dots indicating a stronger, positive correlation.
+
+Because we have two variables with a strong linear correlation, let's use a simple linear regression to look at age's affect on income.
+
+H_0: Age does not predict Income.
+
+H_1: Age predicts income.
+
+```{r}
+ggplot(population, aes(x=Age, y=Income)) +
+  geom_point() +
+  geom_smooth(method='lm')
+```
+
+```{r}
+model <- lm(population$Income ~ population$Age) # linear model function
+summary(model) # returns residuals, coefficients, etc
+```
+
+```{r}
+population |>
+  dplyr::summarize(
+    "min" = min(Age)
+  )
+```
+
+The p-value is \<2e-16 for both variables, meaning we reject the null hypothesis and accept that age predicts income.
+
+When age is zero, Income is 81,182.10 USD, which here is not relevant because minimum age is 18 (and realistically people are not born earning money).
+
+For every 1 unit increase in Age, Income increases by 1,107.60 USD.
+
+Older individuals in this population tend to earn higher incomes, but the relationship is not very strong. Other factors (e.g., education, occupation, experience) likely also play major roles in explaining income differences.
+
+The multiple R-squared is 0.116, meaning 11.6% of the variation in income is explained by age. This suggests a weak linear relationship.
+
+Let's try to predict future values.
+
+```{r}
+predicted_income <- predict(model, newdata = population)
+```
+
+These are the predictions for every observation in the population. Let's compare them to the actual incomes.
+
+```{r}
+yhat = predict(model, newdata = population)
+e = population$Income - yhat
+e
+```
+
+This calculates the residuals for each of the new predictions. These residuals are large, meaning the model is missing the actual value by a lot. This makes sense since the model is only accounting for 11.6% of the variation.
+
+```{r}
+mean(e)
+```
+
+The mean of the residuals is 9.43562e-11, which is close to zero. The only issue with the model is the spread and pattern of the residuals. Let's visually plot the model ti check heteroskedasticity.
+
+```{r}
+plot(model)
+```
+
+In the residual vs fitted graph (first graph), the red line isn't flat, it curves slightly. This means the residuals spread unevenly as fitted values change. This shows non-linearity and heterskedasticity.
+
+In the Q-Q Residuals graph, both tails deviate from the straight line. This suggests the residuals are not normal, and that there are heavier upper tails.
+
+In the scale-location plot, we can see the red line trends slightly upward, meaning variance increases with fitted variables. This fits with the other two graphs and confirms heteroskedasticity. The spread of the residuals isn't constant.
+
+In the last graph, residuals vs leverage, we can see that there are a few outliers affecting our regression line. These could be age outliers or income outliers.
+
+Let's look at the spread of the residuals in a histogram.
+
+```{r}
+hist(e)
+```
+
+The residuals have a bell-shaped curve but are slightly positively skewed. This means the model is not appropriate for the data. This may mean needing to transform variables as logorithmic, add predictors such as education or experience, or use a non-linear model, which we will learn in Statistics II.
+
+Typically, I wouldn't calculate confidence intervals for an incorrect model, but just to show I know how to do it:
+
+```{r}
+# confidence intervals for new values
+x<-population$Age
+model<-lm(population$Income ~ x)
+predict(model, population, interval ="confidence")
+```
+
+These are the confidence intervals for the predicted values of salary for all 2000 datapoints in my original population. These ranges are rather tight and it is interesting to note that almost all these predictions are around 100,000 USD, which makes sense given that the mean is 120,954.40 USD.
+
+```{r}
+dp <-
+  ggplot(population, 
+         mapping = aes(y = Income)) + 
+  geom_boxplot(fill="lightblue")
+dp
+```
+
+[Multi-linear Regression]{.underline}
+
+While this dataset only has 2 quantitative variables, I want to show that I can conduct a multi-linear regression, so solely for the purpose of demonstration I am going to create two fake variables: number of children and weight. Obviously, in a real-world dataset doing this would be entirely problematic, so I cannot emphasis more that this is just for demonstration.
+
+```{r}
+# sorts data by income
+population <- population[order(population$Income), ]
+
+# find halfway point of data
+n <- nrow(population)
+half <- n / 2
+
+# Assign 0–3 to the bottom 50% (lower income group)
+population$number_of_children <- NA
+population$number_of_children[1:half] <- sample(0:3, size = half, replace = TRUE)
+
+# Assign 3–5 to the top 50% (higher income group)
+population$number_of_children[(half + 1):n] <- sample(3:5, size = half, replace = TRUE)
+
+# creates weight randomly generated
+population$weight <- sample(47:77, size = 2000, replace = TRUE)
+```
+
+Now with 4 quantitative variables, I can run a multi-linear regression. Let's see if there are patterns between Income and Age, number of children, or weight.
+
+```{r}
+model<-lm(Income ~ Age + number_of_children + weight, data = population)
+summary(model)
+```
+
+Here we can see that Age and number of children have a p-value of \<2e-16, so they are statistically significant. Let's drop weight since it is not statistically significant.
+
+```{r}
+newmodel <- lm(Income ~ Age + number_of_children, data = population)
+summary(newmodel)
+```
+
+Age and Number of Children are still statistically relevant even when weight is removed. When age and number of children is zero, Income is 62,660 USD, which here is not relevant because minimum age is 18 (and realistically people are not born earning money). It is interesting to note it is significantly smaller than the previous model's intercept (81,182.10 USD).
+
+For every 1 unit increase in Age, Income increases by 692.95 USD, holding the number of children constant. For every 1 unit increase in number of children with age held constant, Income increases by 12,193.83 USD.
+
+Based on the residual standard error, we can see that the predictions deviate from actual income by 30,590 USD. The model only explains 35.56% of the variation in income. This is a huge improvement of the previous model, since Age vs Income only explained 11.6% of the variation.
+
+We can formally compare the models using an ANOVA.
+
+```{r}
+# Model 1: Simple regression
+model1 <- lm(Income ~ Age, data = population)
+
+# Model 2: Multiple regression
+model2 <- lm(Income ~ Age + number_of_children, data = population)
+
+anova(model1, model2)
+```
+
+The residual sum of squares drops from 2.5663e+12 to 1.8688e+12 when adding number of children. This means the reduction in error is highly significant, confirming that adding number_of_children significantly improves the model fit beyond what age could explain.
+
+##### Addendum 1:
+
+I used some descriptive statistical tools in this assignment: I looked at mean, max, min, and boxplots. Mean is the average of a dataset - all points are added together and then divided by the total number of observations. Max is the highest number in a set of observations. Min is the lowest number in a set of observations. A boxplot visualizes the median, spread, and outliers of a numerical variable.
+
+For qualitative analysis, I used hypothesis testing, balloon plots, chi squared testing and cramers V. Hypothesis testing is a tool to make inferences about a population by examining a sample of its data. The null hypothesis always assumes the default, whereas the alternative hypothesis tests the idea you want to validate. The balloon plot is a visualization tool that uses circles in a grid. The size of the balloon is proportional to the value it represents, and can compare sizes across different categories. Chi Square test makes claims about proportions in categorical data. It is a type of test that can be used with hypothesis testing to determine inference. The Cramer's V test, used in conjunction with the Chi Square test, measures the association of the two variables between 0-1, with 1 representing a perfect association.
+
+For the first quantitative analysis, I used a simple linear regression. A simple linear regression studies the correlation between one independent variable (X) and it dependent variable (Y). It finds a linear relationship between the two variables and fits a 'best-fit' straight line across the data. The space between the actual value and the predicted value is called a 'residual'. A simple linear regression assumes a linear relationship, homogeneity (that the errors have a mean of zero), homoscedasticity (that the variance of the errors is constant), independence of the errors (one observation doesn't imply anything about the other), and normality (that the errors follow a normal distribution). To check these assumptions, I conducted residual analysis. I also used the simple linear model to predict observations (later combined with confidence intervals to give a range of the predicted observation) and compared predicted and actual values to evaluate the model.
+
+For the second analysis, I used a multi-linear regression looking at the relationship of indepdent variables age, number of children, and weight on dependent variable income. A multi-linear regression is different from a simple linear regression because it looks at more than one independent variable. After building and evaluation the model, I compared the first linear model with the second multi-linear model using an ANOVA test, which evaluates variance between two groups.

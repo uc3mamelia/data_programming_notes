@@ -35,3 +35,109 @@ Just as you can go *forward*, you can go **backwards**:
 ![](images/clipboard-4052391029.png)
 
 `-R` stands for reverse. This reverses the patch to get the previous file.
+
+Quarto works in R and python.
+
+-   Document Formats (article, report, book, presentation, website)
+
+-   File formats (HTML, PDF, EPUB, DOCX, PPTX)
+
+Markup language
+
+-   a text encoding system consisting of a set of symbols inserted in a text document for control its structure, formatting, or the relationship between its parts
+
+-   often used to control the display of the document or to enrich its content to facilitating automated processing
+
+Markdown
+
+-   a markup language invented in 2004 by Gruber and Swartz
+
+-   easy to read by machines and by humans
+
+YAML
+
+-   human readable data-serialization language
+
+R Markdown
+
+-   An (optional) YAML header surrounded by `---`s
+
+-   Text mixed with simple text formatting in Markdown
+
+-   **Executable code chunks** surrounded by ```` ``` ````s
+
+-   [Code chunks](https://rmarkdown.rstudio.com/lesson-3.html)
+
+    -   Code chunks can be multiple languages
+
+    -   Chunk options
+
+    -   Figure output
+
+-   [Inline code](https://rmarkdown.rstudio.com/lesson-4.html)
+
+-   [Code languages](https://rmarkdown.rstudio.com/lesson-5.html)
+
+-   [Parameters](https://rmarkdown.rstudio.com/lesson-6.html)
+
+-   [Tables](https://rmarkdown.rstudio.com/lesson-7.html)
+
+    -   tables in R markdown suck, so better to use one of the following from the table tab
+
+-   [Output formats](https://rmarkdown.rstudio.com/lesson-9.html)
+
+Showcase
+
+-   [ioslides](https://bookdown.org/yihui/rmarkdown/ioslides-presentation.html)
+
+-   [slidy](https://bookdown.org/yihui/rmarkdown/slidy-presentation.html)
+
+-   [Beamer (PDF)](https://bookdown.org/yihui/rmarkdown/beamer-presentation.html)
+
+-   [PowerPoint](https://bookdown.org/yihui/rmarkdown/powerpoint-presentation.html)
+
+-   [reveal.js](https://bookdown.org/yihui/rmarkdown/revealjs.html)
+
+-   [xaringan](https://bookdown.org/yihui/rmarkdown/xaringan.html)
+
+-   [Tufte Handouts](https://bookdown.org/yihui/rmarkdown/tufte-handouts.html)
+
+-   [Websites](https://bookdown.org/yihui/rmarkdown/websites.html)
+
+-   [Books](https://bookdown.org/yihui/rmarkdown/books.html)
+
+-   [Journals](https://bookdown.org/yihui/rmarkdown/journals.html)
+
+    -   package called rticles which is templates for scientific journals
+
+-   [**Distill**](https://rstudio.github.io/distill/)
+
+<!-- -->
+
+-   The `htmlwidgets` package provides a framework for creating R bindings to create **web components**.
+
+-   Charts, but also maps, diagrams, tables, forms... and even mini-apps. Basically, any HTML component with optional **JavaScript**.
+
+-   You don't generally need to use the `htmlwidgets` package directly. Many packages use it to provide many components.
+
+-   They can be
+
+    -   used at the R console for data analysis, just like conventional R plots;
+
+    -   embedded within any **HTML document**;
+
+    -   saved as standalone web pages for ad-hoc sharing.
+
+<https://gallery.htmlwidgets.org/>
+
+Dashboards
+
+-   With the [`flexdashboard`](https://pkgs.rstudio.com/flexdashboard/) package, you can
+
+    -   use R Markdown to produce dashboards;
+
+    -   embed a wide variety of components, including HTML widgets;
+
+    -   specify flexible layouts that resize automatically;
+
+    -   use **Shiny** for dynamic content.

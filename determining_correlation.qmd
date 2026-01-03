@@ -1,0 +1,55 @@
+---
+title: "Robust Correlation"
+format: html
+editor: visual
+---
+
+## We generate some toy data to show different ways to compute correlation:
+
+```{r}
+xx <-runif(n = 1000,min=0,max=1)
+yy <-xx^2 + rnorm(n=1000,sd=0.1)
+yy[800:1000]<--4*xx[800:1000]^6
+
+plot(xx,yy)
+```
+
+### Pearson Correlation
+
+```{r}
+cor1<-cor(xx,yy)
+print(cor1)
+```
+
+However, we can use some other robust methods against outliers:
+
+### Spearman Correlation
+
+-   more robust to outliers than Pearson
+
+-   If you don't have outliers and have a normally distributed data, you don't need to use Spearman.
+
+-   measures by ranks of data for correlation
+
+```{r}
+cor(xx,yy, method = "spearman")
+```
+
+### Robust Correlation from Robust Covariance Matrix
+
+The best method when you have outliers
+
+```{r}
+library(MASS)
+ccs<-cov.rob(data.frame(xx,yy))
+cor2<-cov2cor(ccs$cov)[1,2]
+print(cor2)
+```
+
+```{r}
+plot(xx,yy)
+points(xx,cor1*xx,col="red")# pearson
+points(xx,cor2*xx,col="blue")# robust 
+```
+
+The part trending down is all outliers.

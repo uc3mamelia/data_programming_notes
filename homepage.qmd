@@ -72,6 +72,28 @@ editor: visual
 
 -   associative analysis, volume plots, correlograms, matrix of scatterplots, simple linear regression, residuals, coefficients, multiple linear regression, ANOVA for every variable
 
+## Stats II Notes
+
+-   Exploratory Data Analysis
+
+-   Determining Correlation
+
+-   Hypothesis Testing
+
+-   Linear Regression
+
+-   Logistic Regression
+
+-   Regularization - Caret
+
+-   Regularization - GLM Net
+
+-   Multinomial Classification
+
+-   Poisson Regression
+
+-   Regularized GLMs
+
 ## Data Visualization Notes
 
 #### [Building Graphs Layer by Layer](https://uc3mamelia.github.io/data_programming_notes/data-viz-1.html)

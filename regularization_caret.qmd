@@ -1,0 +1,216 @@
+---
+title: "Regularization Caret"
+format: html
+editor: visual
+---
+
+# Load data
+
+```{r}
+library(tidyverse)
+data("marketing", package = "datarium")
+head(marketing)
+```
+
+Expand data - feature generation
+
+```{r}
+marketing2 <- marketing |>
+  mutate(
+    youtube2 = youtube^2,
+    youtube3 = youtube^3,
+    facebook2 = facebook^2,
+    facebook3 = facebook^3,
+    newspaper2 = newspaper^2,
+    newspaper3 = newspaper^3,
+    you_face = youtube*facebook,
+    you_news = youtube*newspaper,
+    face_news = facebook*newspaper
+  )
+
+```
+
+Scale data *(ESSENTIAL in shrinkage methods as penalty is applied on coefficients!!)*
+
+```{r}
+# separate target and explanatory vars
+sales <- marketing2$sales
+
+exp_vars <- marketing2 |> select(-sales)
+exp_vars_scaled <-as.data.frame(scale(exp_vars))
+
+# put all vars back together
+df <- cbind(sales, exp_vars_scaled)
+```
+
+# Data split
+
+This splits the data for cross-validation.
+
+```{r}
+library(caret)
+training.samples <- marketing2$sales %>% 
+  createDataPartition(p = 0.8, list = FALSE) #proportion of the split
+
+train.data  <- df[training.samples, ]
+test.data <- df[-training.samples, ]
+```
+
+# Train models using Caret
+
+We will use 10-fold cross validation to look for the best values of lambda in Lasso and Ridge, and also for alpha in ElasticNet.
+
+-   The dataset is split into 10 subsets (or folds)
+-   The model is trained on 9 folds and tested on the remaining fold.
+-   This process repeats 10 times, each time using a different fold as the test set.
+
+## Lambda possible values
+
+```{r}
+# This creates a sequence of 100 possible lambda values (a broad range) - those to try during training
+lambda <- 10^seq(-3, 3, length = 100)
+```
+
+For each lambda value, the model is trained and evaluated on all 10 folds. The lambda value with the lowest average error will be chosen as the best lambda
+
+## Train Ridge regression with caret (alpha = 0)
+
+```{r}
+ridge <- train(
+  sales ~., # input data
+  data = train.data, # specify data
+  method = "glmnet", # specify method
+  trControl = trainControl("cv", number = 10), # specify how you want the cross-validation to be performed, cv is cross validation, number is number of folds
+  tuneGrid = expand.grid(alpha = 0, lambda = lambda) # set of lambda values to test (we provide them), R is performing parameter tuning
+)
+```
+
+```{r}
+# Check best parameters 
+# name of model $ save best parameters
+ridge$bestTune
+```
+
+```{r}
+# Get the best model's coefficients
+best_lambda <- ridge$bestTune$lambda
+ridge_coefficients <- coef(ridge$finalModel, s = best_lambda)
+
+ridge_coefficients
+
+ridge$finalModel$lambda # 100 lambdas tested 
+```
+
+## Train Lasso regression with caret (alpha = 1)
+
+```{r}
+lasso <- train(
+  sales ~., data = train.data, method = "glmnet",
+  trControl = trainControl("cv", number = 10),
+  tuneGrid = expand.grid(alpha = 1, lambda = lambda)
+)
+
+```
+
+Some missing values were found when running the Lasso model. It's fine.
+
+```{r}
+# Get the best model's coefficients
+lasso_best_lambda <- lasso$bestTune$lambda
+lasso_coefficients <- coef(lasso$finalModel, s = best_lambda)
+
+lasso_coefficients
+```
+
+We removed too many variables and now only have 2. We would need to refine this.
+
+## Train ElasticNet with caret
+
+```{r}
+elastic <- train(
+  sales ~., data = train.data, method = "glmnet",
+  trControl = trainControl("cv", number = 10),
+  tuneLength = 10 #number of combinations to test (we do not provide values, caret chooses)
+  )
+```
+
+Here, alpha will vary between 0 and 1, allowing Elastic Net to balance Ridge and Lasso. If we don't provide values for alpha, R will be able to try various ones.
+
+tuneLength = 10 tells caret to automatically generate a grid of 10 values for alpha and lambda, which will adjust the penalty mix and strength based on cross-validation.
+
+```{r}
+elastic$bestTune
+```
+
+```{r}
+# Get the best model's coefficients
+elastic_best_lambda <- elastic$bestTune$lambda
+elastic_coefficients <- coef(elastic$finalModel, s = best_lambda)
+
+elastic_coefficients
+```
+
+## Train standard linear regression with caret
+
+```{r}
+linear<-train(sales ~., data = train.data,
+              method = 'lm',
+              metric =  "RMSE",
+              trControl = trainControl("cv", number = 10)
+              )
+```
+
+```{r}
+# Get the best model's coefficients
+linear_coefficients <- coef(linear$finalModel)
+
+linear_coefficients
+```
+
+# Comparing models
+
+```{r}
+models <- list(ridge = ridge, 
+               lasso = lasso, 
+               elastic = elastic, 
+               linear=linear)
+
+resamples(models) %>% summary()
+```
+
+# Make predictions (test data)
+
+To make predictions with the trained Lasso and Elastic Net models in caret, you can use the predict() function, specifying the new data you want to predict on.
+
+The predict() function automatically uses the best-tuned parameters (best lambda and alpha for each model) stored in the finalModel within the caret object.
+
+```{r}
+elastic_predictions <- predict(elastic, newdata = test.data)
+
+ridge_predictions <- predict(ridge, newdata = test.data)
+
+lasso_predictions <- predict(lasso, newdata = test.data)
+
+linear_predictions <- predict(linear, newdata = test.data )
+```
+
+# Compute MSE on test data
+
+Comparison of each model's error on the test data, helping you to identify which model performs best
+
+```{r}
+mse <- function(actual, predicted) {
+  mean((actual - predicted)^2)
+}
+
+# Calculate MSE for each model
+ridge_mse <- mse(test.data$sales, ridge_predictions)
+lasso_mse <- mse(test.data$sales, lasso_predictions)
+elastic_mse <- mse(test.data$sales, elastic_predictions)
+linear_mse <-  mse(test.data$sales, linear_predictions)
+
+ridge_mse
+lasso_mse
+elastic_mse
+linear_mse
+```

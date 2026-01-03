@@ -1,0 +1,144 @@
+---
+title: "C1"
+author: "Alejandro Llorente"
+date: "26/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+data("marketing", package = "datarium")
+```
+
+```{r}
+head(marketing)
+```
+
+Extending and scaling variables
+
+```{r}
+marketing2 <- marketing %>%
+  mutate(
+    youtube2 = youtube^2,
+    youtube3 = youtube^3,
+    facebook2 = facebook^2,
+    facebook3 = facebook^3,
+    newspaper2 = newspaper^2,
+    newspaper3 = newspaper^3,
+    you_face = youtube*facebook,
+    you_news = youtube*newspaper,
+    face_news = facebook*newspaper
+  )
+
+# scale data
+marketing2<-as.data.frame(scale(marketing2))
+  
+```
+
+Computing linear model with additional data
+
+Defining the model we ran previously
+
+```{r}
+modellm<-lm(sales ~ .,data=marketing2)
+round(coefficients(modellm),3)
+```
+
+```{r}
+summary(modellm)
+```
+
+We should remove the ones that do not have significant codes. We could do this manually, but we will ask an algorithm to do it for us.
+
+## Glmnet
+
+Now let's use glmnet to apply regularization!
+
+The glmnet package fits regularized regression models (like Lasso, Ridge, and Elastic Net).
+
+Fits a set of models for a sequence of λ values that you specify (our grid)
+
+alpha=1 is the lasso penalty, and alpha=0 the ridge penalty.
+
+### Ridge Regression
+
+```{r}
+library(glmnet)
+
+X<-marketing2 |> select(-sales)
+Y<-marketing2 |> select(sales)
+
+# grid with lambda values to try
+# usually, we want to provide R with a wide range of values
+grid = 10^seq(10, -2, length = 100) 
+# length = 100 provides 100 values
+# 10 and -2 are the powers, so you get really small numbers and really really big numbers
+
+# see grid of numbers
+options(scipen = 999)
+grid
+
+#ridge regression (alpha=0, search for best lambda)
+# lambda = grid takes lambda from the grid defined above
+modelR<-glmnet(x=X, y=Y[,1], lambda=grid, alpha=0)
+```
+
+The model is "selecting for the best lambda." We will use a hypothetically selected lambda value of 0.05. (Usually it would be more like 0.0590274).
+
+### Check coefficients for a given lambda
+
+```{r}
+# Get coefficients at λ = 0.05
+# s is indicating the lambda we want to use
+# this is just an example, we don't need to run this for real
+coef(modelR, s = 0.05)
+```
+
+Look for the best lambda value \> model with the maximum dev.ratio (like R2)
+
+```{r}
+library(broom)
+MR<-tidy(modelR) # makes the output of the model more cleanly
+MR |>
+  filter(dev.ratio == max(MR$dev.ratio)) |> 
+  mutate(across(c(estimate,dev.ratio), round, 3))
+# this is showing us that the best lambda is 0.01
+```
+
+Estimate is the estimated coefficient for each variable. The variables with smaller coefficients are the ones that are less important for the model.
+
+R is trying all the models for the various lambdas using the whole dataset and tells us the best lambda as results.
+
+## Cross-Validation
+
+Now lets use cross validation to select the best lambda
+
+cv.glmnet() Performs k-fold cross-validation (default: 10-fold) to automatically find the optimal λ.
+
+It internally calls glmnet() multiple times for different λ’s and partitions of the data.
+
+lambda.min → λ giving the minimum cross-validation error.
+
+### Lasso Regression
+
+```{r}
+#lasso regression (alpha=1, search for best lambda) and do CV
+modelL<-cv.glmnet(x=as.matrix(X), y=Y[,1], lambda=grid, alpha=1)
+
+#extract coefficients
+coef(modelL, s = "lambda.min") # telling R to use the lambda that minimizes the error
+
+#compute predictions for 10 observations
+predict(modelL, newx=as.matrix(X)[1:10,], s="lambda.min")
+
+
+```
+
+The variables that are just a dot are the variables R has removed.
+
+NOTE\*\*
+
+In glmnet, the deviance is the model’s measure of lack of fit — like the residual sum of squares
+
+For each value of λ (the regularization parameter), the model has a certain deviance. The dev.ratio is the fraction of deviance explained by the model relative to the null model (a model with only the intercept).

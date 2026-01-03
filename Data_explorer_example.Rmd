@@ -22,7 +22,7 @@ Includes measurements for penguin species, island in Palmer Archipelago, size (f
 
 ```{r}
 #taking data set and libraries for that dataset
-install.packages("palmerpenguins")
+# install.packages("palmerpenguins")
 library(palmerpenguins)
 ```
 

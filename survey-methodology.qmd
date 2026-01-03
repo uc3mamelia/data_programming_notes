@@ -1,0 +1,192 @@
+---
+title: "Survey Methodology"
+format: html
+editor: visual
+---
+
+# Packages
+
+```{r}
+library(tidyverse) # for tidyverse
+library(here) # for file paths
+library(survey) # for survey analysis
+library(srvyr) # for tidy survey analysis
+library(sampling)
+```
+
+# Tidy Survey Analysis in R using the srvyr Package
+
+## Goals
+
+Grading component next week. He will show us code and we will do exercises that we have to hand in at the end of class.
+
+At the end of this workshop series, we will be able to:
+
+-   specify a survey design in R to create a survey object
+
+-   calculate point estimates and their standard errors with survey data
+
+    -   means, quantiles, ratios
+
+    -   Proportions, totals, and counts
+
+-   Perform t-tests
+
+-   Fit regression models
+
+## Resources
+
+[Survey Sampling Package](https://cran.r-project.org/web/packages/sampling/index.html)
+
+Stephanie A. Zimmer, Rebecca J. Powell, and Isabella C. Velásquez. 2024. Exploring Complex Survey DataAnalysis Using R. CRC Press
+
+## Sampling Review
+
+-   **Simple random sampling:** every unit has the same chance of being selected
+
+    -   Without replacement: units can only be selected once
+
+    -   With replacement: units can be selected more than once
+
+-   **Systematic sampling:** sample of n individuals from an ordered list and sampling individuals at an interval with a random starting point
+
+-   **Probability proportional to size:** probability of selection is proportional to "size"
+
+-   **Stratified sampling:** divide population into mutually exclusive subgroups (strata). Randomly sample within each stratum
+
+-   **Clustered sampling:** divide population into mutually exclusive subgroups (clusters). Randomly sample clusters and then individuals within clusters
+
+    -   implemented because of practical concerns
+
+[**Important Note:**]{.underline}
+
+Simple Random Sampling is not really achievable, but it is what our statistical metrics are based on.
+
+## Package
+
+The sampling package provides a set of useful functions for...
+
+-   [Sampling]{.underline}: Stratification, two-stage, unequal probabilities, balanced sampling
+
+-   [Estimation]{.underline}: calibration and regression estimator
+
+-   [Tools]{.underline}: computation of inclusion probabilities, crossing strata
+
+-   [Data bases]{.underline}: Swiss municipalities, Belgian municipalities.
+
+### Example Use Case: select a sample size of 10 out of a population of 50
+
+```{r}
+s <- srswor(n = 10,## Sample size
+            N = 50 ## Population size
+)
+matrix(s, nrow = 5, byrow = TRUE)
+
+# selected example ids
+which(s == 1)
+```
+
+### Example Use Case: Stratified Sampling
+
+```{r}
+# variable of stratification in this case 3
+group <- rep(1:3, each = 5)
+
+# matrix of balancing variables
+X <- cbind(1:15)
+
+# vector of inclusion probabilities (sample of 9)
+pik <- rep(3/5, times = 15)
+
+# selection of a stratified sample
+s <- balancedstratification(X = X, strata = group, pik = pik, comment = FALSE)
+
+# the sample is
+matrix(s, nrow = 3, byrow = TRUE)
+which(s==1)
+```
+
+### Example Use Case: Clustered Sampling
+
+```{r}
+# selection of 2 clusters
+s <- balancedcluster(
+   X = X, m = 2, cluster = group,
+   selection = 2, # cluster selection equal or by size
+   comment = FALSE
+)
+
+# sample of clusters with the inclusion probabilities of the clusters
+head(s)
+
+# selected clusters
+unique(group[s[,1]==1])
+
+# selected units
+which(s[,1]==1)
+```
+
+# Overview of Survey Analysis using srvyr Package
+
+1.  Create a `tbl_svy` object using: `as_survey_design` or `as_survey_rep`
+2.  Subset data (if needed) using `filter` (sub-populations)
+3.  Specify domains of analysis using `group_by`
+4.  Within `summarize`, specify variables to calculate including means, totals, proportions, quantiles, and more
+
+If we do clustered random sampling, we have to correct the point estimates. Let's say we know education has a bell-shaped distribution. Some clusters are rich and some are poor, so the distribution might be skewed and not match the population distribution.
+
+When we compute standard errors, we are assuming simple random sampling. A simple random sample would be more precise. There is less variation you are covering in your clusters than you have in the overall population.
+
+If we don't take into the account the sampling strategy, we will underestimate the uncertainty. Our confidence intervals are tighter than they should be.
+
+## How to Determine the Design
+
+1.  Look at the documentation associated with the analysis file
+2.  keywords to look for: methodology, design, analysis guide, technical documentation
+3.  documentation will indicate the variables needed to specify the design. Look for:
+    -   weight (almost always)
+    -   strata, clusters, PSUs; OR pseudo-strata, pseudo-cluster (a method to anonymitize the data); OR replicate weights (a method to anonymitize the data)
+    -   finite population correction or population sizes
+4.  Documentation may include syntax for SAS, SUDAAN, Stata, and/or R
+
+Weight is the inverse of the inclusion probability.
+
+### Surveys
+
+-   [American National Election Study (ANES) 2020](https://electionstudies.org/data-center/2020-time-series-study/)
+
+    -   Example of weighting
+
+-   [Residential Energy Consumption Survey (RECS) 2015](https://www.eia.gov/consumption/residential/index.php)
+
+    -   Example of replicate weights
+
+```{r}
+library(survey)
+RECS15 <- read.csv(
+  file = './Data/recs.rds',
+  header=TRUE,
+  sep= ","
+)
+sampweights <- RECS15$NWEIGHT
+brrwts <- RECS15[, grepl(“^BRRWT”, names(RECS15))]
+des <- svrepdesign(
+  weights = sampweights,
+  repweights = brrwts,
+  type = "Fay",
+  rho = 0.5,
+  mse = TRUE,
+  data = RECS15)
+```
+
+## Weighted Analysis for Continuous Variables: Domain Analysis
+
+If we want to get estmates by another variable, we need to add a `group_by` statement before doing the analysis.
+
+Example: What is the average amount of dollar spent on electricity for households that use AC and those that do not use AC?
+
+```{r}
+recs_des |> 
+  group_by(ACUsed) |> 
+  summarize( ElBill=survey_mean(DOLLAREL, na.rm=TRUE) )
+```

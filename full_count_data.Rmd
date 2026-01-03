@@ -1,0 +1,394 @@
+---
+title: "full poisson"
+author: "Emma Perez"
+date: "2025-12-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+# RECAP OF POISSON REGRESSION ASSUMPTIONS
+
+1. Poisson Response: The response variable is a count per unit of time or space, described by a Poisson distribution.
+2. Independence: The observations must be independent of one another.
+3. Mean=Variance: By definition, the mean of a Poisson random variable must be equal to its variance.
+4. Linearity The log of the mean rate, log(λ), must be a linear function of regressors.
+
+# Load data ----
+
+Infidelity data, known as Fair's Affairs. Cross-section data from a survey conducted by Psychology Today in 1969.
+
+```{r}
+# install.packages("datasets")
+data(Affairs, package = 'AER')
+```
+
+
+- affairs: is the number of extramarital affairs in the past year and is our response variable
+- gender
+- age
+- yearsmarried
+- children (yes or no)
+- religiousness (1 - anti, 5 - very)
+- education
+- rating self rating of the marriage 1 (very unhappy) to 5 (very happy)
+- and some others
+
+```{r}
+summary(Affairs)
+```
+
+Have a close look at the distribution of our target variable: 75% of our observations are 0. 
+
+```{r}
+Affairs$occupation <- as.factor(Affairs$occupation)
+```
+
+
+# EDA -----
+
+```{r}
+library(DataExplorer)
+
+plot_intro(Affairs)
+```
+
+```{r}
+# histogram
+hist(Affairs$affairs)
+
+#density plot 
+success <- min(Affairs$affairs):max(Affairs$affairs)
+
+plot(density(Affairs$affairs),ylim=c(0,0.5), xlim = c(0,15))+
+lines(success,dpois(success, lambda=mean(Affairs$affairs)),col="green")
+```
+Check the target variable and its relation to other vars
+
+```{r}
+plot_histogram(Affairs)
+
+plot_boxplot(Affairs, by = "affairs")
+```
+
+There might be a relationship between rating and having an affair because the box plots scale to the right. Maybe years married and affairs since they tend to have a small relationship.
+
+```{r}
+#gender
+boxplot(affairs ~ gender, data = Affairs, main = "Number of Affairs by Gender", ylab = "Number of Affairs", xlab = "Gender")
+wilcox.test(affairs ~ gender, data = Affairs)
+```
+
+We can determine that gender is not statistically significant, but with non-normal distribution these tests are not as reliable.
+
+```{r}
+# children
+boxplot(affairs ~ children, data = Affairs, main = "Number of Affairs by Children", ylab = "Number of Affairs", xlab = "Children")
+wilcox.test(affairs ~ children, data = Affairs)
+```
+
+With children, we can see it is statistically significant.
+
+```{r}
+library(GGally)
+ggcorr(Affairs, label = T, method = c("all.obs","spearman"))
+```
+Most related vars to the target are: years married and rating of marital satisfaction
+
+but are very weak
+
+Check mean and variance of target
+
+```{r}
+mean<- mean(Affairs$affairs)
+var <- var(Affairs$affairs)
+
+var/mean
+```
+
+variance is 7 times bigger than the expected value of y. We can guess we have a problem of dispersion.
+
+# split data 
+
+```{r}
+training.samples <- Affairs$affairs %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+
+train.data  <- Affairs[training.samples, ]
+test.data <- Affairs[-training.samples, ]
+```
+
+Simple Cross Validation 80 / 20
+
+# Train and compare models
+
+Let's train a linear and a poisson model to start with
+
+```{r}
+formula <- affairs ~ age + yearsmarried + religiousness + rating + rating*religiousness + children 
+```
+
+We are going to train a linear model to see how it compares to a Poisson regression.
+
+```{r}
+# Train a LM model
+lm_model <- lm(formula, data = train.data)
+
+summary(lm_model)
+
+# Train a poisson model
+poisson_model <- glm(formula, family = poisson, data = train.data)
+
+poisson_model
+```
+
+From the linear model we see that rating and years married are the important variables.
+
+This is the results of the poisson model. The residual deviance is lower than the null deviance, so it is better than a random model. However, it is much higher than the degrees of freedom, which means it does not fit the model.
+ 
+Compare models using Achaiche information criteria (AIC)
+
+```{r}
+aic_results <- AIC(lm_model, poisson_model)
+
+# Show results
+list(AIC = aic_results)
+
+```
+Because our AIC is lower for the poisson model, we can see that the poisson is better than a linear model. 
+
+Lower AIC in Poisson -> better model than linear for this data
+
+Compare MAE for both models
+
+```{r}
+lm_preds <- predict(lm_model, type = "response", newdata = test.data)
+poisson_preds <- predict(poisson_model, type = "response",  newdata = test.data)
+
+lm_MAE <- mean(abs(test.data$affairs - lm_preds))
+poisson_MAE <- mean(abs(test.data$affairs - poisson_preds))
+
+lm_MAE
+poisson_MAE
+```
+
+This is the residual of errors. Mean absolute error. Comparing them, neither are close to the correct answer of 1.5.
+
+We can also tabulate predictions vs actual values like in a confusion matrix
+
+```{r}
+table(true = test.data$affairs, pred = round(poisson_preds))
+
+```
+Most people have zero numbers of affairs. But we are predicting a lot of values that should be zero. The poisson regression expects there to be more values than zeros, but in our data this is not the case.
+
+```{r}
+# Calculate Pearson residuals
+fitted_values <- fitted(poisson_model)
+pearson_residuals <- residuals(poisson_model, type = "pearson")
+
+# Plot residuals vs fitted values
+plot(fitted_values, pearson_residuals,
+     xlab = "Fitted Values", ylab = "Pearson Residuals",
+     main = "Residuals vs Fitted")
+abline(h = 0, col = "red", lty = 2)
+```
+We want to have a cloud of dots around the line, rather than patterns.
+
+If residuals show a pattern, additional predictors or transformations may be needed.(Random scatter around zero suggests a well-fitting model)
+
+One possible remedy is to incorporate interaction terms, capturing complex relationships between predictors.
+
+This may improve model fit, but can lead to overfitting.
+
+# Overdispersion -----
+
+```{r}
+# Extract residual deviance
+residual_deviance <- poisson_model$deviance
+
+# Extract residual degrees of freedom
+residual_df <- poisson_model$df.residual
+
+# Compute dispersion factor
+dispersion_factor <- residual_deviance / residual_df
+
+dispersion_factor
+```
+
+Quite high dispersion factor! The variance is very high in the model, and we have a problem with overdispersion. It should be lower than 1.5.
+
+```{r}
+# Overdispersion test
+library(AER)
+dispersiontest(poisson_model)
+```
+Ho: There is no overdispersion
+
+Seems there is overdispersion (almost 0 p-value)
+
+The p-value is very low, so we reject the null hypothesis.
+
+# Quasipoisson and negative binomial alternatives ----
+
+Quasi-poisson model
+
+```{r}
+# Train a poisson model
+qpoisson_model <- glm(formula, family = quasipoisson, data = train.data)
+
+qpoisson_model
+
+# Compute predictions and MAE 
+qpois_preds <-predict(qpoisson_model, type = "response", newdata = test.data)
+qpois_MAE <- mean(abs(test.data$affairs - qpois_preds))
+
+qpois_MAE
+
+```
+Same coefficients as Poisson, but corrected standard errors.
+AIC, BIC cannot be used with Quasi-Poisson regression.
+
+Picking a new type of model. Quasi-poisson has a correction for the overdispersion.
+
+The residual deviance has decreased a lot. The fit of the model is getting better, but the predictions will probably not get better because of the nature of the target variable.
+
+Negative - binomial model
+
+
+```{r}
+# Negative binomial model 
+library(MASS)
+negbin_model<-glm.nb(formula, data = train.data)
+negbin_model
+
+# Compute predictions and MAE 
+nb_preds <-predict(negbin_model, type = "response", newdata = test.data)
+nb_MAE <- mean(abs(test.data$affairs - nb_preds))
+
+nb_MAE
+```
+
+The residual deviance here is lowest, meaning the negative binomial is the best fit for this model.
+
+# Zero-inflated models -----
+
+ZI Poisson 
+
+```{r}
+library(pscl)
+zip <- zeroinfl(formula, data = train.data, dist="poisson")
+
+zip_preds <- predict(zip, type = "response", newdata = test.data)
+zip_mae <- mean(abs(test.data$affairs - zip_preds))
+
+zip_mae
+```
+
+
+ZI Negative Binomial 
+```{r}
+zi_nb <- zeroinfl(formula, data = train.data, dist="negbin")
+
+zi_nb_preds<-predict(zi_nb, type = "response", newdata = test.data)
+zinb_mae <- mean(abs(test.data$affairs - zi_nb_preds))
+
+zinb_mae
+
+```
+
+
+# Compare models ----
+
+In terms of MAE - we dont see much improvement in prediction accuracy
+
+```{r}
+list(
+  LinearModel = list(MAE = lm_MAE),
+  PoissonModel = list(MAE = poisson_MAE),
+  QuasiPoisson = list(MAE = qpois_MAE),
+  NegBin = list(MAE = nb_MAE),
+  ZIP = list(MAE = zip_mae),
+  ZI_NB = list(MAE =zinb_mae)
+)
+```
+
+We can see there are no differences in the predictions. This is a very rare event that although the model is getting better, the predictions are staying the same.
+
+Our target variable is what it is.
+
+In terms of AIC - our models have been improving a lot!
+
+```{r}
+list(
+  LinearModel = AIC(lm_model),
+  PoissonModel = AIC(poisson_model),
+ # QuasiPoisson = AIC(), AIC is not valid here
+  NegBin = AIC(negbin_model),
+  ZIP = AIC(zip),
+  ZI_NB = AIC(zi_nb)
+)
+```
+Better statistical fit (AIC) does not necessarily mean better prediction accuracy. 
+Zero-inflated models describe the data-generating process better, especially the zeros, but they do not magically predict rare counts more accurately :(
+
+Rare event prediction is inherently hard!!
+
+
+# Using caret for cross validation and model comparison
+
+Caret does not support zero inflated models, so we will go ahead with the rest. 
+
+```{r}
+library(MASS)
+library(caret)
+library(e1071)
+
+
+set.seed(123)
+#CV setup: cv with 10 folds
+train_control <- trainControl(method = "cv", number = 5)
+
+#linear
+lm_fit <- train(formula, data = train.data, 
+                method = "lm", 
+                trControl = train_control)
+
+#poisson
+poisson_fit <- train(formula, data = train.data, 
+                     method = "glm", family = poisson(),
+                     trControl = train_control)
+
+#quasi poisson model (just change the family)
+qpois_fit <- train(formula, data = train.data, 
+               method = "glm", family=quasipoisson(),
+               trControl = train_control)
+
+#negative binomial 
+neg_bin_fit <- train(formula, data = train.data, 
+               method = "glm.nb",
+               trControl = train_control)
+
+
+```
+
+Now we use resamples() to collect the results from our cv process into one object. 
+It just collects results already computed inside each model and put it together.
+
+```{r}
+results <- resamples(list(linear = lm_fit, poisson = poisson_fit, qpois = qpois_fit, negbin = neg_bin_fit))
+summary(results)
+
+bwplot(results, metric = "MAE")
+
+```
+From cv training, it seems that negbin provides the best MAE but differences are very small!
+
+
+Now we can compute our predictions and metrics on the *test set*, and select our final model. 
+
+

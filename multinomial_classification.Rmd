@@ -1,0 +1,187 @@
+---
+title: "multinomial"
+author: "Emma Perez"
+date: "2025-12-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+## 1. Packages ----
+library(foreign)   # for read.dta
+library(nnet)      # for multinom()
+library(ggplot2)  
+```
+
+```{r}
+# hsbdemo: 200 students, program choice as outcome
+ml <- read.dta("https://stats.idre.ucla.edu/stat/data/hsbdemo.dta")
+
+# Based on: https://stats.oarc.ucla.edu/r/dae/multinomial-logistic-regression/
+
+```
+
+Outcome: prog (general / academic / vocation)
+Predictors: ses (3-level factor) - socioeconomic stats
+            female - gender
+            write - grade 
+            read - grade
+            math - grade
+            science - grade
+            socst - grade
+
+
+# A bit of EDA 
+
+```{r}
+# Quick peek at the data
+str(ml)
+head(ml)
+```
+
+```{r}
+summary(ml)
+```
+
+```{r}
+# Simple bar plot of the outcome
+ggplot(ml, aes(x = prog)) +
+  geom_bar() +
+  labs(
+    title = "Distribution of program type (prog)",
+    x = "Program type",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+Ideally it would be uniformly distributed, but as long as each category represents more than 1% of the data, it will not be a skewed model.
+
+```{r}
+tab_prog_ses <- table(ml$prog, ml$ses)
+tab_prog_ses
+prop.table(tab_prog_ses, margin = 2) 
+```
+More descriptive data. We can see it is not equal across income(?) so it likely has an impact.
+
+```{r}
+tab_prog_fem <- table(ml$prog, ml$female)
+tab_prog_fem
+prop.table(tab_prog_fem, margin = 2) 
+```
+Gender might also relate to the target variable, since it is not equally distributed.
+
+```{r}
+# Boxplot of writing score by program
+ggplot(ml, aes(x = prog, y = write)) +
+  geom_boxplot() +
+  labs(
+    title = "Writing score by program type",
+    x = "Program type",
+    y = "Writing score"
+  ) +
+  theme_minimal()
+```
+
+
+# Fit multinomial logistic regression
+
+```{r}
+# We choose "academic" as the reference category
+ml$prog2 <- relevel(ml$prog, ref = "academic")
+```
+
+In this case, we selected academic for the reference variable. There is no strong reason why because we don't know much about the data set and we are just doing an example. Usually, there would be more forethought into the dataset.
+
+```{r}
+# Split data 
+library(caret)
+index <- createDataPartition(ml$prog2, p = .80, list = FALSE)
+train.data <- ml[index,]
+test.data <- ml[-index,]
+```
+
+
+
+```{r}
+# Fit model
+mod_mn <- multinom(prog2 ~ ses + female + write + read + math + science + socst, data = train.data)
+
+summary(mod_mn)
+```
+
+The model summary output has a block of coefficients and a block of standard errors. 
+Each of these blocks has one row of values corresponding to a model equation. Focusing on the block of coefficients, we can look at the first row comparing prog = "general" to our baseline prog = "academic" and the second row comparing prog = "vocation" to our baseline prog = "academic"
+
+Coefficients represent the log-odds of being in a given category compared to the baseline category for a one-unit increase in the predictor variable:
+
+Interpretation of math: 
+
+- A one-unit increase in the variable math is associated with the decrease in the log odds of being in general program vs. academic program in the amount of 0.08 
+
+- A one-unit increase in the variable math is associated with the decrease in the log odds of being in vocation program vs. academic program in the amount of 0.14 
+
+```{r}
+## 6. Exponentiated coefficients
+exp_coef <- exp(coef(mod_mn))
+exp_coef
+```
+As in logistic regression, exponentiated coefficients indicate the multiplicative effect on odds of an unit increase in the predictor. 
+
+- Values close to 1 suggest very little to no association.Thus, being female seems not to affect the odds of choosing general vs academic program.
+
+- However, females are estimated to be about 39% more likely (i.e multiplying odds by 1.39) than males to choose a vocation program instead of an academic program.
+
+
+
+# Make predictions and evaluate the model
+
+## Train data
+
+```{r}
+# Predicting the values for train dataset
+train.data$prog_pred <- predict(mod_mn, newdata = train.data, "class")
+# Building classification table
+tab <- table(train.data$prog2, train.data$prog_pred)
+tab
+```
+
+```{r}
+# Calculating accuracy manually - sum of diagonal elements divided by total obs
+round((sum(diag(tab))/sum(tab))*100,2)
+```
+
+## Test data
+
+```{r}
+# Predicting the class for test dataset
+test.data$prog_pred <- predict(mod_mn, newdata = test.data, "class")
+
+# Building classification table
+tab <- table(test.data$prog2, test.data$prog_pred)
+tab
+```
+
+
+```{r}
+# Calculating accuracy - sum of diagonal elements divided by total obs
+round((sum(diag(tab))/sum(tab))*100,2)
+```
+
+We can also check the probabilities assigned to each class for each observation
+
+```{r}
+probabilities <- mod_mn %>% predict(test.data, type = "probs")
+
+classes <- mod_mn %>% predict(test.data, type = "class")
+```
+
+# Confusion Matrix & derived metrics 
+
+```{r}
+confusionMatrix(as.factor(test.data$prog2), as.factor(test.data$prog_pred))
+```
+

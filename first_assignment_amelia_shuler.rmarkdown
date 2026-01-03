@@ -1,0 +1,204 @@
+---
+title: "First Assignment"
+format: html
+editor: visual
+author: Amelia Shuler
+---
+
+###### Libraries
+
+```{r}
+#| eval: TRUE
+#| output: FALSE
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(descr)
+library(ggplot2)
+library(dbplyr)
+library(ggpubr)
+library(Rmisc)
+library(lattice)
+library(plyr)
+```
+
+###### Import Data
+
+```{r}
+music <- read.csv2("~/Desktop/Statistics/mxmh_survey_results.csv", header=TRUE, sep=",")
+```
+
+#### **1a. Start by proposing a research question related to your data.**
+
+RQ: Does the primary streaming service of the respondent have any corelation with how many hours a user spends listening to music?
+
+#### **1b. Why do you want to analyze this question?**
+
+I listen to more than 50,000 minutes of music a year on Spotify. Recently, a lot of my friends have switched to Apple Music. I've noticed these are friends who tend to listen on average to less music, so I'd be curious to know if there is any correlation.
+
+#### **1c. Who might be interested in the results?**
+
+The companies themselves may be interested to know how many hours on average people are listening on their platforms. This topic would also need further research in case there is a correlation: why? Why do people who listen to more music prefer one platform over another? Are there aspects of the platform they prefer?
+
+#### **1d. How could they use the statistical report you will produce?**
+
+The statistical report could be used to determine broad demographics about the sample, such as whether they listen at work or not, what kinds of music they listen to, and age. They also can determine which platforms are close competitors in various demographics.
+
+#### **2. Choose one or two variables that are relevant to your research question.**
+
+Primary.streaming.service, Hours.per.day
+
+#### **3. Define the target population and justify the use of the sample.**
+
+The target population is folks who listen to music through a streaming service. While this sample includes other data around mental health, it includes the variables we need for streaming service and hours of listening per day. It also has 736 observations, which is enough to be statistically significant.
+
+#### **4. Describe the socioeconomic characteristics of the sample. If there are no socioeconomic variables, describe other variables related to the variable(s) of interest that could help to better understand the sample.**
+
+```{r}
+bxp_age<-ggplot(music,mapping=aes(y=Age))+
+  geom_boxplot(fill="Orange")
+
+ggarrange(bxp_age,
+          ncol = 1, nrow = 1)
+
+age_summary <- music |>
+  summarise_at(vars(Age),
+  list(
+    avg = ~mean(., na.rm = TRUE),
+    min = ~min(., na.rm = TRUE),
+    max = ~max(., na.rm = TRUE),
+    median = ~median(., na.rm = TRUE)
+  )
+  )
+age_summary
+```
+
+The respondents were age 10 to 89, with the average age being 25. Since the median is less than the average, the data is skewed negatively. This is also confirmed with the presence of so many outliers.
+
+```{r}
+freq_genre <- table(music$Fav.genre)
+freq_genre
+```
+
+The three most frequent 'favorite genres' are Rock (188), Pop (114), and Metal (88).
+
+```{r}
+freq_instrumentalist <- table(music$Instrumentalist)
+freq_instrumentalist
+```
+
+Most respondents are not instrumentalists.
+
+```{r}
+freq_composer <- table(music$Composer)
+freq_composer
+```
+
+Most respondents are not composers.
+
+```{r}
+freq_anxiety <- freq(ordered(music$Anxiety),plot=T)
+freq_depression <- freq(ordered(music$Depression),plot=T)
+```
+
+The respondents do not have clustered data around any level of anxiety or depression, so this shouldn't skew results by including an overwhelming amount of respondents with anxiety or depression.
+
+#### **5. Describe the selected variable(s) of interest, both individually and in relation to other variables in the sample (possibly socioeconomic variables).**
+
+```{r}
+freq_streaming <- table(music$Primary.streaming.service)
+freq_streaming
+```
+
+Most respondents use Spotify, followed by YouTube Music, then Apple Music. 71 respondents do not use a streaming service of any kind.
+
+```{r}
+bar_hours<-ggplot(music, mapping=aes(x=Hours.per.day)) +
+              geom_bar(fill="Orange")
+
+ggarrange(bar_hours,
+          ncol = 1, nrow = 1)
+```
+
+This data does not have clustering. It has three spikes around 1 hour, 2 hours, and 3 hours.
+
+```{r}
+music$Hours.per.day <- as.integer(music$Hours.per.day)
+hours_summary <- music |>
+  summarise_at(vars(Hours.per.day),
+               list(
+                 avg = ~mean(., na.rm = TRUE),
+                 median = ~median(., na.rm = TRUE),
+                 max = ~max(., na.rm = TRUE)
+                 ))
+hours_summary
+```
+
+The mean time of music listened to per day is 3.54 hours, with the median time being 3. This means the data is slightly positively skewed.
+
+#### Bivariate Analysis
+
+```{r}
+ConTtable <- table(music$Primary.streaming.service, music$Hours.per.day)
+ConTtable
+```
+
+There is some clustering in the Joint Absolute Frequency Table around 1-3 hours for all streaming services. A large portion of the data is clustered around 1-3 hours for spotify, but it also is skewed because Spotify had so many more respondents than the other streaming services. Let's look at relative frequency.
+
+```{r}
+RConTtable<-prop.table(ConTtable)*100
+round(RConTtable, 3)
+```
+
+Again, there is some clustering but not much. I would say there is no correlation between streaming platform and hours spent listening, but because the data is highly skewed to Spotify, it is hard to draw analysis.
+
+Note: This is the third time I am completing this assignment before turning it in and my second data set, so I will not be selecting another data set with data that is less skewed. I also looked online for other ways to analyze this data, but they are statistical methods we have not yet been taught.
+
+```{r}
+CConTtableG<-prop.table(ConTtable,margin=2)*100
+round(CConTtableG, 3)
+```
+
+I looked at the conditional frequency tables for streaming services given a fixed listening time, but again, not sure this tells us a clear picture about the data. If you are looking for my comprehension of how to interpret the data in a conditional frequency table, I can tell you that 66.66% of respondents that answered they listened between 11 and 12 hours a day also listed Spotify as their primary streaming service.
+
+Here is the conditional frequency table for listening time given a fixed streaming service.
+
+```{r}
+CConTtableG<-prop.table(ConTtable,margin=1)*100
+round(CConTtableG, 3)
+```
+
+In this case, each row sums 100%. 24.46% of YouTube Music users reported listening between 1 - 2 hours per day.
+
+#### **6. Provide final interpretations and conclusions.**
+
+I do not think there is a correlation between streaming service and number of listening hours. The data is too skewed towards Spotify to conduct a proper bivariate analysis.
+
+#### Appendix 1: A Short Explanation of the Statistical Tools Used
+
+##### Descriptive Statistics
+
+Box plot: A graphical tool for displaying the distribution of a data variable. Includes upper and lower limits of the data, outliers, Q1, Q2 (median), and Q3 which represent 1/4, 1/2, and 3/4 of the data respectively.
+
+Mean: Mean is the sum of all observations divided by the number of observations. It is considered the average of the data but is not 'robust' because it can be affected by outliers.
+
+Median: Median is the middle number of an arranged array of the observations. It is considered robust because it cannot be affected by outliers.
+
+Min: this is the smallest observation in the data set.
+
+Max: this is the largest observation in the data set.
+
+Frequency Table: This table helps explain categorical data. It lists each time an observation is recorded in one of the categories (i.e. 53 respondents listed classical music as their favorite genre).
+
+Frequency Graph / Bar Chart: This is a frequency table that has been plotted. On the x axis are the categories and on the y axis are the counts.
+
+##### Inferential Statistics
+
+Joint Absolute Frequency Table: This table represents the count of observations that selected a certain response for two variables. In this case, the counts represent the number of people who reported a specific range of listening time AND a specific streaming service.
+
+Relative Frequency Table: This table represents the count of observations as a proportion of the total number of observations. In this case, the percentage represents the proportion of respondents who reported a specific range of listening time and a specific streaming service, proportional to the entire sample.
+
+Conditional Frequency Table: This table is calculated by dividing the joint frequencies by the relative frequencies. It fixes one variable (i.e. streaming service) to allow the statistician to understand one variable in the context of the other. It can answer the question 'how many respondents who use Spotify reported listening to 11 to 12 hours of music a day?
+
+\*\* Disclaimer: I used AI to help troubleshoot some of the code (specifically how to get rid of NAs in median and mean) and to explain concepts and recommend methodology. However, AI did not write any part of this report.
+

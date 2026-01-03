@@ -1,0 +1,447 @@
+---
+title: "Regularized GLMs"
+author: "Emma Pérez"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(tidyverse)
+library(caret)
+
+set.seed(1234)
+```
+
+
+# Regularization in GLMs
+
+We've been talking about several different models for different types of problems.
+
+Now that we know most models form the generalized linear models family, we can combine them with regularization methods to prevent overtiffing, handle multicollinearity, perform feature selection...
+
+Let's see how to apply Lasso regularization to Poisson and Logistic Regression
+
+
+# Remember Penalized Linear Model with caret 
+
+- Caret supports a lot of different models from other packages (like glmnet)
+Because glmnet only supports: Gaussian / Binomial / Multinomial / Poisson distributions, other models cannot be included in this caret approach (like negbin)
+- We can customize the model fitting process by selecting:
+     - Cross validation method un _trainControl_
+     - Performance metrics (RMSE by default) in _metric_, we have to change them for classification
+- It includes an argument to preprocess data (scale)
+
+EXAMPLE:
+
+lambda <- 10^seq(-3, 2, length = 100)
+
+lasso_lm <- train(
+  target ~.,          # model formula
+  data = train.data, 
+  method = "glmnet", # training package
+  trControl = trainControl("cv", number = 10),        # cv settings
+  tuneGrid = expand.grid(alpha = 1, lambda = lambda), # values for hyperparameters
+  preProc = c("scale") # standardization (key in regularization methods)
+)
+
+
+
+# Penalized Logistic Regression ----
+
+
+```{r}
+data("PimaIndiansDiabetes2", package = "mlbench")
+
+# remove rows with NA values
+df <- na.omit(PimaIndiansDiabetes2)
+```
+
+Variables info:
+
+- pregnant:	Number of times pregnant
+- glucose:	Plasma glucose concentration (glucose tolerance test)
+- pressure:	Diastolic blood pressure (mm Hg)
+- triceps:	Triceps skin fold thickness (mm)
+- insulin:	2-Hour serum insulin (mu U/ml)
+- mass:	Body mass index
+- pedigree:	Diabetes pedigree function (metric of genetic predisposition)
+- age:	Age (years)
+- diabetes:	detected diabetes (yes or no) --> target variable
+
+```{r}
+# vars description
+str(PimaIndiansDiabetes2)
+
+# summary
+summary(PimaIndiansDiabetes2)
+```
+
+
+Lets expand our dataset by including all interactions and the squared terms of pregnant and age
+
+```{r}
+# model formula for expanded regressors
+form <- diabetes ~ (pregnant + glucose  + pressure + triceps  + 
+                   insulin  + mass     + pedigree + age)^2 +
+                   I(pregnant^2) + I(age^2)
+```
+
+Because we are only testing the data we can do it in the formula, but if we are going to include it we would add it to the dataset.
+
+## Data split 
+
+```{r}
+training.samples <- df$diabetes %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+
+train.data  <- df[training.samples, ]
+test.data <- df[-training.samples, ]
+```
+
+
+## Train Lasso, Rigde and standard logistic regression with *caret* 
+
+ Lambda possible values
+
+```{r}
+lambda <- 10^seq(-3, 1, length = 100)
+```
+
+Setting for cross validation, adjusted for classification
+
+```{r}
+ctrl <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+```
+
+### Standard Logistic 
+
+```{r}
+logistic <- train(
+ form, 
+  data = train.data, 
+  method = "glm", family = "binomial",
+  trControl = ctrl,
+  metric = "ROC", # we want to use the ROC function to select the best model
+  preProc = c("scale")
+ ) 
+
+logistic
+```
+ROC, Sens, Spec are the metrics we get in the typical regression.
+
+Why do we create a baseline model if we are going to do regularization?
+It is good to see how the regularization will change the model.
+
+### Lasso 
+
+```{r}
+logistic_lasso <- train(
+ form, 
+  data = train.data, 
+  method = "glmnet", family = "binomial",
+  trControl = ctrl,
+  tuneGrid = expand.grid(alpha = 1, lambda = lambda),
+  metric = "ROC",
+  preProc = c("scale") # preprocessing step to scale numeric variables
+ ) 
+
+logistic_lasso
+```
+We get the logistical lasso estimation. This is a summary of the things that are tried during the cross-validation. It is changing the lambda value to try various combinations.
+
+```{r}
+# Get the best model's coefficients
+lasso_best_lambda <- logistic_lasso$bestTune$lambda
+lasso_coefficients <- coef(logistic_lasso$finalModel, s = lasso_best_lambda)
+
+lasso_coefficients
+```
+
+This gives us the best combination, which was 0.004. When we use this lambda, we get a distinct set of coefficients. Lasso removed a lot of variables.
+
+Note: Remember that regularized coefficients are best interpreted in terms of prediction, and variable selection — not direct impact on the target on its original scale 
+
+If we want to *interpret*, we'd better compute the standard logistic model with selected variables. Here we would interpret coefficients normally in a logistic regression
+
+### Ridge
+
+```{r}
+logistic_ridge <- train(
+ form, 
+  data = train.data, 
+  method = "glmnet", family = "binomial",
+  trControl = ctrl,
+  tuneGrid = expand.grid(alpha = 0, lambda = lambda),
+  metric = "ROC",
+  preProc = c("scale")
+ ) 
+
+logistic_ridge
+
+logistic_ridge$bestTune$lambda
+```
+This ROC is a little higher than the ones we got before. The best lambda is 0.02.
+
+# Create predictions and evaluate models on test data 
+
+Predicted probabilities
+
+```{r}
+logit_prob <- predict(logistic, test.data, type= "prob")[, "pos"]
+logit_lasso_prob <- predict(logistic_lasso, test.data, type= "prob")[, "pos"]
+logit_ridge_prob <- predict(logistic_ridge, test.data, type= "prob")[, "pos"]
+```
+
+AUC 
+
+```{r}
+library(pROC)
+
+auc_logit <- roc(test.data$diabetes, logit_prob,  levels = c("neg","pos"))$auc
+auc_lasso <- roc(test.data$diabetes, logit_lasso_prob,  levels = c("neg","pos"))$auc
+auc_ridge <- roc(test.data$diabetes, logit_ridge_prob,  levels = c("neg","pos"))$auc
+
+```
+Comparing the three models. 
+
+```{r}
+results <- data.frame(
+  Model   = c("Logistic", "Ridge", "LASSO"),
+  AUC      = c(auc_logit, auc_ridge, auc_lasso))
+
+results
+
+```
+In this case, Ridge achieves the best predictive performance on the test set, probably because predictors are correlated and most of them contain useful information for the target
+
+Ridge ROC and AUC plot
+```{r}
+plot.roc(test.data$diabetes, logit_ridge_prob, 
+         col="darkblue", # curve color
+         print.auc = TRUE,  # add auc value
+         auc.polygon=TRUE, # add auc shape
+         max.auc.polygon=TRUE,
+         auc.polygon.col="lightblue", # auc color
+         print.thres="best") # best thresholds
+```
+
+# Penalized Poisson -----
+
+
+```{r}
+data(Affairs, package = 'AER')
+```
+
+Infidelity data, known as Fair's Affairs. Cross-section data from a survey conducted by Psychology Today in 1969.
+
+
+- affairs: is the number of extramarital affairs in the past year and is our response variable
+- gender
+- age
+- yearsmarried
+- children (yes or no)
+- religiousness (1 - anti, 5 - very)
+- education
+- rating self rating of the marriage 1 (very unhappy) to 5 (very happy)
+
+
+
+```{r}
+summary(Affairs)
+```
+
+# EDA
+
+```{r}
+library(DataExplorer)
+
+plot_intro(Affairs)
+```
+
+Check distributions
+
+```{r}
+#histogram
+hist(Affairs$affairs)
+
+#mean and variance 
+mean(Affairs$affairs)
+var(Affairs$affairs)
+
+#density plot 
+success <- min(Affairs$affairs):max(Affairs$affairs)
+
+plot(density(Affairs$affairs),ylim=c(0,0.5), xlim = c(0,15))+
+lines(success,dpois(success, lambda=mean(Affairs$affairs)),col="green")
+```
+
+```{r}
+library(GGally)
+ggcorr(Affairs, label = T, method = c("all.obs","spearman"))
+```
+
+
+## Feature engineering
+
+Fix some variables and expand the dataset
+```{r}
+Affairs <- Affairs %>% mutate(gender = ifelse(gender == "male", 1,0),
+                   children = ifelse(children == "yes",1,0))
+
+Affairs$occupation <- as.factor(Affairs$occupation )
+
+Affairs <- Affairs %>% mutate(rat_rel = rating*religiousness,
+                              rating2 = rating^2,
+                              yearsmarried2 = yearsmarried^2, 
+                              age2 = age^2)
+
+
+
+```
+
+
+# Split data 
+
+```{r}
+set.seed(123)
+training.samples <- Affairs$affairs %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+
+train.data  <- Affairs[training.samples, ]
+test.data <- Affairs[-training.samples, ]
+
+```
+
+# Modeling
+
+CV settings
+
+```{r}
+ctrl <- trainControl(
+  method = "cv",
+  number = 5
+)
+```
+
+Model formula
+
+```{r}
+form <- affairs ~ .
+```
+
+# Let's perform regulaization in Poisson model
+
+### Standard poisson (not regularized) as a baseline
+
+```{r}
+set.seed(123)
+
+poisson_fit <- train(
+  form,
+  data = train.data,
+  method = "glm", family = "poisson",
+  trControl = ctrl,
+  preProcess = c("scale")
+)
+
+poisson_fit
+
+```
+
+### Lasso poisson
+ 
+```{r}
+set.seed(123)
+lasso_fit <- train(
+  form,
+  data = train.data,
+  method = "glmnet",
+  family = poisson,
+  trControl = ctrl,
+  preProcess = c("scale"),
+  tuneGrid = expand.grid(
+    alpha = 1, # LASSO
+    lambda = 10^seq(-3, 2, length = 100)
+  )
+)
+
+lasso_fit
+```
+
+
+
+```{r}
+coef(lasso_fit$finalModel, s = lasso_fit$bestTune$lambda)
+
+```
+Lasso removed all the variables from the dataset.
+
+# Ridge 
+ 
+```{r}
+set.seed(123)
+ridge_fit <- train(
+  form,
+  data = train.data,
+  method = "glmnet",
+  family = poisson,
+  trControl = ctrl,
+  preProcess = c("scale"),
+  tuneGrid = expand.grid(
+    alpha = 0,# Ridge
+    lambda = 10^seq(-3, 2, length = 50)
+  )
+)
+
+ridge_fit
+plot(ridge_fit)
+
+```
+
+
+Lets see regularization applied in each case!
+
+```{r}
+lasso_fit$bestTune
+ridge_fit$bestTune
+
+```
+ The best lambda in both cases is lambda = 100
+ 
+# Evaluate the models on test data 
+
+```{r}
+pred_lasso <- predict(lasso_fit, newdata = test.data)
+pred_ridge <- predict(ridge_fit, newdata = test.data)
+pred_poisson <- predict(poisson_fit, newdata = test.data)
+
+data.frame(
+  Model = c("Poisson", "LASSO", "Ridge"),
+  MAE   = c(
+    MAE(pred_lm, test.data$affairs),
+    MAE(pred_lasso, test.data$affairs),
+    MAE(pred_ridge, test.data$affairs)
+  ),
+  RMSE  = c(
+    RMSE(pred_lm, test.data$affairs),
+    RMSE(pred_lasso, test.data$affairs),
+    RMSE(pred_ridge, test.data$affairs)
+  )
+)
+
+```
+ 
+ 
+ 
+Regularization protects against overfitting only when overfitting is a "danger". In this case, even with the engineered features, predictors barely explain the count variability (most observations are just 0). 
+
+If the underlying data pattern is weak (as we saw in our previous example with this data), regularization often does not improve or even hurts predictive performance. LASSO and Ridge, by shrinking coefficients, are actually throwing away small but real effects — because they can’t distinguish them from noise in such a weak-signal setting.
+
+
+ 
