@@ -8,6 +8,8 @@ editor: visual
 
 ```{r}
 data("PimaIndiansDiabetes2", package = "mlbench")
+library(caret)
+library(tidyverse)
 
 # we remove rows with NA values
 df <- na.omit(PimaIndiansDiabetes2)
@@ -29,19 +31,15 @@ Variables info:
 summary(PimaIndiansDiabetes2)
 ```
 
-# Perform EDA
+# Perform Exploratory Data Analysis
 
 You can use DataExplorer hereas we've done before!
-
-```{r}
-## EDA 
-```
 
 Train logistic regression
 
 ```{r}
 #split train and test datasets
-training.samples <- df$diabetes %>% 
+training.samples <- df$diabetes |> 
   createDataPartition(p = 0.8, list = FALSE)
 
 train.data  <- df[training.samples, ]
@@ -68,7 +66,7 @@ Make predictions and check general accuracy
 
 ```{r}
 # Predictions
-probabilities <- model %>% predict(test.data, type = "response")
+probabilities <- model |> predict(test.data, type = "response")
 
 # select the classification threshold
 predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
@@ -77,8 +75,8 @@ predicted.classes <- ifelse(probabilities > 0.5, "pos", "neg")
 Model graph
 
 ```{r}
-train.data %>%
-  mutate(prob = ifelse(diabetes == "pos", 1, 0)) %>%
+train.data |>
+  mutate(prob = ifelse(diabetes == "pos", 1, 0)) |>
   ggplot(aes(glucose, prob)) +
   geom_point(alpha = 0.2) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +

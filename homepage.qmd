@@ -74,25 +74,25 @@ editor: visual
 
 ## Stats II Notes
 
--   Exploratory Data Analysis
+-   [Exploratory Data Analysis](https://uc3mamelia.github.io/data_programming_notes/Data_explorer_example.html)
 
--   Determining Correlation
+-   [Determining Correlation](https://uc3mamelia.github.io/data_programming_notes/determining_correlation.html)
 
--   Hypothesis Testing
+-   [Hypothesis Testing](https://uc3mamelia.github.io/data_programming_notes/hypothesis_testing.html)
 
--   Linear Regression
+-   [Linear Regression](https://uc3mamelia.github.io/data_programming_notes/linear_regression.html)
 
--   Logistic Regression
+-   [Logistic Regression](https://uc3mamelia.github.io/data_programming_notes/logistic_regression.html)
 
--   Regularization - Caret
+-   [Regularization - Caret](https://uc3mamelia.github.io/data_programming_notes/regularization_caret.html)
 
--   Regularization - GLM Net
+-   [Regularization - GLM Net](https://uc3mamelia.github.io/data_programming_notes/regularization_glmnet.html)
 
--   Multinomial Classification
+-   [Multinomial Classification](https://uc3mamelia.github.io/data_programming_notes/multinomial_classification.html)
 
--   Poisson Regression
+-   [Poisson Regression](https://uc3mamelia.github.io/data_programming_notes/poisson_regression.html)
 
--   Regularized GLMs
+-   [Regularized GLMs](https://uc3mamelia.github.io/data_programming_notes/regulairzed_glms.html)
 
 ## Data Visualization Notes
 
