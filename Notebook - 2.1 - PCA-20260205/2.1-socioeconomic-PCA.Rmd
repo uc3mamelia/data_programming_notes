@@ -1,0 +1,723 @@
+---
+title: "PCA: extracting socio-economic information in the world"
+author: "Advanced Modelling, Master in Computational Social Science"
+date: 'UC3M, 2025'
+output:
+  html_document:
+    css: my-theme.css
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+    toc_float: true
+  pdf_document:
+    css: my-theme.css
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=T, echo = F}
+knitr::opts_chunk$set(echo = T, warning=FALSE, message=FALSE)
+```
+
+```{r, echo=FALSE}
+htmltools::img(src = knitr::image_uri(file.path("uc3m.jpg")),
+               alt = 'logo',
+               style = 'position:absolute; top:0; right:0; padding:10px;',
+               width="600",
+               height="80")
+```
+
+# Introduction
+
+## Motivation
+
+Can we organize the world's countries by variables we are interested in?
+
+For instance, the World Bank organizes countries in 4 income groups using only the Gross National Income (GNI) per capita. However, development can be measured using more dimensions—health, education, Internet access, among others.
+
+A classic example is the Human Development Index (HDI) used by the United Nations, which aggregates three main variables: life expectancy, education, and income. It is quite interpretable, but obviously does not incorporate every possible dimension.
+
+Principal Component Analysis (PCA) offers a data-driven way to collapse many correlated variables into fewer components, potentially revealing an overall, multi-dimensional measure of development. In other words:
+
+-   How can we define a Development Index that includes more information, such as infant mortality, hospital beds, Internet usage, etc.?
+-   How does this PCA-based index compare to simpler indices (e.g., HDI-like) that only use a few indicators?
+
+In this case study, we will explore countries' socio-economic and health indicators from the World Health Organization (WHO) data, create a PCA-based development index, and compare it with simpler approaches.
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(GGally) # ggplot2-based visualization of correlations
+library(factoextra) # ggplot2-based visualization of pca
+library(countrycode)
+library(rworldmap)
+library(mice)
+library(plotly)
+```
+
+# Data Exploration
+
+## The Dataset
+
+The dataset is obtained through the notebook "2.0-socioeconomic-WHO-preprocessing.Rmd", which creates a file named "WorldData2025.txt". There you can find explanation for the following World Health Organization (WHO) variables:
+
+-   Life expectancy at birth (years)
+-   Infant mortality rate (probability of dying between birth and age 1 per 1000 live births)
+-   Population (in thousands) total
+-   Ambient air pollution (Annual PM2.5 [ug/m3])
+-   Estimates of rates of homicides per 100 000 population
+-   Health expenditure as percentage of GDP (%)
+-   Medical doctors (per 10 000 population)
+-   Hospital beds (per 10 000 population)
+-   Percentage of individuals using the Internet
+-   Literacy rate (% of people ages 15 and above)
+-   Expected Years Of School
+-   Unemployment, total (% of total labor force)
+-   GDP per capita (constant 2017 US\$)
+
+```{r}
+WHO = read.table("WorldData2025.txt", sep=",")
+```
+
+## Descriptive Analysis
+
+Some preliminary analysis:
+
+```{r}
+# Explore data dimensions and structure
+dim(WHO)
+str(WHO)
+head(WHO)
+summary(WHO)
+```
+
+```{r}
+# Visualize the correlation matrix - this motivates PCA
+# High correlations between variables suggest redundancy that PCA can exploit
+ggcorr(WHO %>% dplyr::select(-Continent,-Region,-Country,-COUNTRY,-capital),
+       label = TRUE, label_size = 2.5, hjust = 0.75)
+```
+
+**Key observations:**
+
+-   We have data for approximately 200 countries with 18 variables
+-   Variables span different domains: health (life expectancy, infant mortality), economic (GDP), education (school years, literacy), and infrastructure (internet, hospital beds)
+-   Many variables show high correlations (e.g., GDP with Internet usage, LifeExpectancy with IMR)
+-   These high correlations suggest that PCA can effectively reduce dimensionality
+
+PCA works best when variables are correlated. If all variables were independent, PCA would not compress information effectively. The correlation matrix reveals clusters of related variables (economic, health, education) which PCA can capture in fewer dimensions.
+
+Out of the 200 countries in the world, we have almost complete information (more than 10 variables) for around 130 countries. The output of the analysis depends on which variables we select - this is a subjective choice that should align with the application's objective.
+
+## Pre-Processing
+
+### Handling Missing Values
+
+```{r}
+#Percentage of Na's?
+sapply(WHO, function(x) sum(is.na(x))*100/nrow(WHO))
+
+# Remove first countries with no population
+WHO = WHO %>% drop_na(Population)
+```
+
+Automatic imputation of NAs:
+
+```{r}
+m = 4 # number of multiple imputations
+mice_mod <- mice(WHO, m=m, method='rf')
+WHO <- complete(mice_mod, action=m)
+```
+
+### Preparing the Data Matrix
+
+```{r}
+X = WHO %>% dplyr::select(-Continent,-Region,-Country, -COUNTRY,-Population,-capital)
+
+# We need to apply the log to the GDP because it is highly asymetric
+X$GDP = log(X$GDP)
+
+# We just save the names and continents for the graphs
+names=WHO$Country
+continent = WHO$Continent
+```
+
+The original GDP distribution is highly right-skewed (a few very wealthy countries). Log transformation makes the distribution more symmetric and reduces the influence of outliers.
+
+```{r}
+# Compare GDP before and after log transformation
+par(mfrow = c(1, 2))
+hist(WHO$GDP, breaks = 30, main = "GDP (Original)", col = "lightcoral", xlab = "GDP")
+hist(X$GDP, breaks = 30, main = "GDP (Log-transformed)", col = "lightgreen", xlab = "log(GDP)")
+par(mfrow = c(1, 1))
+```
+
+## Exploring Variables Before PCA
+
+Before running PCA, let's understand the variables we're working with:
+
+```{r}
+# Distribution of variables before scaling
+boxplot(X, las = 2, col = "lightblue", main = "Variable Distributions (Original Scale)")
+```
+
+```{r}
+# After scaling - this is what PCA will "see"
+boxplot(scale(X), las = 2, col = "steelblue", main = "Variable Distributions (Standardized)")
+```
+
+In sumamry what we have done to prepare our data is:
+
+1.  Log transformation of GDP: Makes the distribution more symmetric
+2.  Standardization (`scale. = TRUE` in PCA): Essential when variables have different units
+3.  Excluded variables: Population, Country names, Continent, Region - these are identifiers, not development indicators
+4.  Handle missing data
+
+## Basic Data Analysis
+
+```{r}
+# Continent distribution
+table(WHO$Continent)
+```
+
+```{r}
+# Better visualization with barplot
+WHO %>% ggplot(aes(x=reorder(Continent, Continent, length))) +
+  geom_bar(aes(fill=Continent)) +
+  labs(title = "Number of countries per continent in our dataset",
+       caption = "Source: World Health Organization",
+       x = "", y = "Count") +
+  theme_minimal() +
+  theme(legend.position="none")
+```
+
+Which is the country with the highest life expectancy?
+
+```{r}
+# Top 5 countries by life expectancy
+WHO %>% arrange(desc(LifeExpectancy)) %>%
+  dplyr::select(Country, LifeExpectancy, GDP, IMR) %>% head(5)
+```
+
+And the country with the highest GDP? Are they the same?
+
+```{r}
+# Top 5 countries by GDP
+WHO %>% arrange(desc(GDP)) %>%
+  dplyr::select(Country, GDP, LifeExpectancy) %>% head(5)
+```
+
+```{r}
+# Map of Life Expectancy by country
+map_le = WHO %>% dplyr::select(Country, LifeExpectancy)
+map_le$country = countrycode(map_le$Country, 'country.name', 'iso3c')
+matched_le <- joinCountryData2Map(map_le, joinCode = "ISO3", nameJoinColumn = "country")
+mapCountryData(matched_le, nameColumnToPlot="LifeExpectancy", missingCountryCol = "white",
+               borderCol = "#C7D9FF", catMethod = "pretty", colourPalette = "topo",
+               mapTitle = c("Life Expectancy by Country"), lwd=1)
+```
+
+**Discussion points:**
+
+-   Notice the geographic patterns in life expectancy - developed countries cluster in Europe, North America, and parts of Asia
+-   Are the countries with highest GDP the same as those with highest life expectancy? (Not always!)
+-   This motivates our central question: Can we create a single "development index" that captures multiple dimensions simultaneously?
+
+## Multivariate Visualizations
+
+For instance, this is 4D using a scatterplot (2D):
+
+```{r}
+ggplot(WHO, aes(x=MedicalDoctors, y=LifeExpectancy, group=Continent, size=Population, color=GDP)) + geom_point(alpha=0.9) +
+  facet_wrap(~ Continent) +
+  scale_color_gradient(low="red", high="green") +
+  theme_minimal()+ theme(legend.position="none") +
+  labs(title = "World countries: life expectancy vs MedicalDoctors", subtitle="(color denotes GDP, size denotes population)",caption="Source: World Health Organization",
+       x = "MedicalDoctors", y = "Life expectancy at birth (in years)")
+```
+
+The same but adding interactive visualization with plotly:
+
+```{r}
+p=ggplot(WHO, aes(x=MedicalDoctors, y=LifeExpectancy, group=Continent, size=Population, color=GDP, text=names)) + geom_point(alpha=0.9) +
+  facet_wrap(~ Continent) +
+  scale_color_gradient(low="red", high="green") +
+  theme_minimal()+ theme(legend.position="none") +
+  labs(title = "World countries: life expectancy vs MedicalDoctors", subtitle="(color denotes GDP, size denotes population)",caption="Source: World Health Organization",
+       x = "MedicalDoctors", y = "Life expectancy at birth (in years)")
+
+ggplotly(p, tooltip=c("names"))
+```
+
+Is wealth a determinant of life expectancy?
+
+```{r}
+q = WHO %>% ggplot(aes(x=GDP, y=LifeExpectancy, group=Continent, size=Population, color=Region, text=names)) + geom_point(alpha=0.75) + scale_x_log10(labels=scales::comma) +
+  facet_wrap(~ Continent) +
+  theme_minimal()+ theme(legend.position="none") +
+  labs(title = "Life expectancy vs wealth by continent", subtitle="(size denotes population, color denotes region)",caption="Source: World Health Organization",
+       x = "GDP", y = "Life Expectancy")
+ggplotly(q, tooltip=c("names"))
+```
+
+# Principal Component Analysis
+
+## Why PCA?
+
+A single variable ranking (like GDP alone) does not capture the whole complexity.
+
+-   Could we get a unified index of development that uses all variables simultaneously?
+-   What is the most developed country with this unified index?
+-   Can we rank the countries considering all the variables simultaneously?
+
+## Computing PCA
+
+When variables have different units (as in our case: years, percentages, dollars...), we should use the correlation matrix instead of the covariance matrix. This is equivalent to standardizing the data first.
+
+```{r}
+# Compute PCA using the correlation matrix (scale. = TRUE)
+# This is essential when variables have different units
+pca = prcomp(X, scale. = TRUE)
+
+# View the summary - shows variance explained by each component
+summary(pca)
+```
+
+**Understanding prcomp() output:**
+
+The PCA object contains:
+
+-   `pca$rotation`: the **loadings** (eigenvectors) - how each variable contributes to each PC
+-   `pca$x`: the **scores** - the transformed data (countries in PC space)
+-   `pca$sdev`: standard deviations of each PC (sqrt of eigenvalues)
+
+```{r}
+# Show structure of PCA results
+names(pca)
+```
+
+With 2 components we explain approximately 63% of the total variability.
+
+```{r}
+fviz_screeplot(pca, addlabels = TRUE, title = "Screeplot: Variance Explained by Each PC")
+```
+
+## Choosing the Number of Components
+
+How many principal components should we retain? There are several approaches:
+
+```{r}
+# Method 1: Cumulative variance plot
+var_explained <- cumsum(pca$sdev^2 / sum(pca$sdev^2))
+
+data.frame(PC = 1:length(var_explained),
+           CumulativeVar = var_explained) %>%
+  ggplot(aes(x = PC, y = CumulativeVar)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_hline(yintercept = 0.8, linetype = "dashed", color = "red") +
+  labs(title = "Cumulative Variance Explained",
+       subtitle = "Red line: 80% threshold",
+       x = "Number of Components", y = "Cumulative Proportion") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()
+```
+
+```{r}
+# Method 2: Kaiser criterion (eigenvalues > 1 for correlation-based PCA)
+eigenvalues <- pca$sdev^2
+
+data.frame(PC = 1:length(eigenvalues), Eigenvalue = eigenvalues) %>%
+  ggplot(aes(x = PC, y = Eigenvalue)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  labs(title = "Kaiser Criterion: Keep PCs with Eigenvalue > 1",
+       x = "Principal Component", y = "Eigenvalue") +
+  theme_minimal()
+
+cat("Number of components with eigenvalue > 1:", sum(eigenvalues > 1))
+```
+
+**Guidelines for choosing the number of components:**
+
+1.  **Elbow method**: Look for a "bend" in the screeplot where the curve flattens
+2.  **Cumulative variance**: Keep enough PCs to explain 70-80% of variance
+3.  **Kaiser criterion**: For correlation-based PCA, keep PCs with eigenvalue \> 1
+
+For our data: PC1 + PC2 explain \~63% (good for visualization), while \~4 components are needed for 80% variance.
+
+## First Component: A Development Index?
+
+Let's analyze the first principal component by examining its loadings:
+
+```{r}
+# Visualize PC1 loadings
+barplot(pca$rotation[,1], las=2, col="darkblue",
+        main="PC1 Loadings: How each variable contributes",
+        ylab="Loading (weight)")
+abline(h=0, col="gray", lty=2)
+```
+
+```{r}
+# Sorted by magnitude for clearer interpretation
+loadings_pc1 <- pca$rotation[,1]
+barplot(sort(loadings_pc1), las=2, col="steelblue",
+        main="PC1 Loadings (sorted by value)",
+        ylab="Loading")
+abline(h=0, col="gray", lty=2)
+```
+
+```{r}
+# Numeric view of loadings
+round(pca$rotation[,1], 3)
+```
+
+We can try to interpret this as a Development Index. Looking at the loadings: **Positive loadings** (variables that increase PC1): LifeExpectancy, GDP, Internet, SchoolYears, Literacy, MedicalDoctors, HospitalBeds. **Negative loadings** (variables that decrease PC1): IMR (Infant Mortality), Homicides
+
+**The "sign flip" issue:** PCA components are unique only up to sign. If your PC1 shows opposite signs, the interpretation is the same (just flip the ranking direction). The relative signs between variables is what matters.
+
+### Variable Contributions
+
+Let's plot squared loadings instead: they are like percentages (numbers between 0 and 1), but we lose the sign. They are called contribution of variables to components:
+
+```{r}
+fviz_contrib(pca, choice = "var", axes = 1)
+```
+
+The red dashed line on the graph above indicates the expected average contribution. If the contribution of the variables were uniform, the expected value would be 1/length(variables) = 1/12 = 8%.
+
+### Country Rankings by PC1
+
+```{r}
+cat("Countries with LOWEST PC1 (least developed):\n")
+names[order(pca$x[,1])][1:10]
+
+cat("\nCountries with HIGHEST PC1 (most developed):\n")
+names[order(pca$x[,1], decreasing=T)][1:10]
+```
+
+## Second Component: What Else Does It Capture?
+
+While PC1 captured overall development, what does PC2 represent?
+
+```{r}
+barplot(pca$rotation[,2], las=2, col="darkgreen",
+        main = "PC2 Loadings",
+        ylab = "Loading")
+abline(h=0, col="gray", lty=2)
+```
+
+```{r}
+# Compare PC1 and PC2 loadings side by side
+loadings_df <- data.frame(
+  Variable = rownames(pca$rotation),
+  PC1 = pca$rotation[,1],
+  PC2 = pca$rotation[,2]
+)
+
+loadings_df %>%
+  pivot_longer(cols = c("PC1", "PC2"), names_to = "Component", values_to = "Loading") %>%
+  ggplot(aes(x = reorder(Variable, abs(Loading)), y = Loading, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  labs(title = "Comparing PC1 and PC2 Loadings",
+       x = "Variable", y = "Loading") +
+  theme_minimal()
+```
+
+Maybe we can get more insights by ranking the countries using this component:
+
+```{r}
+cat("Countries with LOWEST PC2 scores:\n")
+names[order(pca$x[,2])][1:5]
+
+cat("\nCountries with HIGHEST PC2 scores:\n")
+names[order(pca$x[,2], decreasing=T)][1:5]
+```
+
+Contribution of variables to second component:
+
+```{r}
+fviz_contrib(pca, choice = "var", axes = 2)
+```
+
+**Interpreting PC2:**
+
+Unlike PC1, the second component is harder to interpret and may capture secondary patterns such as:
+
+-   Differences between health expenditure vs other indicators
+-   Urbanization effects
+-   Regional specificities
+
+By construction, PC2 is **uncorrelated** with PC1. Knowing a country's development level (PC1) tells you nothing about its PC2 score.
+
+# Advanced PCA Visualizations
+
+The `factoextra` package provides elegant visualizations that combine multiple aspects of PCA results.
+
+## Biplot: Variables and Countries Together
+
+```{r}
+# Biplot shows both variables (arrows) and individuals (points)
+# Note: We use habillage for grouping individuals by continent
+fviz_pca_biplot(pca,
+                repel = TRUE,
+                col.var = "black",
+                habillage = continent,
+                addEllipses = TRUE,
+                ellipse.type = "confidence",
+                palette = "jco",
+                legend.title = "Continent") +
+  labs(title = "PCA Biplot: Countries and Variables Together") +
+  theme_minimal()
+```
+
+**Reading the Biplot:**
+
+-   **Arrows (variables)**: Direction shows correlation with PCs; length indicates contribution
+-   **Points (countries)**: Position shows their PC scores
+-   **Proximity**: Variables pointing in similar directions are positively correlated
+-   **Ellipses**: Concentration areas by continent
+
+## Variable Correlation Circle
+
+```{r}
+fviz_pca_var(pca,
+             col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE) +
+  labs(title = "Variable Contributions to Principal Components") +
+  theme_minimal()
+```
+
+**The Correlation Circle:**
+
+-   Variables close together are positively correlated
+-   Variables at 180 degrees are negatively correlated
+-   Variables at 90 degrees are uncorrelated
+-   The closer to the circle edge, the better represented by PC1+PC2
+
+## Individual Factor Map
+
+```{r}
+fviz_pca_ind(pca,
+             col.ind = continent,
+             palette = "jco",
+             addEllipses = TRUE,
+             ellipse.type = "confidence",
+             legend.title = "Continent",
+             repel = TRUE,
+             label = "none") +
+  labs(title = "Countries in Principal Component Space") +
+  theme_minimal()
+```
+
+# Country Rankings and Regional Analysis
+
+## Scores Plot with Labels
+
+The scores plot shows each country positioned in the 2D space defined by PC1 and PC2:
+
+```{r}
+data.frame(z1=pca$x[,1],z2=pca$x[,2]) %>%
+  ggplot(aes(z1,z2,label=names,color=continent)) + geom_point(size=0) +
+  labs(title="First two principal components (scores)", x="PC1", y="PC2") +
+  theme_bw() +theme(legend.position="bottom") + geom_text(size=3, hjust=0.6, vjust=0, check_overlap = TRUE)
+```
+
+**Observations:**
+
+-   Countries cluster by continent (geographic/developmental similarity)
+-   The two PCs appear independent (no visible correlation pattern)
+-   PC1 separates developed (right) from less developed (left) countries
+
+## Regional Development Rankings
+
+Which regions have the most developed countries on average?
+
+```{r}
+data.frame(z1=-pca$x[,1],Region=WHO$Region) %>% group_by(Region) %>% summarise(mean=mean(z1), n=n()) %>% arrange(desc(mean))
+```
+
+Note: We use `-pca$x[,1]` so that higher values indicate more development (depending on the sign of PC1 in your output).
+
+# Additional Explorations
+
+## Outlier Detection
+
+PCA can help identify countries with unusual development profiles:
+
+```{r}
+# Countries with extreme PC1 scores
+extreme_df <- data.frame(
+  Country = names,
+  PC1 = pca$x[,1],
+  PC2 = pca$x[,2]
+)
+
+cat("Countries with LOWEST PC1 (least developed profile):\n")
+print(head(extreme_df %>% arrange(PC1), 5))
+
+cat("\nCountries with HIGHEST PC1 (most developed profile):\n")
+print(tail(extreme_df %>% arrange(PC1), 5))
+```
+
+```{r}
+# Multivariate outliers using Mahalanobis distance on first 4 PCs
+scores_4pc <- pca$x[, 1:4]
+mah_dist <- mahalanobis(scores_4pc, colMeans(scores_4pc), cov(scores_4pc))
+
+outlier_df <- data.frame(Country = names, MahalanobisDist = mah_dist) %>%
+  arrange(desc(MahalanobisDist))
+
+cat("Potential multivariate outliers (unusual profiles):\n")
+print(head(outlier_df, 10))
+```
+
+## Data Reconstruction from PCA
+
+How well can we approximate the original data using only 2 components?
+
+```{r}
+# Reconstruction using 2 components
+X_scaled <- scale(X)
+reconstruction_2pc <- pca$x[, 1:2] %*% t(pca$rotation[, 1:2])
+
+# Compare original vs reconstructed for Spain
+spain_idx <- which(names == "Spain")
+
+comparison <- data.frame(
+  Variable = colnames(X),
+  Original = as.numeric(X_scaled[spain_idx, ]),
+  Reconstructed = as.numeric(reconstruction_2pc[spain_idx, ])
+)
+
+comparison %>%
+  pivot_longer(cols = c("Original", "Reconstructed"),
+               names_to = "Type", values_to = "Value") %>%
+  ggplot(aes(x = Variable, y = Value, fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Spain: Original vs 2-PC Reconstruction",
+       subtitle = "How much information do we lose with only 2 components?") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# Reconstruction error by number of components
+errors <- sapply(1:ncol(X), function(k) {
+  recon <- pca$x[, 1:k, drop = FALSE] %*% t(pca$rotation[, 1:k, drop = FALSE])
+  mean((X_scaled - recon)^2)
+})
+
+data.frame(Components = 1:length(errors), MSE = errors) %>%
+  ggplot(aes(x = Components, y = MSE)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "steelblue", size = 2) +
+  labs(title = "Reconstruction Error vs Number of Components",
+       subtitle = "More components = better approximation of original data",
+       x = "Number of Principal Components", y = "Mean Squared Error") +
+  theme_minimal()
+```
+
+# Validation: Comparison with HDI
+
+How does our PCA-based index relate to the official Human Development Index (HDI)?
+
+The HDI is computed from just 3 variables (life expectancy, education, income), while our PC1 incorporates 12 indicators. Do they agree?
+
+```{r}
+# Download the official HDI from https://ourworldindata.org/grapher/human-development-index
+hdi = read_csv("human-development-index.csv") %>%
+  mutate(HDI=`Human Development Index`, COUNTRY=Code) %>%
+  group_by(COUNTRY) %>% filter(Year==max(Year,na.rm=T)) %>%
+  dplyr::select(COUNTRY, HDI)
+
+df_pca <- data.frame(
+  COUNTRY   = WHO$COUNTRY,
+  Country = WHO$Country,
+  PC1       = pca$x[, 1],
+  Continent = WHO$Continent,
+  stringsAsFactors = FALSE
+)
+
+df_merge <- dplyr::left_join(df_pca, hdi, by = "COUNTRY")
+
+corr_value <- cor(df_merge$PC1, df_merge$HDI, use = "complete.obs")
+
+plot_gg <- ggplot(df_merge, aes(x = PC1, y = HDI, color = Continent, text = Country)) +
+  geom_point(alpha = 0.7) +
+  theme_minimal() +
+  labs(
+    title = paste0("PCA-based index (PC1) vs Official HDI\nCorrelation = ",
+                   round(corr_value, 3)),
+    x = "PC1 (PCA-based development index)",
+    y = "HDI"
+  ) +
+  theme(legend.position = "bottom")
+
+ggplotly(plot_gg, tooltip = c("x", "y", "text"))
+```
+
+## Where Do PCA and HDI Disagree?
+
+```{r}
+# Standardize both for comparison
+df_merge$PC1_scaled <- scale(df_merge$PC1)[,1]
+df_merge$HDI_scaled <- scale(df_merge$HDI)[,1]
+df_merge$Residual <- df_merge$PC1_scaled - df_merge$HDI_scaled
+
+cat("Countries where PCA rates HIGHER than HDI:\n")
+print(df_merge %>%
+        filter(!is.na(Residual)) %>%
+        arrange(desc(Residual)) %>%
+        head(8) %>%
+        dplyr::select(Country, PC1, HDI, Residual))
+
+cat("\nCountries where PCA rates LOWER than HDI:\n")
+print(df_merge %>%
+        filter(!is.na(Residual)) %>%
+        arrange(Residual) %>%
+        head(8) %>%
+        dplyr::select(Country, PC1, HDI, Residual))
+```
+
+These differences arise because our PCA index includes variables not in HDI (internet usage, hospital beds, homicide rates, etc.).
+
+# Geographic Visualization
+
+```{r}
+# Map our PCA index in a map:
+map = data.frame(country=names, value=pca$x[,1])
+#Convert the country code into iso3c using the function countrycode()
+map$country = countrycode(map$country, 'country.name', 'iso3c')
+#Create data object supporting the map
+matched <- joinCountryData2Map(map, joinCode = "ISO3",
+                               nameJoinColumn = "country")
+#Draw the map
+mapCountryData(matched,nameColumnToPlot="value",missingCountryCol = "white",
+               addLegend = FALSE, borderCol = "#C7D9FF",
+               catMethod = "pretty", colourPalette = "terrain",
+               mapTitle = c("PCA1-based Development Index by Country"), lwd=1)
+```
+
+# Conclusions
+
+In this case study, we used PCA to create a data-driven development index from WHO socio-economic indicators. The first principal component captured "overall development" and correlated highly with the official UN Human Development Index, validating PCA as a powerful tool for dimensionality reduction and composite index creation.
+
+**Key R functions used:**
+
+-   `prcomp(X, scale. = TRUE)` - compute PCA on standardized data
+-   `fviz_screeplot()` - visualize variance explained
+-   `fviz_contrib()` - variable contributions to each PC
+-   `fviz_pca_biplot()` - combined visualization of variables and individuals
+-   `fviz_pca_var()` - correlation circle for variables
+-   `fviz_pca_ind()` - individual factor map

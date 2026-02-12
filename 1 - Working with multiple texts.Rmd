@@ -1,0 +1,363 @@
+---
+title: "1 - Working with multiple texts"
+course: Text Mining - MUCSS 25/26
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+instructor: Carmen Torrijos
+based_on: tidytextmining.com
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Working with multiple texts
+
+We are going to learn how to deal with multiple texts in dataframes, organizing them in a tidy way.
+
+## Jane Austen novels
+
+For this task, we will be working with the 6 published novels from [Jane Austen](https://en.wikipedia.org/wiki/Jane_Austen), the English novelist from the 18th century:
+
+-   Sense and Sensibility (1811)
+
+-   Pride and Prejudice (1813)
+
+-   Mansfield Park (1814)
+
+-   Emma (1815)
+
+-   Northanger Abbey (1818)
+
+-   Persuasion (1818)
+
+We will have a library ([janeaustenr](https://cran.r-project.org/web/packages/janeaustenr/index.html)) containing these 6 novels ready for text analysis: in plain text and splitted by lines. Let's call and see it.
+
+```{r}
+library(janeaustenr)
+#this is a function from this library to show a sample of the first lines
+austen_books()
+```
+
+We've got just two columns: text, and book.
+
+## Adding the chapter
+
+It would be useful to have another variable to know which **chapter** each line comes from. Let's add it.
+
+```{r}
+library(dplyr)
+library(stringr)
+
+original_austen_books <- austen_books() %>%
+  #we group by book just for a while
+  group_by(book) %>%
+  #we create a new variable with consecutive numbers, just to keep track of lines
+  mutate(linenumber = row_number(),
+         #we use a regex to identify chapters beginning
+         chapter = cumsum(str_detect(text, 
+                                     regex("^chapter [\\divxlc]",
+                                           # [\\divxlc] is any character or roman numeral
+                                          ignore_case = TRUE)))) %>%
+  #and we ungroup
+  ungroup()
+
+original_austen_books
+```
+
+## Tokenizing
+
+Now, we need to tokenize the texts. We already have them splitted by lines, let's just split them into tokens and put them into the variable `tidy_austen_books`. We already know which function gets that: **please write it under the comment**.
+
+```{r}
+library(tidytext)
+#we save it to a new variable
+tidy_austen_books <- original_austen_books %>%
+  #we tokenize it
+  unnest_tokens(word, text)
+
+tidy_austen_books
+```
+
+Do you see anything weird in the words? Something not useful, that should not be there? Look at the words again.
+
+## Filtering stopwords
+
+Stopwords are words that are not useful for analysis, typically extremely common words in language such as "the", "of", "to", and so forth in English. To filter them, we need to start from a list. Hopefully, we've got one in `tidytext` built upon 3 different lexicons (SMART, snowball and onix). Let's have a look.
+
+```{r}
+stop_words
+```
+
+So now, let's remove stopwords from the whole novels with [`anti_join()`](https://dplyr.tidyverse.org/reference/filter-joins.html).
+
+The `anti_join` function proves useful when we find ourselves wanting to **identify the records from one table that do NOT match another table.**
+
+In this case, for our dataframe of novels, we only want words that are NOT in the stopwords list.
+
+```{r}
+tidy_austen_books <- tidy_austen_books %>%
+  anti_join(stop_words)
+
+tidy_austen_books
+```
+
+Now all words are **meaningful**.
+
+## Counting word frequencies
+
+We want to know how many times a word is mentioned in Austen's novels, so we use the function `count`.
+
+```{r}
+tidy_austen_books %>%
+  count(word, sort = TRUE) 
+```
+
+And why not visualizing it? Let's make a simple plot with words and frequencies.
+
+```{r}
+library(ggplot2)
+
+tidy_austen_books |>
+  count(word, sort = TRUE) |>
+  #only words mentioned over 800 times in the novels
+  filter(n > 800) |>
+  #we reorder words by number of mentions
+  mutate(word = reorder(word, n)) |>
+  #we create the plot with the word (x) and the number of mentions (y)
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+**Exercise**: Try the same plot with words that are mentioned fewer times, and find some patterns that explain Jane Austen's writing style or main topics.
+
+```{r}
+tidy_austen_books |>
+  count(word, sort = TRUE) |>
+  #only words mentioned over 800 times in the novels
+  filter(n > 600) |>
+  filter(n < 800) |>
+  #we reorder words by number of mentions
+  mutate(word = reorder(word, n)) |>
+  #we create the plot with the word (x) and the number of mentions (y)
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+Insights: her words are related to emotions and most of her characters are women.
+
+## Comparing word frequencies across texts
+
+We can guess now the main characteristics of Jane Austen's text looking at her word selection, but it would be much more informative if we could compare her to other authors' word frequencies.
+
+### Project Gutenberg
+
+In order to achieve this, we will be using the [Project Gutenberg](https://www.gutenberg.org/), a digital repository of thousands of books that you surely know.
+
+The `gutenbergr` package provides access to the public domain books from the Project. It includes:
+
+-   tools for downloading books (stripping out the unhelpful header/footer information),
+
+-   and a complete dataset of metadata that can be used to find works of interest.
+
+We will mostly use the function [`gutenberg_download()`](https://docs.ropensci.org/gutenbergr/reference/gutenberg_download.html) that downloads one or more works from Project Gutenberg by ID. Each book is associated to a number.
+
+```{r}
+#We install the package
+# install.packages("gutenbergr")
+```
+
+### Preparing H.G. Wells
+
+First, we will download some novels from [Herbert George Wells](https://en.wikipedia.org/wiki/H._G._Wells), an English novelist who lived between the end of the 19th century and the beginning of the 20th. He is mostly famous for his novel "The War of the Worlds". Here we will be working with:
+
+-   The War of the Worlds (1897)
+
+-   The Time Machine (1895)
+
+-   The Island of Dr. Moreau (1896)
+
+-   The invisible man (1897)
+
+```{r}
+library(gutenbergr)
+
+#Download the books by ID (it takes a while, don't panic)
+hgwells <- gutenberg_download(c(35, 36, 5230, 159))
+```
+
+We get a tibble with just two columns: gutenberg ID and line.
+
+With the function `distinct` we can check that all IDs have been downloaded.
+
+```{r}
+library(dplyr)
+distinct(hgwells, gutenberg_id)
+```
+
+**Exercise**: prepare HG Wells novels for analysis:
+
+1.  tokenize them by word with default options,
+2.  filter stopwords and
+3.  count word frequencies in a separate cell.
+
+Save the result from the beginning in a variable called `tidy_hgwells`.
+
+```{r}
+tidy_hgwells <- hgwells |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words)
+
+tidy_hgwells |>
+  count(word, sort = TRUE)
+```
+
+There are less words in these four books compared to Jane Austen's one book (13,000 vs 11,810) but words are used less frequently as well. The highest used word is used 461 times.
+
+Note that we lose now the variable "gutenberg_id", because word count are aggregated data: now we are using all books to count.
+
+H.G. Wells is prepared for work now.
+
+### Preparing the Brontës
+
+Let's switch now to a rather different style. We will be working with some novels from the three Brontë sisters, Charlotte, Emily and Anne, English writers who lived in the 19th century, and who are **supposedly closest in writing to Jane Austen** than H.G. Wells. We will be using:
+
+-   Wuthering Heights (Emily, 1847) - Gutenberg code: `768`
+
+-   The Tenant of Wildfell Hall (Anne, 1848) - Gutenberg code: `969`
+
+-   Villette (Charlotte, 1853) - Gutenberg code: `9182`
+
+-   Agnus Grey (Anne, 1847) - Gutenberg code: `767`
+
+**Exercise**: Download the Brontës' novels from Gutenberg, tokenize them with default options, filter stopwords and count word frequencies.
+
+Note: remember it takes a little longer to download the books, so do it in a separate cell.
+
+```{r}
+bronte <- gutenberg_download(c(768, 969, 9182, 767))
+```
+
+The Brontës' are prepared for work now.
+
+```{r}
+library(dplyr)
+distinct(bronte, gutenberg_id)
+```
+
+```{r}
+tidy_bronte <- bronte |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words)
+
+tidy_bronte
+```
+
+```{r}
+tidy_bronte |>
+  count(word, sort = TRUE)
+```
+
+### Crossing the authors
+
+Now, let's compare Jane Austen, H.G. Wells and the Bronte novels by crossing their word frequencies, and put them in a single dataframe called `frequency`.
+
+```{r}
+library(tidyr)
+#we start by creating a column called author, distributed by each author dataframe. Bind_rows combines df vertically.
+frequency <- bind_rows(mutate(tidy_bronte, author = "Brontë Sisters"),
+                       mutate(tidy_hgwells, author = "H.G. Wells"), 
+                       mutate(tidy_austen_books, author = "Jane Austen")) %>% 
+  #regex to identify words and not _words_
+  mutate(word = str_extract(word, "[a-z']+")) %>%
+  #we count number of mentions of a word for an author
+  count(author, word) %>%
+  #we calculate proportion over the total sum of words
+  group_by(author) %>%
+  mutate(proportion = n / sum(n)) %>% 
+  select(-n) %>% 
+  #we reshape the dataframe
+  #pivot wider means: more columns, less rows
+  pivot_wider(names_from = author, values_from = proportion) %>%
+  #pivot longer means: more rows, less columns
+  pivot_longer(`Brontë Sisters`:`H.G. Wells`,
+               names_to = "author", values_to = "proportion")
+
+frequency
+```
+
+We have a column named "Jane Austen" with Jane Austen proportion because it's our reference. We are comparing H.G.Wells and the Brontës both with Jane Austen.
+
+### Making a plot
+
+```{r}
+library(scales)
+
+# expect a warning about rows with missing values being removed
+ggplot(frequency, aes(x = proportion, y = `Jane Austen`, 
+                      color = abs(`Jane Austen` - proportion))) +
+  geom_abline(color = "gray40", lty = 2) +
+  #you can use geom_jitter to adjust the points location and gain visibility
+  geom_jitter(alpha = 0.1, size = 0.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 0.5) +
+  scale_x_log10(labels = percent_format()) +
+  scale_y_log10(labels = percent_format()) +
+  scale_color_gradient(limits = c(0, 0.001), 
+                       low = "darkslategray4", high = "gray75") +
+  facet_wrap(~author, ncol = 2) +
+  theme(legend.position="none") +
+  labs(y = "Jane Austen", x = NULL)
+```
+
+Rules to read the plot:
+
+-   We've got the high frequency area, at the upper right end, and the low frequency area, at the lower left end.
+
+-   Words that are close to the line in these plots have similar frequencies in both sets of texts.
+
+-   Words that are far from the line are words that are found more in one set of texts than another.
+
+**Exercise**:
+
+Make some guesses about the style of H.G. Wells vs. Jane Austen. Are they so different?
+
+Make some guesses about the style of Jane Austen vs. the Brontës. Are they so close?
+
+### Calculating correlation
+
+We have been making guesses at first sight, strongly influenced by our intuition and our knowledge about the authors. To see if we are right, let's **quantify** now how similar and different these sets of word frequencies are.
+
+**Correlation is** **a statistical measure that expresses the extent to which two variables are linearly related** (meaning they change together at a constant rate).
+
+-   Talking about word frequencies: a higher correlation means word frequencies are more similar.
+
+We will be using the Pearson **correlation coefficient**, which is the most common way of measuring a correlation. It is a number between -1 and 1 that measures the strength and direction of the relationship between two variables.
+
+Let's see if it is higher for Austen-Brontë or for Austen-H.G.Wells.
+
+```{r}
+cor.test(data = frequency[frequency$author == "Brontë Sisters",],
+         ~ proportion + `Jane Austen`)
+```
+
+And just repeat the code for Austen-H.G. Wells.
+
+It is quite clear and quantified that word frequencies are more correlated between the Austen and Brontë novels than between Austen and H.G. Wells. Now it's a quantitative fact.
+
+## Summary
+
+We have learned so far:
+
+-   How to tokenize a text into single words
+
+-   How to filter stop words using a preset library
+
+-   How to count word frequencies
+
+-   How to compare word frequencies in multiple texts
+
+-   How to make a plot with word frequencies for multiple texts
+
+-   How to quantify correlations between word frequencies in multiple texts

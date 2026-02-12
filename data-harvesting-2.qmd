@@ -1,0 +1,635 @@
+---
+title: "What you need to know about regular expressions"
+format: html
+editor: visual
+---
+
+## Regular Expressions
+
+"regex"
+
+a pattern (or filter) that describes a set of strings that matches the pattern. In other words, a regex accepts a certain set of strings and rejects the rest.
+
+```{r}
+library(stringr)
+library(scrapex)
+library(rvest)
+library(xml2)
+library(lubridate)
+library(vistime)
+library(tibble)
+```
+
+### An Example of a Regular Expression
+
+```{r}
+borges <- "I like hourglasses, maps, eighteenth century typography."
+str_view_all(borges, "eighteenth", match = TRUE)
+```
+
+```{r}
+str_replace_all(borges, "eighteenth", "[DATE]")
+```
+
+## **The `.` placeholder**
+
+```{r}
+borges <- "I like hourglasses, maps, eighteenth Eighteenth century typography."
+str_view_all(borges, ".ighteenth", match = TRUE)
+```
+
+The regexp used is `.ighteenth` meaning that we want to match *any character* (`.`) followed directly by `ighteenth`. It matches both the capital letter word as well the lower case word. However, it would also match *any other* character, even empty spaces:
+
+```{r}
+borges <- "I like hourglasses, maps, ighteenth century typography."
+str_view_all(borges, ".ighteenth", match = TRUE)
+```
+
+## **Quantifiers**
+
+The `.` in regexp is very handy but also can be imprecise. The `.` is often used with `+` which means that the character `.` needs to be repeated one or more times. For example, say you want to extract the century from the phrase `maps, [some century] century`. In our example it’s easy because you know exactly the century. However, you might want to make it generic to extract any word between `maps` and `century`. You could try something like this:
+
+```{r}
+borges_two_phrase <- c(
+  "I like hourglasses, maps, eighteenth century typography.",
+  "I like hourglasses, maps, seventeenth century typography."
+)
+
+str_view_all(borges_two_phrase, "maps, . century")
+```
+
+Nothing was matched. Why? Because we’re saying we want to match something like this: `maps, [a] century.`. Replace `[a]` with whatever character you want and that’s what your matching. Of course, that doesn’t have a match anywhere in the string. What we want instead is this:
+
+```{r}
+str_view_all(borges_two_phrase, "maps, .+ century")
+```
+
+This is saying: match the part `maps,` followed by *any character* (`.`) repeated one or more times (`+`) which is followed by `century`.
+
+## **Escaping `.`**
+
+`.` is useful because it can be used as a general placeholder. However, what if you want to match a literal `.`? If I asked you to match the first sentence of this phrase without specifying “hourglasses”, what regexp could you use?
+
+```{r}
+borges <- "I like hourglasses. I also like maps, eighteenth century typography"
+str_view_all(borges, "I like .+")
+```
+
+`I like .+` is almost there. It says: match the phrase `I like` followed by any character repeated one or more times. However, that matches the entire phrase because it doesn’t know we want it stop at the first `.`, right after hourglasses. To match a literal `.` you need to append it with two `\\`. It would look like this: `I like .+\\.`. This reads like this:
+
+-   Match the phrase `I like`
+
+-   Followed be any character that is repeated one or more times (`.+`)
+
+-   Until there is a literal dot (`\\.`)
+
+Let’s apply it:
+
+```{r}
+str_view_all(borges, "I like .+\\.")
+```
+
+Be aware that you need to append `\\` in front of **any** special character in regexp. For example, if you wanted to match the quantifier `+` literally, you’ll need to do it like this: `\\+`. There’s a bunch of special character in regexp but you’ll just need to know a few like `(`, `)`, `+`, `.`, `$`, `^` or `|`.
+
+## **The OR (`|`) operator**
+
+To make your regexp generic, you’ll often want to match either one regexp or another. The `|` allows you to do it very succinctly. Suppose we want to extract the century from the vector below. We can do it like this:
+
+```{r}
+borges_two_phrase <- c(
+  "I like hourglasses, maps, eighteenth century typography.",
+  "I like hourglasses, maps, seventeenth century typography."
+)
+
+res <- str_extract_all(borges_two_phrase, "maps, .+ century")
+res
+```
+
+However, we want to extract only the actual century and replace `maps,` and `century`. We can use a regexp to say: replace either `maps,` or `century` with an empty space, which will give you only the actual century. In our case the regexp would be like this: `maps, | century`. Using `str_replace_all` we can match that expression and replace it with empty space:
+
+```{r}
+res %>% str_replace_all("maps, | century", "")
+```
+
+## **Anchors**
+
+Anchors are also another feature of regexp. `^` is used to match the start of the string and `$` to match the end of the string. For example, to match the first letter of the entire text you could use:
+
+```{r}
+borges <- "I like hourglasses. I also like maps, eighteenth century typography"
+str_view_all(borges, "^.", match = TRUE)
+str_view_all(borges, ".$", match = TRUE)
+```
+
+This might seem like something which doesn’t have much use but it’s actually very handy. Take this text as an example:
+
+```{r}
+borges_long <- c(
+  "I like cars. I like hourglasses, maps, eighteenth century typography.",
+  "I like computers. I like hourglasses, maps, eighteenth century typography."
+)
+```
+
+Both phrases have “I like” at the beginning but also have “I like” after the end of the first sentence. Using what we know until now won’t be enough:
+
+```{r}
+str_view_all(borges_long, "^I like .+")
+```
+
+To achieve what we want we could use the trick to match literal dot and add the anchor of the beginning:
+
+```{r}
+str_view_all(borges_long, "^I like .+\\.")
+```
+
+## **Matching spaces**
+
+You can also match spaces in regexp and replace them:
+
+```{r}
+str_view_all(borges, " ")
+```
+
+Since spaces come in different ways (new lines or a tabs), you can also use the special character `\\s`:
+
+```{r}
+str_replace_all(borges, "\\s", "")
+```
+
+## **Special classes**
+
+Aside from the magic of `.`, regexp has a set of special tools for matching general patterns. Let’s touch upon three of these.
+
+-   `\\d`: matches digits
+
+Suppose you’re scraping a list of countries and their GDP. After scraping that data you end up with this:
+
+```{r}
+gdp <- c(
+  "Afghanistan 516 US dollars",
+  "Albania 6494 US dollars",
+  "Algeria 3765 US dollars",
+  "American Samoa 12844 US dollars",
+  "Andorra 43047 US dollars"
+)
+```
+
+The keyword `\\d` will match a single digit. So for example, if we wanted to match the age of a child in a string (`Angel is 8 years old)`, writing a regexp like `\\d` will match that `8`. For example:
+
+```{r}
+str_view_all("Angel is 8 years old", "\\d")
+```
+
+If we matched instead someone older, `\\d` will match each digit *separately*:
+
+```{r}
+str_view_all(
+  c("Angel is 8 years old", "Martha is 56 years old"),
+  "\\d"
+)
+```
+
+If you pay close attention, the regexp matched `56` but each digit separately. However, we could combine this with the quantifier `+` to match *one or more* digits. For example:
+
+```{r}
+str_view_all(
+  c("Angel is 8 years old", "Martha is 56 years old"),
+  "\\d+"
+)
+```
+
+Going back to our `gdp` example, we can extract the GDP of every country with the regexp `\\d+`, meaning “extract any number that is repeated one or more times”:
+
+```{r}
+gdp_chr <- str_extract_all(gdp, "\\d+")
+lapply(gdp_chr, as.numeric)
+```
+
+-   `[abc]`: matches a, b, or c.
+
+Regexps also has a cool shortcut to extend the regexp `|` (or) and make it more flexible. For example, say we wanted to match all retirement ages of men in Europe that are between 67 and 69:
+
+```{r}
+retirement <-
+  # Read in our scrapex example with retirement ages
+  retirement_age_europe_ex() %>%
+  read_html() %>%
+  html_table() %>%
+  .[[2]]
+
+retirement
+```
+
+One way is to explicitly use `|` to match all ages like this: `(67|68|69)`. Instead, using brackets (`[]`), regexp will match everything inside as if it were `|`. So for example:
+
+```{r}
+str_view_all(retirement$Men, "6[789]")
+```
+
+This regexp will match the number `6` followed either by `7`, `8`, or `9`. If these numbers are sequential (as it is now) it has additional shortcuts to make it simpler:
+
+```{r}
+str_view_all(retirement$Men, "6[7-9]")
+```
+
+Note that `[]` works the same way for anything: numbers, letters, punctuation, spaces, etc..
+
+-   `[^abc]`: matches anything except a, b, or c.
+
+Similarly to the previous example `[abc]`, `[^abc]` will match anything except these letters. So recycling our previous retirement example, if we wanted to match all ages except those after 65, the regexp would be like this:
+
+```{r}
+str_view_all(retirement$Men, "6[^5-9]")
+```
+
+All ages which are below 65 will be matched.
+
+# **What you need to know about XPath**
+
+XPath (XML Path Language) is the language designed to identify the address of one or several tags within an HTML or XML document. With that address, XPath allows us to extract the data under those tags.
+
+To extract the book ‘Hyperion Cantos’ of Dan Simmons, the simplest XPath you can use is `/bookshelf/dansimmons/book`. Let’s break that up to understand it better:
+
+-   The first node is bookshelf so we start with `/bookshelf`.
+
+-   The *child* of bookshelf is `<dansimmons>` so the XPath becomes `/bookshelf/dansimmons/`
+
+-   The *child* of `<dansimmons>` is `<book>` so we just add that to our XPath: `/bookshelf/dansimmons/book`
+
+That doesn’t look so hard, right? The problem is that for all your web scraping needs, having the exact address, node by node, will not by generalizable.
+
+## **Finding tags with XPath**
+
+Before we read in that previous XPath let’s load the libraries we’ll need for this chapter.
+
+```{r}
+library(xml2)
+library(magrittr)
+library(scrapex)
+```
+
+Let’s read in that XML to R and test our initial XPath:
+
+```{r}
+raw_xml <- "
+<bookshelf>
+  <dansimmons>
+    <book>
+      Hyperion Cantos
+    </book>
+  </dansimmons>
+</bookshelf>"
+
+book_xml <- read_xml(raw_xml)
+direct_address <- "/bookshelf/dansimmons/book"
+
+book_xml %>%
+  xml_find_all(direct_address)
+```
+
+It works as expected. Now you remember what I told you that this specific address was not generalizable? What if someone added the `authors` tag after bookshelf?
+
+```{r}
+# Note the new `<authors>` tag, a child of `<bookshelf>`.
+raw_xml <- "
+<bookshelf>
+  <authors>
+    <dansimmons>
+      <book>
+        Hyperion Cantos
+      </book>
+    </dansimmons>
+  </authors>
+</bookshelf>"
+
+book_xml <- raw_xml %>% read_xml()
+
+book_xml %>%
+  xml_find_all(direct_address)
+```
+
+It can’t find it using our previous XPath expression. We know why, it’s because we should instead use the XPath `/bookshelf/authors/dansimmons/book`. But what if someone (that is, the developer behind the website you’re trying to scrape) continually changes the XML? Can’t we build a more general expression? XPath has some handy tricks that you can use to do that. For example, there’s one thing we know for the book `Hyperion Cantos`: it was written by Dan Simmons. Instead, you can extract only the `<dansimmons>` tag directly with `//dansimmons`. That will return all `<dansimmons>` tags of the entire XML document. However, since we know there’s only one `<dansimmons>` tag, we know we’ll be grabbing the one we’re after:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons")
+```
+
+`//` is very handy, it means: search the entire document and bring me back all `<dansimmons>` tags. It doesn’t matter the depth of the `<dansimmons>` tag, it could be three or twenty times deep, `//` will return all occurrences of that tag. Let’s extend the example to include another Dan Simmons book and its release date:
+
+```{r}
+# Note the new `<release_year>` tag below the second (also new) `<book>` tag
+raw_xml <- "
+<bookshelf>
+  <authors>
+    <dansimmons>
+      <book>
+        Hyperion Cantos
+      </book>
+      <book>
+        <release_year>
+         1996
+        </release_year>
+        Endymion
+      </book>
+    </dansimmons>
+  </authors>
+</bookshelf>"
+
+book_xml <- raw_xml %>% read_xml()
+```
+
+Can you predict what our XPath will return before running it? Let’s find out:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons")
+```
+
+It returns the `<dansimmons>` tag, which is what we expected. Within `<dansimmons>` there should be two `<book>` tags but we can’t see the result of these two tags directly from the output. What we want is to extract the names of both books. We can reuse that idea of using `/` as before for the `book` tag. We do this because we know that `book` is the direct child of `dansimmons`:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons/book")
+```
+
+There we go, we get the two book nodes. If `book` would not be the direct child of `<dansimmons>`, `/` wouldn’t work. For example, if instead of `book` we searched for `release_year` (the new tag we added as well), it would return an empty node:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons/release_year")
+```
+
+That’s expected: `dansimmons` doesn’t have a direct child called `release_year` (it has a *grandchild* `<release_year>`. However, we know that `//` will search for tags in the entire XML tree so we can instead request all `release_year` tags inside `dansimmons`:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons//release_year")
+```
+
+At this point, it might be useful to know that `xml_path` can return the literal, direct address to a given node. Exactly like our first XPath from the chapter:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons//release_year") %>%
+  xml_path()
+```
+
+For some concrete cases, using a literal path such as this one might be much quicker than coming up with a single XPath that makes it more general. If you’re trying to scrape something as a one-off thing, manually navigating a HTML/XML tree (with functions such as `xml_child` or directly in the web developer tools of your browser) and copying it’s exact XPath location might be the better choice.
+
+XPath also allows to hand pick nodes by position. Within the `dansimmons` tag there are two book tags. What would an XPath expression look like to subset only the 2nd `<book>` tag of `dansimmons`? We can tell XPath the position of the tag we want using `[number]`, where number is replaced with the position:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons/book[2]")
+```
+
+You can supply the position of any node. As expected, this will return empty if the position doesn’t exist:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons/book[8]")
+```
+
+However, throughout all of these examples we had to be very specific in supplying the exact address of some child node with respect to it’s parent. `//dansimmons` will return all `dansimmons` tags but we won’t be able to see its children. We would need to know which specific book tags are children of `dansimmons`, if there are any. XPath introduces the `*` as a wildcard pattern to return all children of current parent tag. For example:
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons/*")
+```
+
+The result is not the `dansimmons` tag but all it’s children, regardless of whether they are `<book>` tags or any other tag. This strategy is useful if you’re unsure which nodes are below a certain parent and you want to extract all of them: this is in fact very generalizable because you can extract all children of a tag and then pick the one you’re after with some string manipulation.
+
+Similarly, `*` can be used to fill out a tag which you don’t know the name of. You know that each author has `<book>` tags but you don’t know the name of all authors. You could extract all book tags like this:
+
+```{r}
+book_xml %>%
+  xml_find_all("/*/*/*/book")
+```
+
+In other words, this XPath is saying: extract all book tags which have three tags above it, it doesn’t matter *which* tags they are. As we’ll see later in this chapter, this is quite a nice trick for more complex HTML/XML structures.
+
+Let’s recap so far:
+
+-   `/` links between two tags that have direct parent-child relationship
+
+-   `//` finds all tags in the HTML/XML tree regardless of depth
+
+-   Use `[number]` to subset the position of a node. For example: `//a[8]` will return the 8th `<a>` tag.
+
+-   `*` is a wildcard that allows to signal nodes without specifying which nodes.
+
+These rules can take you a long way when building XPath expressions but the real flexibility comes when you’re available to filter through attributes of a given node.
+
+## **Filter by attributes**
+
+When parsing complicated websites, you’ll need additional flexibility to parse HTML/XML. XPath has a great property that allows to pick tags with specific attributes. Let’s update our XML example to include a new author tag `<stephenking>`, one of it’s books and some additional attributes for some books:
+
+```{r}
+# Note the new <stephenking> tag with it's book 'The Stand' and all <book> tags have some attributes
+raw_xml <- "
+<bookshelf>
+  <authors>
+    <dansimmons>
+      <book price='yes' topic='scifi'>
+        Hyperion Cantos
+      </book>
+      <book topic='scifi'>
+        <release_year>
+         1996
+        </release_year>
+        Endymion
+      </book>
+    </dansimmons>
+    <stephenking>
+    <book price='yes' topic='horror'>
+     The Stand
+    </book>
+    </stephenking>
+  </authors>
+</bookshelf>"
+
+book_xml <- raw_xml %>% read_xml()
+```
+
+The power of XPath comes in when we can filter tags by attributes. Perhaps we’d like to extract all book tags that had a price, regardless of author. Or catch all books of a certain topic. Whenever we want our tags to match a specific attribute we can add two brackets at the end of the tag and match the attribute to what we’re after. Say we wanted to know all Dan Simmons book with a price, how would that XPath look like?
+
+```{r}
+book_xml %>%
+  xml_find_all("//dansimmons//book[@price='yes']") %>%
+  xml_text()
+```
+
+Our new XPath is saying: find all `<book>` tags that have an attribute of `price` set to `yes` that are *descendants* (but not necessarily direct child, because of the `//`) of the `<dansimmons>` tag. Quite interesting eh? This approach allows us to have a much flexible language for parsing HTML/XML documents. Everything inside `[]` serves to add additional filters/criteria that matches your XPath. With the help of the `and` keyword, you can alter the previous XPath to get all books with a price from the topic `horror`:
+
+```{r}
+book_xml %>%
+  xml_find_all("//book[@price='yes' and @topic='horror']") %>%
+  xml_text()
+```
+
+Or grab only the books which have a `price` attribute (that’s different from having `price` set to `yes` or `no`):
+
+```{r}
+book_xml %>%
+  xml_find_all("//book[@price]")
+```
+
+Or find all books which did not have a price:
+
+```{r}
+book_xml %>%
+  xml_find_all("//book[@price!='yes']")
+```
+
+This is correct because there is not attribute of price set to ‘no’. You can also use the keyword `or` to match certain properties:
+
+```{r}
+book_xml %>%
+  xml_find_all("//book[@price='yes' or @topic='scifi']") %>%
+  xml_text()
+```
+
+XPath has all the goodies to perform basic filtering (`and`, `or`, `=`, `!=`) but also has additional functions that are useful for filtering. Some of the most common ones include:
+
+-   [`contains()`](https://tidyselect.r-lib.org/reference/starts_with.html)
+
+-   `starts-with()`
+
+-   [`text()`](https://rdrr.io/r/graphics/text.html)
+
+-   [`not()`](https://magrittr.tidyverse.org/reference/aliases.html)
+
+-   [`count()`](https://dplyr.tidyverse.org/reference/count.html)
+
+How do we use them? We always use these functions within the context of filtering (everything used inside `[]`). With these you can reach a level of fine-grained filtering that can save you hours searching on the source code of an XML/HTML document. Before we go over some of the cases where these functions are useful, let’s load a new example from the `scrapex` package.
+
+For the rest of the chapter and the exercises you’ll be working with the main page of the newspaper “El País”. “El País” is an international daily newspaper. It is the among the most circulated newspapers in Spain and has a very rich website that we’ll be scraping. We can load it from the function [`elpais_newspaper_ex()`](https://rdrr.io/pkg/scrapex/man/elpais_newspaper_ex.html):
+
+```{r}
+newspaper_link <- elpais_newspaper_ex()
+newspaper <- read_html(newspaper_link)
+```
+
+Let’s look at the website in our web browser:
+
+```{r}
+browseURL(prep_browser(newspaper_link))
+```
+
+The website has news organized along the left, right and center of the website. If you scroll down you’ll see there are dozens more news snippets scattered throughout the website. These news are organized through sections such as ‘Culture’, ‘Sports’ and ‘Business’.
+
+Let’s say we’re interested in figuring out the links to all sections of the newspaper to be able to scrape all news separately by area. To avoid complexity, we’ll start by first grabbing the ‘Science’ section link as a first step.
+
+Ok, with this information we can be creative and build an XPath expressions that says: find all the `<a>` tags that have an `href` attribute containing the word ‘Science’ and also inherits from a `<section>` tag:
+
+```{r}
+newspaper %>%
+  xml_find_all("//section//a[contains(@href, 'science')]")
+```
+
+Hmm, the XPath seems right but the output returns too many tags. We were expecting one link that is the general science section (something like `https://english.elpais.com/science-tech/`).
+
+We could narrow things with the classes of the link:
+
+```{r}
+newspaper %>%
+  xml_find_all("//section//a[contains(@class, 'b_h_t _pr') and contains(@href, 'science')]")
+```
+
+We can also use
+
+```{r}
+newspaper %>%
+  xml_find_all("//section/*/*/a[contains(@href, 'science')]")
+```
+
+We can count how many times an article appears
+
+```{r}
+newspaper %>%
+  xml_find_all("//section[count(.//article)>3]")
+```
+
+By looking at the result we see that the attribute `data-dtm-region` contains some information about the name of the section (see the word culture in the third node). Let’s extract it:
+
+```{r}
+newspaper %>%
+  xml_find_all("//section[count(.//article)>3]") %>%
+  xml_attr("data-dtm-region")
+```
+
+Examples:
+
+```{r}
+# Find all sections
+newspaper %>%
+  xml_find_all("//section")
+
+# Return all divs below all sections
+newspaper %>%
+  xml_find_all("//section//div")
+
+# Return all sections which a div as a child
+newspaper %>%
+  xml_find_all("//section/div")
+
+# Return the child (any, because of *) of all sections
+newspaper %>%
+  xml_find_all("//section/*")
+
+# Return all a tags of all section tags which have two nodes in between
+newspaper %>%
+  xml_find_all("//section/*/*/a")
+
+# Return all a tags below all section tags without a class attribute
+newspaper %>%
+  xml_find_all("//section//a[not(@class)]")
+
+# Return all a tags below all section tags that contain a class attribute
+newspaper %>%
+  xml_find_all("//section//a[@class]")
+
+# Return all a tags of all section tags which have two nodes in between
+# and contain some text in the a tag.
+newspaper %>%
+  xml_find_all("//section/*/*/a[contains(text(), 'Science')]")
+
+# Return all span tags in the document with a specific class
+newspaper %>%
+  xml_find_all("//span[@class='c_a_l']")
+
+# Return all span tags in the document that don't have a specific class
+newspaper %>%
+  xml_find_all("//span[@class!='c_a_l']")
+
+# Return all a tags where an attribute starts with something
+newspaper %>%
+  xml_find_all("//a[starts-with(@href, 'https://')]")
+
+# Return all a tags where an attribute contains some text
+newspaper %>%
+  xml_find_all("//a[contains(@href, 'science-tech')]")
+
+# Return all section tags which have tag *descendants (because of the .//)* that have a class attribute
+newspaper %>%
+  xml_find_all("//section[.//a[@class]]")
+
+# Return all section tags which have <td> children
+newspaper %>%
+  xml_find_all("//section[td]")
+
+# Return the first occurrence of a section tag
+newspaper %>%
+  xml_find_all("(//section)[1]")
+
+# Return the last occurrence of a section tag
+newspaper %>%
+  xml_find_all("(//section)[last()]")
+```
+
+-   [XPath Cheetsheet](https://devhints.io/xpath)
+
+-   [Extensive XPath Cheetsheet](https://www.lambdatest.com/blog/most-exhaustive-xpath-locators-cheat-sheet/)
+
+-   [XPath tutorial](https://www.w3schools.com/xml/xpath_intro.asp)

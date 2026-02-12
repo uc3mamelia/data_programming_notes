@@ -1,0 +1,594 @@
+---
+title: "2 - Sentiment analysis_SOLVED"
+course: Text Mining - MUCSS 25/26
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+instructor: Carmen Torrijos
+based_on: tidytextmining.com
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Sentiment analysis
+
+Let's do some sentiment analysis using lexicons/dictionaries. This means we work in the word-level.
+
+## 1. Know our lexicons
+
+Before we start analyzing, let's have a look at some sentiment lexicons. The `tidytext` package provides access to three general-purpose sentiment lexicons:
+
+-   AFINN from Finn Årup Nielsen,
+
+-   Bing from Bing Liu and collaborators, and
+
+-   NRC from Saif Mohammad and Peter Turney.
+
+```{r}
+#we install the necessary packages to work with these lexicons
+# install.packages("tidytext")
+# install.packages("textdata")
+```
+
+The three packages have different approaches to sentiment analysis.
+
+```{r}
+library(tidytext)
+
+get_sentiments("afinn")
+```
+
+Afinn is a regression approach. It gives points to words from 5 to -5.
+
+```{r}
+get_sentiments("bing")
+```
+
+Bing is a multiclass classification approach on just 2 categories: positive and negative.
+
+```{r}
+get_sentiments("nrc")
+```
+
+NRC is a multilabel classification approach in two different levels: it combines sentiment and emotions.
+
+## 2. Extracting sentiment from Jane Austen novels
+
+We will be working on a dataset we created in notebook 1: tokenized Jane Austen novels with columns for the books and chapters the word is coming from. Let's create it again:
+
+```{r}
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+
+tidy_austen_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, 
+                                regex("^chapter [\\divxlc]", 
+                                      ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+tidy_austen_books
+```
+
+### Joy words in Emma
+
+Now that we have our books tokenized by word, let's make a question: What are the most common **joy words** Jane Austen used? Let's take one of the novels, for example, *Emma*.
+
+```{r}
+#we set nrc lexicon to a variable, filtering by joy
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+emma_joy_words <- tidy_austen_books %>%
+    #we choose the book Emma
+    filter(book == "Emma") %>%
+    #we combine both lists (all matching rows), NRC and Emma's words
+    inner_join(nrc_joy) %>%
+    #we count the mentions of each word to find the most frequent
+    count(word, sort = TRUE)
+
+emma_joy_words
+```
+
+We've got a tibble with words and frequencies from *Emma*, filtered only for joy words.
+
+**Exercise**: We want to make a plot combining the last piece of code with ggplot2. We will follow these steps:
+
+1.  Start from tidy_austen_books
+
+2.  Filter by book *Emma*
+
+3.  Combine with nrc_joy
+
+4.  Count word frequencies and sort them
+
+5.  Filter them by frequency (only mentioned more than X times)
+
+6.  Reorder column word by number of mentions (most frequents on top)
+
+7.  Create the plot with x=n, y=word
+
+Write the three missing lines of code:
+
+```{r}
+library(ggplot2)
+
+tidy_austen_books %>%
+  filter(book == "Emma") %>%
+    #we combine both lists, coincident items in NRC and Emma
+    inner_join(nrc_joy) %>%
+    #we count the mentions to see the most frequent words
+    count(word, sort = TRUE) %>%
+    #only words mentioned over 50 times in the novel
+    filter(n > 50) %>%
+    #we reorder words by number of mentions
+    mutate(word = reorder(word, n)) %>%
+    #we create the plot with the word (x) and the number of mentions (y)
+    ggplot(aes(x = n, y = word)) +
+    geom_col() +
+    labs(y = NULL)
+```
+
+### Sentiment distribution in novels
+
+We can also examine how sentiment changes throughout each novel. First, we divide text in chunks and find a sentiment score for each one of them using the Bing lexicon and [`inner_join()`](https://dplyr.tidyverse.org/reference/mutate-joins.html).
+
+```{r}
+library(tidyr)
+
+jane_austen_sentiment <- tidy_austen_books %>%
+  #find the sentiment for each word using bing
+  inner_join(get_sentiments("bing")) %>%
+  #divide each book in chunks of 80 lines assigning an index
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  #we write positive and negative in different columns
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  #we substract positive minus negative to find a net sentiment for each chunk
+  mutate(sentiment = positive - negative)
+
+jane_austen_sentiment
+```
+
+We've got everything we need to create plots of sentiment by novel. We can plot these sentiment scores across the plot trajectory of each novel following the chunks of 80 lines.
+
+```{r}
+library(ggplot2)
+#create the plot with x = index (chunks) and y = net sentiment
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+Remember we are using the sentiment lexicon "Bing" here. Try to imagine the plot of each novel just by looking at the distribution of sentiment.
+
+**Exercise:** Read the plot, locate the points of conflict for each book and think if they correspond to common narrative structures.
+
+## 3. Comparing lexicons in Pride and Prejudice
+
+Let's use the three lexicons, AFINN, Bing and NRC, applied to the same novel, to compare the narrative distribution of sentiment in the three of them.
+
+First of all, let's filter the book we are interested in from the general data frame of novels.
+
+```{r}
+pride_prejudice <- tidy_austen_books %>% 
+  filter(book == "Pride & Prejudice")
+
+pride_prejudice
+```
+
+Now, let's extract the net sentiment with each lexicon for chunks of 80 lines.
+
+```{r}
+#for AFINN is different. We need to summarise quantities to get net sentiment.
+afinn <- pride_prejudice %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(index = linenumber %/% 80) %>%
+  #we summarise the sentiment of each chunk
+  summarise(sentiment = sum(value)) %>% 
+  mutate(method = "AFINN")
+
+afinn
+```
+
+```{r}
+#for Bing and NRC we can do it in one step using bind_rows to paste them together
+bing_and_nrc <- bind_rows(
+  #Bing
+  pride_prejudice %>% 
+    #we get sentiments from bing
+    inner_join(get_sentiments("bing")) %>%
+    #we create the column for bing
+    mutate(method = "Bing et al."),
+  #NRC
+  pride_prejudice %>% 
+    #we get sentiment from nrc 
+    inner_join(get_sentiments("nrc") %>% 
+                 #we filter just sentiment, not emotions
+                 filter(sentiment %in% c("positive", 
+                                         "negative"))
+    ) %>%
+    #we create the column for nrc
+    mutate(method = "NRC")) %>%
+  #we divide in chunks of 80 lines
+  count(method, index = linenumber %/% 80, sentiment) %>%
+  #we write positive and negative in different columns
+  pivot_wider(names_from = sentiment,
+              values_from = n,
+              values_fill = 0) %>% 
+  #we extract net sentiment by substraction
+  mutate(sentiment = positive - negative)
+
+bing_and_nrc
+```
+
+We now have an estimate of the net sentiment (positive - negative) in each chunk of the novel text for each sentiment lexicon.
+
+-   Remember that the column "sentiment" is in Afinn a sum of values.
+
+<!-- -->
+
+-   Remember that the column "sentiment" in Bing and NRC is a substraction of positive words - negative words.
+
+And finally, let's bind the three of them together and visualize them in a plot.
+
+```{r}
+#bind the three of them
+bind_rows(afinn, 
+          bing_and_nrc) %>%
+  #make the plot with x=index (chunks), y=sentiment and fill by lexicon (method)
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y")
+```
+
+Now you can see how different narrative plot can be just depending on the sentiment lexicon used. To read the plot, look at:
+
+-   Higher and lower positive values.
+
+-   Larger blocks of similar sentiment.
+
+-   Similarity in points of conflict and narrative arc.
+
+### Lexicons bias and risks
+
+We can not trust the lexicon 100%. Generally, there are three **possible biases** in sentiment lexicons:
+
+-   The lexicon is biased towards negative sentiment (more negative than positive words)
+
+-   The lexicon is biased towards positive sentiment (more positive than negative words)
+
+-   The lexicon is very different in style or context from the text we are analyzing. For instance: a lexicon built on Twitter data used to analyze 19th century literature.
+
+Let's see which case is Bing:
+
+```{r}
+get_sentiments("bing") %>% 
+  count(sentiment)
+```
+
+Let's see which case is NRC:
+
+```{r}
+get_sentiments("nrc") %>% 
+  filter(sentiment %in% c("positive", "negative")) %>% 
+  count(sentiment)
+```
+
+As it follows a regression model, the case of Afinn is different, but we can still see how many words it has for each value.
+
+```{r}
+get_sentiments("afinn") %>% 
+  count(value)
+```
+
+Summing up: 1598 negative words and 873 positive words. Only one neutral word.
+
+**Exercise**: which is the neutral word in Afinn?
+
+```{r}
+get_sentiments("afinn") %>% 
+  filter(value == 0)
+
+```
+
+### Most common positive and negative words
+
+Let's find out how much each word in the pack of novels contributes to each sentiment. This is: how many times each word appears in the novels, and which sentiment it is associated to:
+
+```{r}
+#create a data frame with word, sentiment and number of mentions
+bing_word_counts <- tidy_austen_books %>%
+  #get sentiment from bing
+  inner_join(get_sentiments("bing")) %>%
+  #count the number of mentions for each word
+  count(word, sentiment, sort = TRUE)
+
+bing_word_counts
+```
+
+Let's make a plot to see this in perspective.
+
+```{r}
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 15) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+Here's how we discover, for example, that the word "miss" is bringing a lot of negative sentiment to the analysis. How can we fix this?
+
+We can add "miss" to an existent stopwords list. Remember that we've got one in `tidytext` built upon 3 different lexicons (SMART; snowball and onix) that you can find directly in `stop_words`.
+
+```{r}
+stop_words
+```
+
+Now we know the aspect of the tibble, there are two columns to fill: word and lexicon it comes from. For the case of "miss", in the lexicon column we can write just "custom".
+
+```{r}
+custom_stop_words <- bind_rows(tibble(word = c("miss"),  
+                                      lexicon = c("custom")), 
+                               stop_words)
+
+custom_stop_words
+```
+
+**Exercise:** create the same dataframe and plot, this time without "miss". Follow these steps:
+
+1.  Filter custom stopwords
+2.  Create the data frame again
+3.  Create the plot again
+
+```{r}
+tidy_austen_books <- tidy_austen_books %>%
+  #we use custom_stop_words instead of stop_words
+  anti_join(custom_stop_words)
+```
+
+```{r}
+bing_word_counts <- tidy_austen_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE)
+
+bing_word_counts
+```
+
+```{r}
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 15) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+### Most negative chapters
+
+Next question could be: what are the most negative chapters in each of Jane Austen's novels? To answer this question we need to extract average sentiment by chapter. The real question is: **which chapter has the highest proportion of negative words?**
+
+We do that in a few steps:
+
+-   First, we filter negative words from Bing.
+
+-   We make a data frame with number of words per chapter.
+
+-   We find the number of negative words in each chapter and divide by the total words in chapter.
+
+```{r}
+#filter negative words from Bing
+bingnegative <- get_sentiments("bing") %>% 
+  filter(sentiment == "negative")
+
+bingnegative
+```
+
+```{r}
+# make a dataframe (wordcounts) with number of words per chapter
+wordcounts <- tidy_austen_books %>%
+  group_by(book, chapter) %>%
+  summarize(words = n())
+
+wordcounts
+```
+
+```{r}
+#find the number of negative words by chapter and divide by the total words in chapter
+tidy_austen_books %>%
+  #semi_join: returns all words in books with a match in bingnegative
+  semi_join(bingnegative) %>%
+  #group by book and chapter to summarize how many negative words by chapter
+  group_by(book, chapter) %>%
+  summarize(negativewords = n()) %>%
+  #left_join keeps all words in wordcounts and makes a dataframe
+  left_join(wordcounts, by = c("book", "chapter")) %>%
+  #create a column in the dataframe with the ratio
+  mutate(ratio = negativewords/words) %>%
+  #we don't want chapters 0 because they're just title and author
+  filter(chapter != 0) %>%
+  #we select the highest ratios
+  slice_max(ratio, n = 1) %>% 
+  ungroup()
+```
+
+**Exercise:** print one or two of this chapters to see with your eyes if they really are so negative.
+
+```{r}
+tidy_austen_books %>%
+  filter(book == "Mansfield Park") %>%
+  filter (chapter == 45)
+```
+
+## 4. Wordclouds ☁️
+
+Wordclouds are a very easy and powerful tool to visualize language and concepts. Here we can see the most common words in Jane Austen books, using directly the function `wordcloud`:
+
+```{r}
+# install.packages("wordcloud")
+```
+
+**Note**: expect a lot of warnings when painting wordclouds. It's normal, R is tuning the size of the words to make them fit in the cloud.
+
+**Note:** for wordclouds, filtering stopwords is particularly important, as they can really distort the cloud.
+
+```{r}
+library(wordcloud)
+
+tidy_austen_books %>%
+  #we filter stopwords
+  anti_join(custom_stop_words) %>%
+  #we count words
+  count(word) %>%
+  #we use the wordcloud function
+  with(wordcloud(word, n, max.words = 60))
+```
+
+This is in black and white, so let's put some colour into it. First, we install the package:
+
+```{r}
+# install.packages("RColorBrewer")
+```
+
+Second, we recreate the word cloud with the new possibilities. There are different ways of introducing colors in word clouds. You can specify colors using either a color name, a hexadecimal color code, or a vector of color values. For example:
+
+-   We write a vector of colors to be combined: `wordcloud(words, freq, colors = c("red", "blue")`
+
+-   Same with hexadecimal color codes: `wordcloud(words, freq, colors = c("#00FF00", "#FF00FF")`
+
+-   We use a number of colors from a pre-defined palette: `wordcloud(words, freq, colors = brewer.pal(8, 'Dark2'))`
+
+Let's try the palette option:
+
+```{r}
+library(RColorBrewer)
+
+#set the colors from a brewer palette. 8 is the number of colors used from Dark2 palette.
+colors = brewer.pal(10, 'Dark2')
+
+tidy_austen_books %>%
+  anti_join(custom_stop_words) %>%
+  count(word) %>%
+  #we add colors as an argument
+  with(wordcloud(word, n, max.words = 90, colors = colors))
+```
+
+### Comparing two wordclouds in one ☁️☁️
+
+Let's compare positive wordcloud with negative wordcloud. To be able to plot two wordclouds in one, we need to install reshape2.
+
+```{r}
+# install.packages("reshape2")
+```
+
+```{r}
+library(reshape2)
+
+word_matrix <- tidy_austen_books %>%
+  #we get sentiments
+  inner_join(get_sentiments("bing")) %>%
+  #we count word mentions
+  count(word, sentiment, sort = TRUE) %>%
+   #we convert to a matrix: rows = words, columns = sentiments, values = counts (0 if missing)
+  acast(word ~ sentiment, value.var = "n", fill = 0)
+
+head(word_matrix)
+```
+
+```{r}
+#we paint two wordclouds in one using two different colors
+#the colors are assigned in the same order as the columns in the matrix
+comparison.cloud(word_matrix, colors = c("red", "blue"),
+                   max.words = 100)
+```
+
+**Exercise**: repeat this wordcloud but only restricted to one book from Jane Austen, at your choice.
+
+```{r}
+library(reshape2)
+
+tidy_austen_books %>%
+  filter(book == "Persuasion") %>%
+  #we get sentiments
+  inner_join(get_sentiments("bing")) %>%
+  #we count word mentions
+  count(word, sentiment, sort = TRUE) %>%
+  #we create the matrix
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  #we paint two wordclouds in one using two different colors
+  comparison.cloud(colors = c("red", "blue"),
+                   max.words = 100)
+```
+
+## 5. Working sentence-level
+
+So far, we have explored how to analyze sentiment at the word level. This approach can be useful depending on the project, for instance, if you want to create a word cloud.
+
+Now, we are going to look at how to handle sentiment analysis at the **sentence or short text level.**
+
+To do that, we need a library called `sentimentr`.
+
+```{r}
+#first, we install the package
+# install.packages("sentimentr")
+```
+
+```{r}
+#we try some sentences to see how it works
+library(sentimentr)
+texts <- c(
+  "I love this book, it is amazing, super cool!",
+  "I hate waiting for the train.",
+  "The movie was okay, not bad but not great."
+)
+
+# calculate sentiment using function sentiment_by
+texts_sentiments <- sentiment_by(texts)
+
+texts_sentiments
+```
+
+However, this output can be a bit confusing. Let's select only what we are interested in and create a tibble with sentence and sentiment.
+
+```{r}
+#we create a tibble with two columns, sentence and sentiment
+final_sentiment <- tibble(sentence = texts, sentiment = texts_sentiments$ave_sentiment)
+
+
+final_sentiment
+```
+
+Sentence-level sentiment analysis can look more modern or accurate, but it is not perfect either. Always look for the best option for your specific project.
+
+## Summary
+
+We have learned so far:
+
+-   How to use sentiment lexicons with different approaches
+
+-   How to analyze sentiment in the word-token level
+
+-   How to extract net sentiment of a chunk of lines
+
+-   How to plot the sentiment of a corpus to make a guess at its narrative distribution
+
+-   How to identify words that are contributing the most to sentiment analysis and how to fix mistakes
+
+-   How to find the most negative chapters in a book
+
+-   How to plot word clouds in black and white and color to illustrate our analysis
+
+-   How to analyze sentiment in the sentence or short text level

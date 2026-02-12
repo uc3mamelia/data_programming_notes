@@ -1,0 +1,514 @@
+---
+title: "3 - Term_frequency"
+course: Text Mining - MUCSS 25/26
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+instructor: Carmen Torrijos
+based_on: tidytextmining.com
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Term frequency
+
+Let's push word frequencies work to a higher level.
+
+Remember that:
+
+**TF**: *Term frequency*. Measures how many times a word appears in a text taking its length into account.
+
+**IDF**: *Inverse document frequency*. Measures how many times a word appears in a text compared to how many times it appears in the rest of the collection.
+
+**TF-IDF**: Both metrics multiplied to get a balanced metric to measure real value of a word in a document that is part of a collection.
+
+## 1. Most often used words
+
+Our collection is composed of Jane Austen's six novels. Let's try to find out what makes each novel different in the collection. And let's start by calculating two absolute values:
+
+-   Most frequent words in the collection as a whole. - Saved in `book_words`.
+
+-   Total number of words by novel. - Saved in `total_words`.
+
+#### First step: how many times each word appears in each book
+
+```{r}
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+#we obtain the text from the library
+book_words <- austen_books() %>%
+  # we tokenize as usual (as an exception we won't be filtering stopwords now)
+  unnest_tokens(word, text) %>%
+  #we just count word frequencies keeping a column for the book the word comes from
+  count(book, word, sort = TRUE)
+
+#we get a dataframe with the number of times the word appears in each book
+book_words
+```
+
+#### Second step: how many total words there are in each book
+
+Just summing up the total number of words in each book.
+
+```{r}
+total_words <- book_words %>% 
+  #we group by books to sum all the totals in the n column of book_words
+  group_by(book) %>% 
+  #we create a column called total with the total of words by book
+  summarize(total = sum(n))
+
+total_words
+```
+
+#### Third step: we add this total to the `book_words` dataframe
+
+We need to add the total to the dataframe to operate with it afterwards.
+
+```{r}
+#we add a column with this total number to the dataframe book_words
+#we use left join because we need to keep all rows in book_words, then add the total
+book_words <- left_join(book_words, total_words)
+book_words
+```
+
+Now we've got everything that is necessary to get the distribution of `n/total` for each novel: the number of times a word appears in a novel divided by the total number of terms (words) in that novel. We call this metric **term frequency.**
+
+#### Fourth step: calculate term frequency
+
+We add the column just to see it with our own eyes.
+
+```{r}
+book_words <- book_words |>
+  #we add a column for term_frequency in each novel
+  mutate(term_frequency = n/total)
+
+book_words
+```
+
+#### Fifth step: visualize distribution in collection
+
+Let's make a plot to see how words are distributed in the whole Jane Austen's collection.
+
+```{r}
+library(ggplot2)
+
+#we calculate the distribution and put it in the x axis, filling by book
+ggplot(book_words, aes(term_frequency)) +
+  #we create the bars histogram
+  geom_histogram(show.legend = TRUE) +
+  #we set the limit for the term frequency in the x axis
+  xlim(NA, 0.0009)
+```
+
+How to read this plot:
+
+-   **X axis**: we've got different term frequencies for words in the collection
+
+-   **Y axis**: we've got how many words in the collection present each frequency
+
+This is called **long tail distribution**.
+
+A long-tail distribution means that a few items appear very often, while many others appear rarely, forming a long “tail” in the distribution.
+
+In TF-IDF, this is very clear when you visualize the statistics: a small number of words have very high frequency (the head), and a large number of words occur only a few times but carry more specific information (the long tail).
+
+#### Sixth step: visualize distribution by book
+
+Let's make multiple plots to see how words are distributed in each novel.
+
+```{r}
+library(ggplot2)
+
+#we calculate the distribution and put it in the x axis, filling by book
+ggplot(book_words, aes(term_frequency, fill = book)) +
+  #we create the bars histogram
+  geom_histogram(show.legend = TRUE) +
+    #we set the limit for the term frequency in the x axis to remove extremely high TF values (very unique words)
+  xlim(NA, 0.0002) +
+  #plot settings
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+```
+
+There is a similar distribution for all books: most words have very low frequencies (on the left) and a few words have very high frequencies (on the right).
+
+## 2. Zipf's Law
+
+Zipf's law was claimed by George Zipf, a 20th century **linguist** from the United States. It states that the *frequency of a word appearance in a text is inversely proportional to its rank*.
+
+Most natural language data follows Zipf’s law: a few words are extremely frequent, and many words appear very rarely.
+
+**⭐️ The lower the term frequency, the higher the rank. Because the word is more rare and valuable.**
+
+Where rank is just a **number for position in a ranking**. Let's convert `book_words` to a new dataframe called `freq_by_rank` that adds a column for the rank, ranking the words in descending order by their term frequency.
+
+```{r}
+freq_by_rank <- book_words |>
+  group_by(book) |>
+  #we create the column for the rank with row_number
+  mutate(rank = row_number()) |>
+  ungroup()
+
+freq_by_rank
+```
+
+**Note**: a rank of 1000 is an example of high rank. A rank of 1 is the lowest rank.
+
+Here we have all books, but this can be seen more clearly if we filter by just one book. Choose any of them:
+
+```{r}
+freq_by_rank |>
+  filter(book == "Mansfield Park")
+```
+
+Let's visualize Zipf's Law in the Austen collection quickly by plotting rank on the x axis and term frequency on the y axis:
+
+```{r}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  #plot settings
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = TRUE)
+```
+
+How to read this plot:
+
+-   Words with higher term_frequency are lower in rank. While the rank goes up to the right, the term frequency goes down.
+
+But Zipf's law is more often visualized on logarithmic scales. **This is just a trick to see it better, you don't have to learn to do this.**
+
+**-\> Logarithmic scales** are just non linear scaling: instead of scaling by orders of magnitude summing numbers (+1 would be 1,2,3,4...), each step scales multiplying by a fixed quantity (x 10 would be 1,10,100,1000..). So that the plot can be better appreciated.
+
+Plotting this way, we can see with our eyes how an inversely proportional relationship will have a constant, negative slope from right to left.
+
+```{r}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_line(size = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+### Measuring deviation
+
+If we break this plot in three sections, we can see that the middle section is the most stable one. Let's find the exact numeric coefficients that define the relationship in this section between the tf and the rank:
+
+```{r}
+#we set the section in a variable called rank_subset
+rank_subset <- freq_by_rank %>% 
+  filter(rank < 500,
+         rank > 10)
+
+#we use the linear model function (lm) to find numeric coefficients of relationship between tf and rank
+lm(log10(term_frequency) ~ log10(rank), data = rank_subset)
+```
+
+If we now add a line to our plot with these coefficients, we will be able to see more clearly Jane Austen's deviation in the first and third sections. Let's paint the same plot for the slope, but with an extra guideline:
+
+```{r}
+freq_by_rank %>% 
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  #we add a line in the plot with the two coefficients we have found
+  geom_abline(intercept = -0.62, slope = -1.1, 
+              color = "gray50", linetype = 2) +
+  geom_line(size = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+```
+
+If we establish that the second section represents the standard use of language:
+
+-   Deviation in the first section means Jane Austen uses a lower percentage of the most common words than many collections of language.
+
+-   Deviation in the third section means Jane Austen uses a lower percentage of rare words than many collections of language.
+
+Her writing relies on a stable, mid-frequency vocabulary, which is characteristic of a **classical, controlled use of language**.
+
+## 3. The function does its magic
+
+The [`bind_tf_idf()`](https://rdrr.io/pkg/tidytext/man/bind_tf_idf.html) function in the tidytext package takes a tidy text data frame as input with one row per token (term), per document. It only needs 3 columns:
+
+-   One column contains the terms (`word` in this case)
+
+-   One column contains the documents (`book` in this case) terms come from
+
+-   One column contains the counts: how many times each document contains each term (`n` in this example).
+
+Remember this is exactly what we have in `book_words`. `Total` and `term_frequency` are intermediate steps that we don't need anymore.
+
+```{r}
+book_words
+```
+
+The function:
+
+-   takes as input three arguments for the three needed columns
+
+-   gives as output three new columns: tf, idf and a combination of both, tf-idf
+
+```{r}
+#we create a new variable with the analysis
+book_tf_idf <- book_words %>%
+  bind_tf_idf(word, book, n)
+
+book_tf_idf
+```
+
+These first words in the dataframe have very low TF-IDF, near zero, because these are words that occur in many of the documents in a collection (dataframe is sorted by count), so, they are not distinctive for any document.
+
+#### Higher TF-IDF words
+
+The more documents containing the word, the less distinctive it is of any of them, so the TF-IDF score will be higher for words that occur fewer times. The TF-IDF analysis rewards these words.
+
+To check this, we just have to arrange the dataframe by tf-idf:
+
+```{r}
+book_tf_idf %>%
+  #we exclude the total column which is not needed now
+  select(-total) %>%
+  #we arrange by tf-idf in descending order
+  arrange(desc(tf_idf))
+```
+
+What do we see here? And why?
+
+Let's make a plot to visualize them.
+
+```{r}
+# install.packages("forcats")
+```
+
+```{r}
+library(forcats)
+
+book_tf_idf %>%
+  group_by(book) %>%
+  #choose maximum number of words
+  slice_max(tf_idf, n = 10) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+What measuring TF-IDF has done here is to show us that Jane Austen used similar language across her six novels, and **what distinguishes one novel from the rest** within the collection of her works **are the proper nouns, the names of people and places**.
+
+## 4. TF-IDF in physics texts
+
+Let's download some physics classics from Gutenberg to apply what we have learned of TF-IDF. These are the chosen ones:
+
+| Author | Book | Year of publishing | Project Gutenberg ID |
+|------------------|------------------|------------------|------------------|
+| Galileo Galilei | Discourse of floating bodies | 1612 | 37729 |
+| Christiaan Huygens | Treatise on Light | 1690 | 14625 |
+| Nikola Tesla | Experiments with Alternate Currents of High Potential and High Frequency | 1892 | 13476 |
+| Albert Einstein | Relativity: The Special and General Theory | 1916 | 30155 |
+
+**Exercise**: We want to compare these texts and know which words are distinctive for each of them from a TF-IDF point of view. Follow the next steps:
+
+-   Download the texts from Gutenberg using [gutenberg_download](https://www.rdocumentation.org/packages/gutenbergr/versions/0.2.3/topics/gutenberg_download) and put them into a variable named `physics`.
+
+**Note**: Since we are downloading many books to one dataframe, this time we will be using author and not book as a reference. Look for an argument in the gutenberg_download() function to keep the author as a metafield.
+
+**Note**: if it's not working, try another mirror. You can choose a random one at <https://www.gutenberg.org/MIRRORS.ALL>
+
+```{r}
+library(gutenbergr)
+```
+
+```{r}
+physics <- gutenberg_download(c(37729, 14625, 13476, 30155), meta_fields = "author", mirror = "http://mirror.csclub.uwaterloo.ca/gutenberg/")
+```
+
+-   Create a dataframe called `physics_words` with one row per word, per document. First, tokenize the text, and second, count words by author to find out how many times each word was used by each writer.
+
+```{r}
+physics_words <- physics |>
+  unnest_tokens(author, word) |>
+  count(book, word, sort = TRUE)
+```
+
+-   We already have the three columns needed, so we can directly perform TF-IDF analysis. Save it into a variable called `physics_tfidf`.
+
+```{r}
+
+```
+
+Create a plot to visualize this analysis. Follow the next steps:
+
+1.  Start from physics_tf_idf and assign it to a new variable: plot_physics
+
+2.  Group by author
+
+3.  Set a maximum number of words using `slice_max`
+
+4.  Ungroup
+
+5.  Reorder words by tf_idf to see the higher scores
+
+6.  Make a plot with x=tf_idf, y=word, and filling by author
+
+7.  Use `geom_col` without a legend
+
+8.  Set labs to `x="tf-idf"` and `y= NULL`
+
+9.  Add this line for plot settings: `facet_wrap(~author, ncol = 2, scales = "free")`
+
+```{r}
+
+```
+
+### Filtering unconvenient words
+
+There is no need to filter stopwords when performing TF-IDF, because with TF-IDF metrics they are just not considered as important words in the text. **Stopwords can be naturally filtered by the method**.
+
+However, we have some expressions here that are not exactly words. It is always useful to see them in context to know what they are exactly.
+
+```{r}
+#remember that, in the initial dataframe, we have a column containing the text. Print it just to have a look.
+physics
+```
+
+Let's put in context this expression, that appears in the books: \`\_k\_\`
+
+```{r}
+library(stringr)
+
+physics %>% 
+  filter(str_detect(text, "_k_")) %>% 
+  select(text)
+```
+
+**Exercise**: Follow the same method to see in context other strange elements in the texts and decide what should and should not be filtered.
+
+```{r}
+
+```
+
+-   All these expressions appear in the books: `"eq", "co", "rc", "ac", "ak", "bn", "fig", "file", "cg", "cb", "cm", "ab", "_k", "k", "_x"`. Put them in a `tibble` called `physics_stopwords` made of one column called `word`.
+
+```{r}
+
+```
+
+-   Filter them from our dataframe `physics_words` using the same method `anti_join()` we normally use for stopwords.
+
+-   Create `plot_physics` by analyzing its tf-idf again, as we did before.
+
+-   **Note**: this time, after analyzing tf-idf, add a line to eliminate all words between underscores:
+
+    ```         
+    mutate(word = str_remove_all(word, "_"))
+    ```
+
+```{r}
+
+```
+
+-   Plot again and see the difference with your own eyes.
+
+```{r}
+
+```
+
+## 5. Comparing Savoury vs Sweet Recipes
+
+**Exercise**:
+
+Use these cookbooks from Project Gutenberg to clearly see which are the lexical differences between sweet and savoury recipes, i.e., what kind of words really make a difference between these two cooking styles.
+
+| Author | Title | Project Gutenberg ID | Style |
+|----|----|----|----|
+| Cambell Soup Company | 30 tempting spaghetti meals | 65562 | Savoury |
+| Mitzi Perdue | The Perdue Chicken Cookbook | 1979 | Savoury |
+| Elizabeth Douglas | The Soup and Souce Book | 68446 | Savoury |
+| Anonymous | The New York Cake Book | 65572 | Sweet |
+| Franklin Baker Co. | Baker's Coconut Recipes | 65326 | Sweet |
+| Elizabeth Douglas | The Cake and Biscuit Book | 68137 | Sweet |
+
+First, download the books and create **a different dataframe with each style**.
+
+```{r}
+```
+
+Add a column to label as "savoury" or "sweet" recipes coming from each type of book.
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+Bind both dataframes in one called `all_recipes` using `rbind`. Print `head` and `tail` to check that both dataframes are included.
+
+```{r}
+
+```
+
+Prepare the dataframe for tf-idf analysis. You need three columns: style, word and number of appearances of the word. Starting from `all_recipes`, tokenize and count words, and put everything in a variable called `all_recipes_tidy`.
+
+```{r}
+
+```
+
+Perform tf-idf analysis and remove words between underscores as we have done before.
+
+```{r}
+
+```
+
+Make a plot to visualize the 30 more distinctive words from each style of cooking. Starting from recipes_tf_idf, follow these steps:
+
+-   Arrange by tf_idf in descending order
+
+-   Choose to show only the first 30 using `slice_head`
+
+-   Plot with x=word, y=tf_idf and fill by style
+
+-   Use `geom_col` and do not show the legend (FALSE)
+
+-   Add the following plot settings:
+
+`labs(x = NULL, y = "tf-idf") +`
+
+`coord_flip() +`
+
+`facet_wrap(~style, ncol = 2, scales = "free")`
+
+```{r}
+
+```
+
+Think if you can tell which collection is which just by looking at the tf-idf plot.
+
+**Many words share rather the same tf-idf.**
+
+-   TF-IDF works well to distinguish one collection from another, such as sweet versus savoury recipes.
+
+-   However, within each collection, many texts use very similar vocabulary, so TF-IDF assigns very similar values to many words.
+
+-   As a result, it becomes difficult to distinguish individual documents from each other inside the same collection.
+
+It is also possible that the words with the same tf-idf values are **not truly identical**, but their difference is small enough that it is not noticeable on the plot.
+
+It is useful anyway to find words that truly characterize documents in a collection.
+
+## Summary
+
+We have learned so far:
+
+-   The theory behind TF, IDF and TF-IDF
+
+-   The difference between representativeness and distinctivity in text
+
+-   The difference between word frequency and term frequency
+
+-   How to prepare a dataset to calculate TF-IDF
+
+-   How to use the function bind_tf_idf, arrange by higher tf-idf and plot it
+
+-   Summing up: we know a better, more scientific method than word count to find out what makes a text distinctive.

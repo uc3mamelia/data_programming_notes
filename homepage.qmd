@@ -18,45 +18,25 @@ editor: visual
 
 ## Data Programming Notes
 
-#### [Study Sheet from Introduction to R](https://uc3mamelia.github.io/data_programming_notes/study_sheet.html)
+#### [libraries, data types, dates, basic operators, logic, add elements, delete elements, glue, extract, data tables, tibble](https://uc3mamelia.github.io/data_programming_notes/study_sheet.html)
 
--   libraries, data types, dates, basic operators, logic, add elements, delete elements, glue, extract, data tables, tibble
+#### [nrow, ncol, order(), unique(), mean(), sd()](https://uc3mamelia.github.io/data_programming_notes/case_study_mock_task.html)
 
-#### [Mock Case Study](https://uc3mamelia.github.io/data_programming_notes/case_study_mock_task.html)
+#### [tidy data, pivot_longer, pivot_wider](https://uc3mamelia.github.io/data_programming_notes/sept_11_class.html)
 
--   nrow, ncol, order(), unique(), mean(), sd()
+#### [separate, unite, pivot_longer with extra specs, sampling](https://uc3mamelia.github.io/data_programming_notes/sept_18_class.html)
 
-#### [Sept 11th](https://uc3mamelia.github.io/data_programming_notes/sept_11_class.html)
+#### [remove NAs](https://uc3mamelia.github.io/data_programming_notes/sept_28_class.html)
 
--   tidy data, pivot_longer, pivot_wider
+#### [column functions: select, unselect, rename, relocate, mutate, flow structures](https://uc3mamelia.github.io/data_programming_notes/oct_2_class.html)
 
-#### [Sept 18th](https://uc3mamelia.github.io/data_programming_notes/sept_18_class.html)
+#### [if_else, summarize(), case_when](https://uc3mamelia.github.io/data_programming_notes/oct-9.html)
 
--   separate, unite, pivot_longer with extra specs, sampling
+#### [summarize, slice_max, stratified sample, slice sample, change graph color](https://uc3mamelia.github.io/data_programming_notes/oct-16.html)
 
-#### [Sept 25](https://uc3mamelia.github.io/data_programming_notes/sept_28_class.html)
+#### [Joins](https://uc3mamelia.github.io/data_programming_notes/oct-23.html)
 
--   remove NAs
-
-#### [Oct 2](https://uc3mamelia.github.io/data_programming_notes/oct_2_class.html)
-
--   column functions: select, unselect, rename, relocate, mutate, flow structures
-
-#### [Oct 9](https://uc3mamelia.github.io/data_programming_notes/oct-9.html)
-
--   if_else, summarize(), case_when
-
-#### [Oct 16](https://uc3mamelia.github.io/data_programming_notes/oct-16.html)
-
--   summarize, slice_max, stratified sample, slice sample, change graph color
-
-#### [Oct 23](https://uc3mamelia.github.io/data_programming_notes/oct-23.html)
-
--   Joins
-
-#### [Nov 4](https://uc3mamelia.github.io/data_programming_notes/nov-4.html)
-
--   imports and exports
+#### [imports and exports](https://uc3mamelia.github.io/data_programming_notes/nov-4.html)
 
 ## Statistics Notes
 
@@ -121,6 +101,30 @@ editor: visual
 -   titles, subtitles, guides, text labels, highlighting points, reference lines, reference areas, individual annotations (segments), spatial coordinates, direct labeling, annotating groups of points, gghighlight
 
 #### [Arranging Plots](https://uc3mamelia.github.io/data_programming_notes/data-viz-7.html)
+
+## Text Mining
+
+-   [Breaking the Ice](https://uc3mamelia.github.io/data_programming_notes/0---Breaking-the-ice_SOLVED.html)
+
+-   [Working with Multiple Texts](https://uc3mamelia.github.io/data_programming_notes/1---Working-with-multiple-texts.html)
+
+-   [Sentiment Analysis](https://uc3mamelia.github.io/data_programming_notes/2---Sentiment-analysis_SOLVED.html)
+
+-   Term Frequency and Lammatize
+
+## Survey
+
+-   [Why Surveys](https://uc3mamelia.github.io/data_programming_notes/Why Surveys.html)
+
+-   [Socio-demographic variables in surveys](https://uc3mamelia.github.io/data_programming_notes/Socio-demographic variables in surveys.html)
+
+## Data Harvesting
+
+-   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/Multiple Imputation in Survey Data-20260211/Missing_data.html)
+
+-   [Data Harvesting 1](https://uc3mamelia.github.io/data_programming_notes/Multiple Imputation in Survey Data-20260211/Missing_data.html)
+
+-   Data Harvesting 2
 
 ## Retired
 

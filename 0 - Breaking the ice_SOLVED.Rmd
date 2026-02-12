@@ -1,0 +1,119 @@
+---
+title: "0 - Breaking the ice_SOLVED"
+course: Text Mining - MUCSS 25/26
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+instructor: Carmen Torrijos
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Breaking the ice
+
+This is a little exercise to start learning how to deal with text.
+
+## 1. Choose a short text of your liking (5-6 lines)
+
+It can be a Lord Byron poem, a Bad Bunny song, a Trump speech or just a short joke in English. In my case, it's a verse in Ed Sheeran's song *Give me love*.
+
+## 2. Save it into a variable
+
+Break it into lines and put it in quotes. **In code, text must always be in quotes**.
+
+```{r}
+my_text <- c("Give me love like never before",
+          "'Cause lately I've been craving more",
+          "It's been a while but I still feel the same,",
+          "Maybe I should let you go")
+```
+
+Print your variable to see everything is OK.
+
+```{r}
+my_text
+```
+
+## 3. Let's make a tibble
+
+To make it tidy, let's convert this into a tibble. **A tibble is a modern class of data frame in R**, available in the `dplyr` and `tibble` packages, that has a beautiful print method and keeps things organized.
+
+```{r}
+library(dplyr)
+#tibble() has two parameters: the lines we need (line) and the variable containing the text (text)
+my_text_df <- tibble(line = 1:4, text = my_text)
+
+my_text_df
+```
+
+Here we have **one sentence per row**. We still can not analyze too much in this format.
+
+## 4. Let's break it into words
+
+A **token** is a meaningful unit of text, most often a [word]{.underline} but not only, that we are interested in using for further analysis.
+
+**Tokenization** is the process of splitting text into tokens. Use the function `unnest_tokens()` to make our tibble contain a new column with tokens.
+
+```{r}
+# install.packages("tidytext")
+```
+
+```{r}
+#call the library tidytext
+library(tidytext)
+
+my_text_df %>%
+  #The two basic arguments to unnest_tokens are the new column name (word) and the column tokens come from (text)
+  unnest_tokens(word, text)
+```
+
+Note that default tokenization for this function is:
+
+-   punctuation has been stripped
+
+-   it converts the text to lowercase
+
+-   the sentence each word comes from is not shown
+
+-   and only single words (like *stop*), not multiple words (like *stop_for*)
+
+## 5. Let's use some options
+
+Use the [function documentation](https://www.rdocumentation.org/packages/tidytext/versions/0.4.1/topics/unnest_tokens) to find arguments that solve the following problems:
+
+**5.1 Source line**
+
+We want to create the tokenization tibble knowing which line each word tokenized came from. Look for the correct argument and modify the dataframe.
+
+```{r}
+my_text_df %>%
+  #find the argument for keeping the line the word came from
+  unnest_tokens(word, text, drop=FALSE)
+```
+
+**5.2** **Punctuation**
+
+Maybe we want to have our punctuation symbols treated as tokens too. Look for the correct argument and modify the dataframe again.
+
+**Note**: If -by any chance- your text has no punctuation symbols, please add some manually to see the difference.
+
+```{r}
+my_text_df %>%
+  #drop argument is for keeping the line the word came from
+  unnest_tokens(word, text, drop = FALSE, strip_punct = FALSE)
+```
+
+**5.3** **Case**
+
+And finally, we want to respect the case.
+
+**Note**: If -by any chance- your text has no upper case letters, please add them manually to see the difference.
+
+```{r}
+my_text_df %>%
+  #drop argument is for keeping the line the word came from
+  unnest_tokens(word, text, drop = FALSE, strip_punct = FALSE, to_lower = FALSE)
+```
+
+Congrats! You have learned the basics for a tokenization process over one text.

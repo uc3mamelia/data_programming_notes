@@ -1,0 +1,348 @@
+---
+title: "A primer on Webscraping"
+format: html
+editor: visual
+---
+
+```{r}
+# install.packages("devtools")
+# devtools::install_github("cimentadaj/scrapex")
+# install.packages(c("httr2", "xml2", "rvest"))
+```
+
+```{r}
+library(scrapex)
+library(rvest)
+library(httr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+
+link <- history_elections_spain_ex()
+link
+```
+
+```{r}
+browseURL(prep_browser(link))
+```
+
+This opens the link and saves a local copy.
+
+```{r}
+set_config(
+  user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36; Amelia Shuler / amelia.b.shuler@gmail.com")
+)
+
+html_website <- link %>% read_html()
+html_website
+```
+
+```{r}
+all_tables <-
+  html_website |>
+  html_table()
+```
+
+This takes all the tables from the webpage and puts them in a tibble.
+
+```{r}
+elections_data <- all_tables[[5]]
+elections_data
+```
+
+This gets the 5th table, which is the one we want.
+
+```{r}
+elections_data |> select_if(is.character)
+```
+
+From the previous version of the table, we have gotten ridden of NAs and converted them to "empty".
+
+Next, we want to remove data that is not a number. For now, we are starting with a manual list. We will learn more complex ways later.
+
+```{r}
+wrong_labels <- c(
+  "Dissolved",
+  "[k]",
+  "[l]",
+  "[m]",
+  "n",
+  "Banned",
+  "Boycotted",
+  "Did not run"
+)
+
+wrong_labels <- paste0(wrong_labels, collapse = "|")
+wrong_labels
+```
+
+We use str_replace_all to replace the values
+
+```{r}
+semi_cleaned_data <-
+  elections_data %>%
+  mutate_if(
+    is.character,
+    ~ str_replace_all(string = .x, pattern = wrong_labels, replacement = NA_character_)
+  )
+semi_cleaned_data
+```
+
+We have two values that have month-year instead of year. We need to convert these.
+
+```{r}
+semi_cleaned_data <-
+  semi_cleaned_data %>%
+  mutate(
+    Election = str_replace_all(string = Election, pattern = "Apr. |Nov. ", replacement = "")
+  )
+
+semi_cleaned_data %>% select_if(is.character)
+```
+
+Now let's convert everything to numerical and remove the first row which is empty.
+
+```{r}
+semi_cleaned_data <-
+  semi_cleaned_data |>
+  mutate_all(as.numeric) |>
+  filter(!is.na(Election))
+
+semi_cleaned_data
+```
+
+We need to clean up the column names
+
+```{r}
+semi_cleaned_data <-
+  semi_cleaned_data %>%
+  rename_all(~ str_replace_all(.x, "\\[.+\\]", ""))
+
+semi_cleaned_data
+```
+
+We want tidy data.
+
+```{r}
+# Pivot from wide to long to plot it in ggplot
+cleaned_data <-
+  semi_cleaned_data %>%
+  pivot_longer(-Election, names_to = "parties")
+```
+
+We want to plot it
+
+```{r}
+# Plot it
+cleaned_data %>%
+  ggplot(aes(Election, value, color = parties)) +
+  geom_line() +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  scale_color_viridis_d() +
+  theme_minimal()
+```
+
+Most web scraping involves parsing XML and HTML
+
+XML is for data storage and transfer, HTML for website structure
+
+Use xml2 package in R to read both formats
+
+```{r}
+# install.packages("xml2")
+library(xml2)
+```
+
+The first XML file
+
+```{r}
+xml_test <- "<people>
+<jason>
+  <person type='fictional'>
+    <first_name>
+      <married>
+        Jason
+      </married>
+    </first_name>
+    <last_name>
+        Bourne
+    </last_name>
+    <occupation>
+      Spy
+    </occupation>
+  </person>
+</jason>
+<carol>
+  <person type='real'>
+    <first_name>
+      <married>
+        Carol
+      </married>
+    </first_name>
+    <last_name>
+        Kalp
+    </last_name>
+    <occupation>
+      Scientist
+    </occupation>
+  </person>
+</carol>
+</people>
+"
+
+cat(xml_test)
+```
+
+Each tag has the name, which could be any custom value \<jason\> as long as it has a closing tag \</jason\>. These are then nested within the tags such as \<first_name\>
+
+Let's compare the XML with an HTML example.
+
+```{r}
+html_test <- "<html>
+  <head>
+    <title>Div Align Attribbute</title>
+  </head>
+  <body>
+    <div align='left'>
+      First text
+    </div>
+    <div align='right'>
+      Second text
+    </div>
+    <div align='center'>
+      Third text
+    </div>
+    <div align='justify'>
+      Fourth text
+    </div>
+  </body>
+</html>
+"
+```
+
+HTML has pre-defined tags. [Here](https://www.w3schools.com/tags/) is a comprehensive list of tags.
+
+```{r}
+xml_raw <- read_xml(xml_test)
+xml_structure(xml_raw)
+```
+
+This is the structure of the XML.
+
+```{r}
+# xml_child returns only one child (specified in search)
+# Here, jason is the first child
+xml_child(xml_raw, search = 1)
+```
+
+This returns the first child of the XML file (meaning Jason).
+
+```{r}
+# Here, carol is the second child
+xml_child(xml_raw, search = 2)
+```
+
+This gets the second child of the XML file (meaning Carol).
+
+```{r}
+# Use xml_children to extract **all** children
+child_xml <- xml_children(xml_raw)
+
+child_xml
+```
+
+This gets all the children, Jason and Carol.
+
+```{r}
+xml_attrs(child_xml, "type")
+```
+
+This pulls the attributes of all tags in the children. In this case, we only have the attribute "type" in the person tag. Because there is no attribute "type" on jason or carol, this returns an error: "named character(0)".
+
+To get the attributes, we need to look at the children.
+
+```{r}
+# We go down one level of children
+person_nodes <- xml_children(child_xml)
+
+# <person> is now the main node, so we can extract attributes
+person_nodes
+
+# Both type attributes
+xml_attrs(person_nodes, "type")
+```
+
+This saves the children as "person_nodes" and then extracts the attributes from the children. There is another way to do this as well.
+
+```{r}
+# Specific address of each person tag for the whole xml tree
+# only using the `person_nodes`
+xml_path(person_nodes)
+
+# You can use results from xml_path like directories
+xml_find_all(xml_raw, "/people/jason/person")
+```
+
+We could also use the following.
+
+```{r}
+xml_raw %>% xml_child(search = 1)
+```
+
+We can also use find all for deeply nested trees.
+
+```{r}
+xml_find_all(xml_raw, "/people/jason/person")
+```
+
+### HTML
+
+```{r}
+html_raw <- read_html(html_test)
+html_structure(html_raw)
+```
+
+Conclusion
+
+XML and HTML are both tag-based and have parent-child relationships.
+
+XML tags have special meaning while HTML tags have behavior
+
+navigating nodes.
+
+### [Homework 1](https://cimentadaj.github.io/dataharvesting/primer-webscraping.html#exercises)
+
+1.  Europe has an ageing problem and the mandatory retirement age is being constantly revised. In the `scrapex` package there’s a copy of the “Retirement in Europe” wikipedia website <https://en.wikipedia.org/wiki/Retirement_in_Europe>. You can find the local link in the function [`retirement_age_europe_ex()`](https://rdrr.io/pkg/scrapex/man/retirement_age_europe_ex.html). Can you inspect the website, parse the table and replicate the plot below? (Hint: you might need the function `str_sub` from the `stringr` package).
+
+<!-- -->
+
+2.  When parsing the elections table, we parsed all tables of the Wikipedia table into `all_tables`. Among all those tables, there’s one table that documents the years at which there were general elections, presidential elections, european elections, local elections, regional elections and referendums in Spain. Can you extract into a *numeric* vector all the years at which there were general elections in Spain? (Hint: you might need `str_split` and other `stringr` functions and the resulting vector should start by 1810 and end with 2019).
+
+<!-- -->
+
+3.  Building on your previous code, can you tell me the years where local elections, european elections and general elections overlapped?
+
+### [3.4 Exercises](https://cimentadaj.github.io/dataharvesting/data-formats-for-webscraping.html#exercises-1)
+
+1.  Extract the values for the `align` attributes in `html_raw` (Hint, look at the function `xml_children`).
+2.  Extract the occupation of Carol Kalp from `xml_raw`
+3.  Extract the text of all `<div>` tags from `html_raw`. Your result should look specifically like this:
+
+```         
+[1] "\n      First text\n    "  "\n      Second text\n    "
+[3] "\n      Third text\n    "  "\n      Fourth text\n    "
+```
+
+4.  Manually create an XML string which contains a root node, then two children nested within and then two grandchildren nested within each child. The first child and the second grandchild of the *second* child should have an attribute called family set to ‘1’. Read that string and find those two attributes but only with the function `xml_find_all` and `xml_attrs`.
+
+5.  The output of all the previous exercises has been either a `xml_nodeset` or an `html_document` (you can read it at the top of the print out of your results):
+
+```         
+{html_document}
+<html>
+[1] <head>\n<meta http-equiv="Content-Type" content="text/html; charset=UTF-8 ...
+[2] <body>\n    <div align="left">\n      First text\n    </div>\n    <div al ...
+```
+
+Can you extract the text of the last name of Carol the scientist only using R subsetting rules on your object? For example `some_object$people$person$...` (Hint: `xml2` has a function called `as_list`).
