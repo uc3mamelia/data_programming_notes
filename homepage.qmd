@@ -54,25 +54,25 @@ editor: visual
 
 ## Stats II Notes
 
--   [Exploratory Data Analysis](https://uc3mamelia.github.io/data_programming_notes/Data_explorer_example.html)
+-   [Exploratory Data Analysis](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/Data_explorer_example.html)
 
--   [Determining Correlation](https://uc3mamelia.github.io/data_programming_notes/determining_correlation.html)
+-   [Determining Correlation](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/determining_correlation.html)
 
--   [Hypothesis Testing](https://uc3mamelia.github.io/data_programming_notes/hypothesis_testing.html)
+-   [Hypothesis Testing](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/hypothesis_testing.html)
 
--   [Linear Regression](https://uc3mamelia.github.io/data_programming_notes/linear_regression.html)
+-   [Linear Regression](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/linear_regression.html)
 
--   [Logistic Regression](https://uc3mamelia.github.io/data_programming_notes/logistic_regression.html)
+-   [Logistic Regression](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/logistic_regression.html)
 
--   [Regularization - Caret](https://uc3mamelia.github.io/data_programming_notes/regularization_caret.html)
+-   [Regularization - Caret](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/regularization_caret.html)
 
--   [Regularization - GLM Net](https://uc3mamelia.github.io/data_programming_notes/regularization_glmnet.html)
+-   [Regularization - GLM Net](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/regularization_glmnet.html)
 
--   [Multinomial Classification](https://uc3mamelia.github.io/data_programming_notes/multinomial_classification.html)
+-   [Multinomial Classification](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/multinomial_classification.html)
 
--   [Poisson Regression](https://uc3mamelia.github.io/data_programming_notes/poisson_regression.html)
+-   [Poisson Regression](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/poisson_regression.html)
 
--   [Regularized GLMs](https://uc3mamelia.github.io/data_programming_notes/regulairzed_glms.html)
+-   [Regularized GLMs](https://uc3mamelia.github.io/data_programming_notes/statistics-ii/regulairzed_glms.html)
 
 ## Data Visualization Notes
 
@@ -104,27 +104,27 @@ editor: visual
 
 ## Text Mining
 
--   [Breaking the Ice](https://uc3mamelia.github.io/data_programming_notes/0---Breaking-the-ice_SOLVED.html)
+-   [Breaking the Ice](https://uc3mamelia.github.io/data_programming_notes/text-mining/0---Breaking-the-ice_SOLVED.html)
 
--   [Working with Multiple Texts](https://uc3mamelia.github.io/data_programming_notes/1---Working-with-multiple-texts.html)
+-   [Working with Multiple Texts](https://uc3mamelia.github.io/data_programming_notes/text-mining/1---Working-with-multiple-texts.html)
 
--   [Sentiment Analysis](https://uc3mamelia.github.io/data_programming_notes/2---Sentiment-analysis_SOLVED.html)
+-   [Sentiment Analysis](https://uc3mamelia.github.io/data_programming_notes/text-mining/2---Sentiment-analysis_SOLVED.html)
 
 -   Term Frequency and Lammatize
 
 ## Survey
 
--   [Why Surveys](https://uc3mamelia.github.io/data_programming_notes/Why Surveys.html)
+-   [Why Surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Why Surveys.html)
 
--   [Socio-demographic variables in surveys](https://uc3mamelia.github.io/data_programming_notes/Socio-demographic variables in surveys.html)
+-   [Socio-demographic variables in surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Socio-demographic variables in surveys.html)
+
+-   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/Multiple Imputation in Survey Data-20260211/survey-ii/Missing_data.html)
 
 ## Data Harvesting
 
--   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/Multiple Imputation in Survey Data-20260211/Missing_data.html)
+-   [Data Harvesting 1](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-1.html)
 
--   [Data Harvesting 1](https://uc3mamelia.github.io/data_programming_notes/Multiple Imputation in Survey Data-20260211/Missing_data.html)
-
--   Data Harvesting 2
+-   [Data Harvesting 2](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-2.html)
 
 ## Retired
 

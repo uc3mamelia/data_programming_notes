@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>What you need to know about regular expressions</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="data-harvesting-2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="data-harvesting-2_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="data-harvesting-2_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="data-harvesting-2_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="data-harvesting-2_files/libs/quarto-html/popper.min.js"></script>
+<script src="data-harvesting-2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="data-harvesting-2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="data-harvesting-2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="data-harvesting-2_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="data-harvesting-2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="data-harvesting-2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="data-harvesting-2_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">What you need to know about regular expressions</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="regular-expressions" class="level2">
+<h2 class="anchored" data-anchor-id="regular-expressions">Regular Expressions</h2>
+<p>“regex”</p>
+<p>a pattern (or filter) that describes a set of strings that matches the pattern. In other words, a regex accepts a certain set of strings and rejects the rest.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scrapex)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rvest)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xml2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'xml2' was built under R version 4.5.2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'lubridate'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vistime)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="an-example-of-a-regular-expression" class="level3">
+<h3 class="anchored" data-anchor-id="an-example-of-a-regular-expression">An Example of a Regular Expression</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>borges <span class="ot">&lt;-</span> <span class="st">"I like hourglasses, maps, eighteenth century typography."</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">"eighteenth"</span>, <span class="at">match =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `str_view_all()` was deprecated in stringr 1.5.0.
+ℹ Please use `str_view()` instead.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I like hourglasses, maps, &lt;eighteenth&gt; century typography.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_replace_all</span>(borges, <span class="st">"eighteenth"</span>, <span class="st">"[DATE]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "I like hourglasses, maps, [DATE] century typography."</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="the-.-placeholder" class="level2">
+<h2 class="anchored" data-anchor-id="the-.-placeholder"><strong>The <code>.</code> placeholder</strong></h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>borges <span class="ot">&lt;-</span> <span class="st">"I like hourglasses, maps, eighteenth Eighteenth century typography."</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">".ighteenth"</span>, <span class="at">match =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I like hourglasses, maps, &lt;eighteenth&gt; &lt;Eighteenth&gt; century typography.</code></pre>
+</div>
+</div>
+<p>The regexp used is <code>.ighteenth</code> meaning that we want to match <em>any character</em> (<code>.</code>) followed directly by <code>ighteenth</code>. It matches both the capital letter word as well the lower case word. However, it would also match <em>any other</em> character, even empty spaces:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>borges <span class="ot">&lt;-</span> <span class="st">"I like hourglasses, maps, ighteenth century typography."</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">".ighteenth"</span>, <span class="at">match =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I like hourglasses, maps,&lt; ighteenth&gt; century typography.</code></pre>
+</div>
+</div>
+</section>
+<section id="quantifiers" class="level2">
+<h2 class="anchored" data-anchor-id="quantifiers"><strong>Quantifiers</strong></h2>
+<p>The <code>.</code> in regexp is very handy but also can be imprecise. The <code>.</code> is often used with <code>+</code> which means that the character <code>.</code> needs to be repeated one or more times. For example, say you want to extract the century from the phrase <code>maps, [some century] century</code>. In our example it’s easy because you know exactly the century. However, you might want to make it generic to extract any word between <code>maps</code> and <code>century</code>. You could try something like this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>borges_two_phrase <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I like hourglasses, maps, eighteenth century typography."</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I like hourglasses, maps, seventeenth century typography."</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges_two_phrase, <span class="st">"maps, . century"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I like hourglasses, maps, eighteenth century typography.
+[2] │ I like hourglasses, maps, seventeenth century typography.</code></pre>
+</div>
+</div>
+<p>Nothing was matched. Why? Because we’re saying we want to match something like this: <code>maps, [a] century.</code>. Replace <code>[a]</code> with whatever character you want and that’s what your matching. Of course, that doesn’t have a match anywhere in the string. What we want instead is this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges_two_phrase, <span class="st">"maps, .+ century"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I like hourglasses, &lt;maps, eighteenth century&gt; typography.
+[2] │ I like hourglasses, &lt;maps, seventeenth century&gt; typography.</code></pre>
+</div>
+</div>
+<p>This is saying: match the part <code>maps,</code> followed by <em>any character</em> (<code>.</code>) repeated one or more times (<code>+</code>) which is followed by <code>century</code>.</p>
+</section>
+<section id="escaping-." class="level2">
+<h2 class="anchored" data-anchor-id="escaping-."><strong>Escaping <code>.</code></strong></h2>
+<p><code>.</code> is useful because it can be used as a general placeholder. However, what if you want to match a literal <code>.</code>? If I asked you to match the first sentence of this phrase without specifying “hourglasses”, what regexp could you use?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>borges <span class="ot">&lt;-</span> <span class="st">"I like hourglasses. I also like maps, eighteenth century typography"</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">"I like .+"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ &lt;I like hourglasses. I also like maps, eighteenth century typography&gt;</code></pre>
+</div>
+</div>
+<p><code>I like .+</code> is almost there. It says: match the phrase <code>I like</code> followed by any character repeated one or more times. However, that matches the entire phrase because it doesn’t know we want it stop at the first <code>.</code>, right after hourglasses. To match a literal <code>.</code> you need to append it with two <code>\\</code>. It would look like this: <code>I like .+\\.</code>. This reads like this:</p>
+<ul>
+<li><p>Match the phrase <code>I like</code></p></li>
+<li><p>Followed be any character that is repeated one or more times (<code>.+</code>)</p></li>
+<li><p>Until there is a literal dot (<code>\\.</code>)</p></li>
+</ul>
+<p>Let’s apply it:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">"I like .+</span><span class="sc">\\</span><span class="st">."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ &lt;I like hourglasses.&gt; I also like maps, eighteenth century typography</code></pre>
+</div>
+</div>
+<p>Be aware that you need to append <code>\\</code> in front of <strong>any</strong> special character in regexp. For example, if you wanted to match the quantifier <code>+</code> literally, you’ll need to do it like this: <code>\\+</code>. There’s a bunch of special character in regexp but you’ll just need to know a few like <code>(</code>, <code>)</code>, <code>+</code>, <code>.</code>, <code>$</code>, <code>^</code> or <code>|</code>.</p>
+</section>
+<section id="the-or-operator" class="level2">
+<h2 class="anchored" data-anchor-id="the-or-operator"><strong>The OR (<code>|</code>) operator</strong></h2>
+<p>To make your regexp generic, you’ll often want to match either one regexp or another. The <code>|</code> allows you to do it very succinctly. Suppose we want to extract the century from the vector below. We can do it like this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>borges_two_phrase <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I like hourglasses, maps, eighteenth century typography."</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I like hourglasses, maps, seventeenth century typography."</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">str_extract_all</span>(borges_two_phrase, <span class="st">"maps, .+ century"</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] "maps, eighteenth century"
+
+[[2]]
+[1] "maps, seventeenth century"</code></pre>
+</div>
+</div>
+<p>However, we want to extract only the actual century and replace <code>maps,</code> and <code>century</code>. We can use a regexp to say: replace either <code>maps,</code> or <code>century</code> with an empty space, which will give you only the actual century. In our case the regexp would be like this: <code>maps, | century</code>. Using <code>str_replace_all</code> we can match that expression and replace it with empty space:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>res <span class="sc">%&gt;%</span> <span class="fu">str_replace_all</span>(<span class="st">"maps, | century"</span>, <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "eighteenth"  "seventeenth"</code></pre>
+</div>
+</div>
+</section>
+<section id="anchors" class="level2">
+<h2 class="anchored" data-anchor-id="anchors"><strong>Anchors</strong></h2>
+<p>Anchors are also another feature of regexp. <code>^</code> is used to match the start of the string and <code>$</code> to match the end of the string. For example, to match the first letter of the entire text you could use:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>borges <span class="ot">&lt;-</span> <span class="st">"I like hourglasses. I also like maps, eighteenth century typography"</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">"^."</span>, <span class="at">match =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ &lt;I&gt; like hourglasses. I also like maps, eighteenth century typography</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">".$"</span>, <span class="at">match =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I like hourglasses. I also like maps, eighteenth century typograph&lt;y&gt;</code></pre>
+</div>
+</div>
+<p>This might seem like something which doesn’t have much use but it’s actually very handy. Take this text as an example:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>borges_long <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I like cars. I like hourglasses, maps, eighteenth century typography."</span>,</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I like computers. I like hourglasses, maps, eighteenth century typography."</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Both phrases have “I like” at the beginning but also have “I like” after the end of the first sentence. Using what we know until now won’t be enough:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges_long, <span class="st">"^I like .+"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ &lt;I like cars. I like hourglasses, maps, eighteenth century typography.&gt;
+[2] │ &lt;I like computers. I like hourglasses, maps, eighteenth century typography.&gt;</code></pre>
+</div>
+</div>
+<p>To achieve what we want we could use the trick to match literal dot and add the anchor of the beginning:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges_long, <span class="st">"^I like .+</span><span class="sc">\\</span><span class="st">."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ &lt;I like cars. I like hourglasses, maps, eighteenth century typography.&gt;
+[2] │ &lt;I like computers. I like hourglasses, maps, eighteenth century typography.&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="matching-spaces" class="level2">
+<h2 class="anchored" data-anchor-id="matching-spaces"><strong>Matching spaces</strong></h2>
+<p>You can also match spaces in regexp and replace them:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(borges, <span class="st">" "</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ I&lt; &gt;like&lt; &gt;hourglasses.&lt; &gt;I&lt; &gt;also&lt; &gt;like&lt; &gt;maps,&lt; &gt;eighteenth&lt; &gt;century&lt; &gt;typography</code></pre>
+</div>
+</div>
+<p>Since spaces come in different ways (new lines or a tabs), you can also use the special character <code>\\s</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_replace_all</span>(borges, <span class="st">"</span><span class="sc">\\</span><span class="st">s"</span>, <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Ilikehourglasses.Ialsolikemaps,eighteenthcenturytypography"</code></pre>
+</div>
+</div>
+</section>
+<section id="special-classes" class="level2">
+<h2 class="anchored" data-anchor-id="special-classes"><strong>Special classes</strong></h2>
+<p>Aside from the magic of <code>.</code>, regexp has a set of special tools for matching general patterns. Let’s touch upon three of these.</p>
+<ul>
+<li><code>\\d</code>: matches digits</li>
+</ul>
+<p>Suppose you’re scraping a list of countries and their GDP. After scraping that data you end up with this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>gdp <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Afghanistan 516 US dollars"</span>,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Albania 6494 US dollars"</span>,</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Algeria 3765 US dollars"</span>,</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"American Samoa 12844 US dollars"</span>,</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Andorra 43047 US dollars"</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The keyword <code>\\d</code> will match a single digit. So for example, if we wanted to match the age of a child in a string (<code>Angel is 8 years old)</code>, writing a regexp like <code>\\d</code> will match that <code>8</code>. For example:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(<span class="st">"Angel is 8 years old"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ Angel is &lt;8&gt; years old</code></pre>
+</div>
+</div>
+<p>If we matched instead someone older, <code>\\d</code> will match each digit <em>separately</em>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"Angel is 8 years old"</span>, <span class="st">"Martha is 56 years old"</span>),</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ Angel is &lt;8&gt; years old
+[2] │ Martha is &lt;5&gt;&lt;6&gt; years old</code></pre>
+</div>
+</div>
+<p>If you pay close attention, the regexp matched <code>56</code> but each digit separately. However, we could combine this with the quantifier <code>+</code> to match <em>one or more</em> digits. For example:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"Angel is 8 years old"</span>, <span class="st">"Martha is 56 years old"</span>),</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="sc">\\</span><span class="st">d+"</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] │ Angel is &lt;8&gt; years old
+[2] │ Martha is &lt;56&gt; years old</code></pre>
+</div>
+</div>
+<p>Going back to our <code>gdp</code> example, we can extract the GDP of every country with the regexp <code>\\d+</code>, meaning “extract any number that is repeated one or more times”:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>gdp_chr <span class="ot">&lt;-</span> <span class="fu">str_extract_all</span>(gdp, <span class="st">"</span><span class="sc">\\</span><span class="st">d+"</span>)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(gdp_chr, as.numeric)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] 516
+
+[[2]]
+[1] 6494
+
+[[3]]
+[1] 3765
+
+[[4]]
+[1] 12844
+
+[[5]]
+[1] 43047</code></pre>
+</div>
+</div>
+<ul>
+<li><code>[abc]</code>: matches a, b, or c.</li>
+</ul>
+<p>Regexps also has a cool shortcut to extend the regexp <code>|</code> (or) and make it more flexible. For example, say we wanted to match all retirement ages of men in Europe that are between 67 and 69:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>retirement <span class="ot">&lt;-</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read in our scrapex example with retirement ages</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">retirement_age_europe_ex</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_html</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_table</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  .[[<span class="dv">2</span>]]</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>retirement</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 41 × 6
+   Country                Men               Women         Year  Notes References
+   &lt;chr&gt;                  &lt;chr&gt;             &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;     
+ 1 Albania                65                61            2020  ""    [1]       
+ 2 Austria                65                60            2018  "In … [1][3]    
+ 3 Belarus                62.5              57.5          2021  "By … [5]       
+ 4 Belgium                65                65            2018  "In … [5]       
+ 5 Bosnia and Herzegovina 65                65            2011  ""    [1]       
+ 6 Bulgaria               64 (and 4 months) 61 (and 8 mo… 2021  "In … [2]       
+ 7 Croatia                65                62            2018  "By … [2]       
+ 8 Cyprus                 65                65            2018  ""    [1][3]    
+ 9 Czech Republic         63 (and 4 months) 58 (and 8 mo… 2018  "In … [7]       
+10 Denmark                67                67            2022  "In … [3][5]    
+# ℹ 31 more rows</code></pre>
+</div>
+</div>
+<p>One way is to explicitly use <code>|</code> to match all ages like this: <code>(67|68|69)</code>. Instead, using brackets (<code>[]</code>), regexp will match everything inside as if it were <code>|</code>. So for example:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(retirement<span class="sc">$</span>Men, <span class="st">"6[789]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] │ 65
+ [2] │ 65
+ [3] │ 62.5
+ [4] │ 65
+ [5] │ 65
+ [6] │ 64 (and 4 months)
+ [7] │ 65
+ [8] │ 65
+ [9] │ 63 (and 4 months)
+[10] │ &lt;67&gt;
+[11] │ 63 (and 9 months)
+[12] │ 65
+[13] │ 62
+[14] │ 65 (and 7 months)
+[15] │ &lt;67&gt;
+[16] │ 65
+[17] │ &lt;67&gt;
+[18] │ 66
+[19] │ &lt;67&gt;
+[20] │ 63 (and 6 months)
+... and 21 more</code></pre>
+</div>
+</div>
+<p>This regexp will match the number <code>6</code> followed either by <code>7</code>, <code>8</code>, or <code>9</code>. If these numbers are sequential (as it is now) it has additional shortcuts to make it simpler:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(retirement<span class="sc">$</span>Men, <span class="st">"6[7-9]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] │ 65
+ [2] │ 65
+ [3] │ 62.5
+ [4] │ 65
+ [5] │ 65
+ [6] │ 64 (and 4 months)
+ [7] │ 65
+ [8] │ 65
+ [9] │ 63 (and 4 months)
+[10] │ &lt;67&gt;
+[11] │ 63 (and 9 months)
+[12] │ 65
+[13] │ 62
+[14] │ 65 (and 7 months)
+[15] │ &lt;67&gt;
+[16] │ 65
+[17] │ &lt;67&gt;
+[18] │ 66
+[19] │ &lt;67&gt;
+[20] │ 63 (and 6 months)
+... and 21 more</code></pre>
+</div>
+</div>
+<p>Note that <code>[]</code> works the same way for anything: numbers, letters, punctuation, spaces, etc..</p>
+<ul>
+<li><code>[^abc]</code>: matches anything except a, b, or c.</li>
+</ul>
+<p>Similarly to the previous example <code>[abc]</code>, <code>[^abc]</code> will match anything except these letters. So recycling our previous retirement example, if we wanted to match all ages except those after 65, the regexp would be like this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str_view_all</span>(retirement<span class="sc">$</span>Men, <span class="st">"6[^5-9]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] │ 65
+ [2] │ 65
+ [3] │ &lt;62&gt;.5
+ [4] │ 65
+ [5] │ 65
+ [6] │ &lt;64&gt; (and 4 months)
+ [7] │ 65
+ [8] │ 65
+ [9] │ &lt;63&gt; (and 4 months)
+[10] │ 67
+[11] │ &lt;63&gt; (and 9 months)
+[12] │ 65
+[13] │ &lt;62&gt;
+[14] │ 65 (and 7 months)
+[15] │ 67
+[16] │ 65
+[17] │ 67
+[18] │ 66
+[19] │ 67
+[20] │ &lt;63&gt; (and &lt;6 &gt;months)
+... and 21 more</code></pre>
+</div>
+</div>
+<p>All ages which are below 65 will be matched.</p>
+</section>
+<section id="what-you-need-to-know-about-xpath" class="level1">
+<h1><strong>What you need to know about XPath</strong></h1>
+<p>XPath (XML Path Language) is the language designed to identify the address of one or several tags within an HTML or XML document. With that address, XPath allows us to extract the data under those tags.</p>
+<p>To extract the book ‘Hyperion Cantos’ of Dan Simmons, the simplest XPath you can use is <code>/bookshelf/dansimmons/book</code>. Let’s break that up to understand it better:</p>
+<ul>
+<li><p>The first node is bookshelf so we start with <code>/bookshelf</code>.</p></li>
+<li><p>The <em>child</em> of bookshelf is <code>&lt;dansimmons&gt;</code> so the XPath becomes <code>/bookshelf/dansimmons/</code></p></li>
+<li><p>The <em>child</em> of <code>&lt;dansimmons&gt;</code> is <code>&lt;book&gt;</code> so we just add that to our XPath: <code>/bookshelf/dansimmons/book</code></p></li>
+</ul>
+<p>That doesn’t look so hard, right? The problem is that for all your web scraping needs, having the exact address, node by node, will not by generalizable.</p>
+<section id="finding-tags-with-xpath" class="level2">
+<h2 class="anchored" data-anchor-id="finding-tags-with-xpath"><strong>Finding tags with XPath</strong></h2>
+<p>Before we read in that previous XPath let’s load the libraries we’ll need for this chapter.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xml2)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magrittr)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scrapex)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s read in that XML to R and test our initial XPath:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>raw_xml <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;bookshelf&gt;</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;dansimmons&gt;</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;book&gt;</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="st">      Hyperion Cantos</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/book&gt;</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;/dansimmons&gt;</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;/bookshelf&gt;"</span></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>book_xml <span class="ot">&lt;-</span> <span class="fu">read_xml</span>(raw_xml)</span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a>direct_address <span class="ot">&lt;-</span> <span class="st">"/bookshelf/dansimmons/book"</span></span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(direct_address)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;book&gt;\n      Hyperion Cantos\n    &lt;/book&gt;</code></pre>
+</div>
+</div>
+<p>It works as expected. Now you remember what I told you that this specific address was not generalizable? What if someone added the <code>authors</code> tag after bookshelf?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Note the new `&lt;authors&gt;` tag, a child of `&lt;bookshelf&gt;`.</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>raw_xml <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;bookshelf&gt;</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;authors&gt;</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;dansimmons&gt;</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;book&gt;</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a><span class="st">        Hyperion Cantos</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/book&gt;</span></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/dansimmons&gt;</span></span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;/authors&gt;</span></span>
+<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;/bookshelf&gt;"</span></span>
+<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a>book_xml <span class="ot">&lt;-</span> raw_xml <span class="sc">%&gt;%</span> <span class="fu">read_xml</span>()</span>
+<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(direct_address)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (0)}</code></pre>
+</div>
+</div>
+<p>It can’t find it using our previous XPath expression. We know why, it’s because we should instead use the XPath <code>/bookshelf/authors/dansimmons/book</code>. But what if someone (that is, the developer behind the website you’re trying to scrape) continually changes the XML? Can’t we build a more general expression? XPath has some handy tricks that you can use to do that. For example, there’s one thing we know for the book <code>Hyperion Cantos</code>: it was written by Dan Simmons. Instead, you can extract only the <code>&lt;dansimmons&gt;</code> tag directly with <code>//dansimmons</code>. That will return all <code>&lt;dansimmons&gt;</code> tags of the entire XML document. However, since we know there’s only one <code>&lt;dansimmons&gt;</code> tag, we know we’ll be grabbing the one we’re after:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;dansimmons&gt;\n  &lt;book&gt;\n        Hyperion Cantos\n      &lt;/book&gt;\n&lt;/dansimm ...</code></pre>
+</div>
+</div>
+<p><code>//</code> is very handy, it means: search the entire document and bring me back all <code>&lt;dansimmons&gt;</code> tags. It doesn’t matter the depth of the <code>&lt;dansimmons&gt;</code> tag, it could be three or twenty times deep, <code>//</code> will return all occurrences of that tag. Let’s extend the example to include another Dan Simmons book and its release date:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Note the new `&lt;release_year&gt;` tag below the second (also new) `&lt;book&gt;` tag</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>raw_xml <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;bookshelf&gt;</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;authors&gt;</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;dansimmons&gt;</span></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;book&gt;</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a><span class="st">        Hyperion Cantos</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/book&gt;</span></span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;book&gt;</span></span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;release_year&gt;</span></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a><span class="st">         1996</span></span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;/release_year&gt;</span></span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a><span class="st">        Endymion</span></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/book&gt;</span></span>
+<span id="cb65-15"><a href="#cb65-15" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/dansimmons&gt;</span></span>
+<span id="cb65-16"><a href="#cb65-16" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;/authors&gt;</span></span>
+<span id="cb65-17"><a href="#cb65-17" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;/bookshelf&gt;"</span></span>
+<span id="cb65-18"><a href="#cb65-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-19"><a href="#cb65-19" aria-hidden="true" tabindex="-1"></a>book_xml <span class="ot">&lt;-</span> raw_xml <span class="sc">%&gt;%</span> <span class="fu">read_xml</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Can you predict what our XPath will return before running it? Let’s find out:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;dansimmons&gt;\n  &lt;book&gt;\n        Hyperion Cantos\n      &lt;/book&gt;\n  &lt;book&gt;&lt; ...</code></pre>
+</div>
+</div>
+<p>It returns the <code>&lt;dansimmons&gt;</code> tag, which is what we expected. Within <code>&lt;dansimmons&gt;</code> there should be two <code>&lt;book&gt;</code> tags but we can’t see the result of these two tags directly from the output. What we want is to extract the names of both books. We can reuse that idea of using <code>/</code> as before for the <code>book</code> tag. We do this because we know that <code>book</code> is the direct child of <code>dansimmons</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons/book"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;book&gt;\n        Hyperion Cantos\n      &lt;/book&gt;
+[2] &lt;book&gt;&lt;release_year&gt;\n         1996\n        &lt;/release_year&gt;\n        End ...</code></pre>
+</div>
+</div>
+<p>There we go, we get the two book nodes. If <code>book</code> would not be the direct child of <code>&lt;dansimmons&gt;</code>, <code>/</code> wouldn’t work. For example, if instead of <code>book</code> we searched for <code>release_year</code> (the new tag we added as well), it would return an empty node:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons/release_year"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (0)}</code></pre>
+</div>
+</div>
+<p>That’s expected: <code>dansimmons</code> doesn’t have a direct child called <code>release_year</code> (it has a <em>grandchild</em> <code>&lt;release_year&gt;</code>. However, we know that <code>//</code> will search for tags in the entire XML tree so we can instead request all <code>release_year</code> tags inside <code>dansimmons</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons//release_year"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;release_year&gt;\n         1996\n        &lt;/release_year&gt;</code></pre>
+</div>
+</div>
+<p>At this point, it might be useful to know that <code>xml_path</code> can return the literal, direct address to a given node. Exactly like our first XPath from the chapter:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons//release_year"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_path</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "/bookshelf/authors/dansimmons/book[2]/release_year"</code></pre>
+</div>
+</div>
+<p>For some concrete cases, using a literal path such as this one might be much quicker than coming up with a single XPath that makes it more general. If you’re trying to scrape something as a one-off thing, manually navigating a HTML/XML tree (with functions such as <code>xml_child</code> or directly in the web developer tools of your browser) and copying it’s exact XPath location might be the better choice.</p>
+<p>XPath also allows to hand pick nodes by position. Within the <code>dansimmons</code> tag there are two book tags. What would an XPath expression look like to subset only the 2nd <code>&lt;book&gt;</code> tag of <code>dansimmons</code>? We can tell XPath the position of the tag we want using <code>[number]</code>, where number is replaced with the position:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons/book[2]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;book&gt;&lt;release_year&gt;\n         1996\n        &lt;/release_year&gt;\n        End ...</code></pre>
+</div>
+</div>
+<p>You can supply the position of any node. As expected, this will return empty if the position doesn’t exist:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons/book[8]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (0)}</code></pre>
+</div>
+</div>
+<p>However, throughout all of these examples we had to be very specific in supplying the exact address of some child node with respect to it’s parent. <code>//dansimmons</code> will return all <code>dansimmons</code> tags but we won’t be able to see its children. We would need to know which specific book tags are children of <code>dansimmons</code>, if there are any. XPath introduces the <code>*</code> as a wildcard pattern to return all children of current parent tag. For example:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons/*"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;book&gt;\n        Hyperion Cantos\n      &lt;/book&gt;
+[2] &lt;book&gt;&lt;release_year&gt;\n         1996\n        &lt;/release_year&gt;\n        End ...</code></pre>
+</div>
+</div>
+<p>The result is not the <code>dansimmons</code> tag but all it’s children, regardless of whether they are <code>&lt;book&gt;</code> tags or any other tag. This strategy is useful if you’re unsure which nodes are below a certain parent and you want to extract all of them: this is in fact very generalizable because you can extract all children of a tag and then pick the one you’re after with some string manipulation.</p>
+<p>Similarly, <code>*</code> can be used to fill out a tag which you don’t know the name of. You know that each author has <code>&lt;book&gt;</code> tags but you don’t know the name of all authors. You could extract all book tags like this:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"/*/*/*/book"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;book&gt;\n        Hyperion Cantos\n      &lt;/book&gt;
+[2] &lt;book&gt;&lt;release_year&gt;\n         1996\n        &lt;/release_year&gt;\n        End ...</code></pre>
+</div>
+</div>
+<p>In other words, this XPath is saying: extract all book tags which have three tags above it, it doesn’t matter <em>which</em> tags they are. As we’ll see later in this chapter, this is quite a nice trick for more complex HTML/XML structures.</p>
+<p>Let’s recap so far:</p>
+<ul>
+<li><p><code>/</code> links between two tags that have direct parent-child relationship</p></li>
+<li><p><code>//</code> finds all tags in the HTML/XML tree regardless of depth</p></li>
+<li><p>Use <code>[number]</code> to subset the position of a node. For example: <code>//a[8]</code> will return the 8th <code>&lt;a&gt;</code> tag.</p></li>
+<li><p><code>*</code> is a wildcard that allows to signal nodes without specifying which nodes.</p></li>
+</ul>
+<p>These rules can take you a long way when building XPath expressions but the real flexibility comes when you’re available to filter through attributes of a given node.</p>
+</section>
+<section id="filter-by-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="filter-by-attributes"><strong>Filter by attributes</strong></h2>
+<p>When parsing complicated websites, you’ll need additional flexibility to parse HTML/XML. XPath has a great property that allows to pick tags with specific attributes. Let’s update our XML example to include a new author tag <code>&lt;stephenking&gt;</code>, one of it’s books and some additional attributes for some books:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Note the new &lt;stephenking&gt; tag with it's book 'The Stand' and all &lt;book&gt; tags have some attributes</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>raw_xml <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;bookshelf&gt;</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;authors&gt;</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;dansimmons&gt;</span></span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;book price='yes' topic='scifi'&gt;</span></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a><span class="st">        Hyperion Cantos</span></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/book&gt;</span></span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;book topic='scifi'&gt;</span></span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;release_year&gt;</span></span>
+<span id="cb84-11"><a href="#cb84-11" aria-hidden="true" tabindex="-1"></a><span class="st">         1996</span></span>
+<span id="cb84-12"><a href="#cb84-12" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;/release_year&gt;</span></span>
+<span id="cb84-13"><a href="#cb84-13" aria-hidden="true" tabindex="-1"></a><span class="st">        Endymion</span></span>
+<span id="cb84-14"><a href="#cb84-14" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/book&gt;</span></span>
+<span id="cb84-15"><a href="#cb84-15" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/dansimmons&gt;</span></span>
+<span id="cb84-16"><a href="#cb84-16" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;stephenking&gt;</span></span>
+<span id="cb84-17"><a href="#cb84-17" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;book price='yes' topic='horror'&gt;</span></span>
+<span id="cb84-18"><a href="#cb84-18" aria-hidden="true" tabindex="-1"></a><span class="st">     The Stand</span></span>
+<span id="cb84-19"><a href="#cb84-19" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/book&gt;</span></span>
+<span id="cb84-20"><a href="#cb84-20" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;/stephenking&gt;</span></span>
+<span id="cb84-21"><a href="#cb84-21" aria-hidden="true" tabindex="-1"></a><span class="st">  &lt;/authors&gt;</span></span>
+<span id="cb84-22"><a href="#cb84-22" aria-hidden="true" tabindex="-1"></a><span class="st">&lt;/bookshelf&gt;"</span></span>
+<span id="cb84-23"><a href="#cb84-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-24"><a href="#cb84-24" aria-hidden="true" tabindex="-1"></a>book_xml <span class="ot">&lt;-</span> raw_xml <span class="sc">%&gt;%</span> <span class="fu">read_xml</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The power of XPath comes in when we can filter tags by attributes. Perhaps we’d like to extract all book tags that had a price, regardless of author. Or catch all books of a certain topic. Whenever we want our tags to match a specific attribute we can add two brackets at the end of the tag and match the attribute to what we’re after. Say we wanted to know all Dan Simmons book with a price, how would that XPath look like?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//dansimmons//book[@price='yes']"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_text</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "\n        Hyperion Cantos\n      "</code></pre>
+</div>
+</div>
+<p>Our new XPath is saying: find all <code>&lt;book&gt;</code> tags that have an attribute of <code>price</code> set to <code>yes</code> that are <em>descendants</em> (but not necessarily direct child, because of the <code>//</code>) of the <code>&lt;dansimmons&gt;</code> tag. Quite interesting eh? This approach allows us to have a much flexible language for parsing HTML/XML documents. Everything inside <code>[]</code> serves to add additional filters/criteria that matches your XPath. With the help of the <code>and</code> keyword, you can alter the previous XPath to get all books with a price from the topic <code>horror</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//book[@price='yes' and @topic='horror']"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_text</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "\n     The Stand\n    "</code></pre>
+</div>
+</div>
+<p>Or grab only the books which have a <code>price</code> attribute (that’s different from having <code>price</code> set to <code>yes</code> or <code>no</code>):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//book[@price]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;book price="yes" topic="scifi"&gt;\n        Hyperion Cantos\n      &lt;/book&gt;
+[2] &lt;book price="yes" topic="horror"&gt;\n     The Stand\n    &lt;/book&gt;</code></pre>
+</div>
+</div>
+<p>Or find all books which did not have a price:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//book[@price!='yes']"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (0)}</code></pre>
+</div>
+</div>
+<p>This is correct because there is not attribute of price set to ‘no’. You can also use the keyword <code>or</code> to match certain properties:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>book_xml <span class="sc">%&gt;%</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//book[@price='yes' or @topic='scifi']"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_text</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "\n        Hyperion Cantos\n      "                  
+[2] "\n         1996\n        \n        Endymion\n      "
+[3] "\n     The Stand\n    "                             </code></pre>
+</div>
+</div>
+<p>XPath has all the goodies to perform basic filtering (<code>and</code>, <code>or</code>, <code>=</code>, <code>!=</code>) but also has additional functions that are useful for filtering. Some of the most common ones include:</p>
+<ul>
+<li><p><a href="https://tidyselect.r-lib.org/reference/starts_with.html"><code>contains()</code></a></p></li>
+<li><p><code>starts-with()</code></p></li>
+<li><p><a href="https://rdrr.io/r/graphics/text.html"><code>text()</code></a></p></li>
+<li><p><a href="https://magrittr.tidyverse.org/reference/aliases.html"><code>not()</code></a></p></li>
+<li><p><a href="https://dplyr.tidyverse.org/reference/count.html"><code>count()</code></a></p></li>
+</ul>
+<p>How do we use them? We always use these functions within the context of filtering (everything used inside <code>[]</code>). With these you can reach a level of fine-grained filtering that can save you hours searching on the source code of an XML/HTML document. Before we go over some of the cases where these functions are useful, let’s load a new example from the <code>scrapex</code> package.</p>
+<p>For the rest of the chapter and the exercises you’ll be working with the main page of the newspaper “El País”. “El País” is an international daily newspaper. It is the among the most circulated newspapers in Spain and has a very rich website that we’ll be scraping. We can load it from the function <a href="https://rdrr.io/pkg/scrapex/man/elpais_newspaper_ex.html"><code>elpais_newspaper_ex()</code></a>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>newspaper_link <span class="ot">&lt;-</span> <span class="fu">elpais_newspaper_ex</span>()</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="ot">&lt;-</span> <span class="fu">read_html</span>(newspaper_link)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s look at the website in our web browser:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">browseURL</span>(<span class="fu">prep_browser</span>(newspaper_link))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The website has news organized along the left, right and center of the website. If you scroll down you’ll see there are dozens more news snippets scattered throughout the website. These news are organized through sections such as ‘Culture’, ‘Sports’ and ‘Business’.</p>
+<p>Let’s say we’re interested in figuring out the links to all sections of the newspaper to be able to scrape all news separately by area. To avoid complexity, we’ll start by first grabbing the ‘Science’ section link as a first step.</p>
+<p>Ok, with this information we can be creative and build an XPath expressions that says: find all the <code>&lt;a&gt;</code> tags that have an <code>href</code> attribute containing the word ‘Science’ and also inherits from a <code>&lt;section&gt;</code> tag:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section//a[contains(@href, 'science')]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (20)}
+ [1] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/is-climate-c ...
+ [2] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/worlds-top-m ...
+ [3] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+ [4] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/a-new-drug-t ...
+ [5] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/a-new-drug-t ...
+ [6] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+ [7] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+ [8] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/ophiuchus-th ...
+ [9] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/ophiuchus-th ...
+[10] &lt;a href="https://english.elpais.com/science-tech/2022-09-17/one-girls-ge ...
+[11] &lt;a href="https://english.elpais.com/science-tech/2022-09-17/one-girls-ge ...
+[12] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/global-warmi ...
+[13] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/global-warmi ...
+[14] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+[15] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/how-can-a-sm ...
+[16] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/how-can-a-sm ...
+[17] &lt;a href="https://english.elpais.com/science-tech/2022-10-04/the-orbit-of ...
+[18] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+[19] &lt;a href="https://english.elpais.com/science-tech/2022-10-01/rare-diamond ...
+[20] &lt;a href="https://english.elpais.com/science-tech/2022-09-30/carole-hoove ...</code></pre>
+</div>
+</div>
+<p>Hmm, the XPath seems right but the output returns too many tags. We were expecting one link that is the general science section (something like <code>https://english.elpais.com/science-tech/</code>).</p>
+<p>We could narrow things with the classes of the link:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section//a[contains(@class, 'b_h_t _pr') and contains(@href, 'science')]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Scie ...
+[2] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Scie ...</code></pre>
+</div>
+</div>
+<p>We can also use</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section/*/*/a[contains(@href, 'science')]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Scie ...
+[2] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Scie ...</code></pre>
+</div>
+</div>
+<p>We can count how many times an article appears</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section[count(.//article)&gt;3]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (5)}
+[1] &lt;section class="_g _g-md _g-o b b-d" data-dtm-region="portada_apertura"&gt;&lt; ...
+[2] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_sc ...
+[3] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada_culture" ...
+[4] &lt;section class="b b-t b-t-df b-t-1 _g-o " data-dtm-region="portada_temati ...
+[5] &lt;section class="b b-t b-t-df b-t-1 _g-o " data-dtm-region="portada_temati ...</code></pre>
+</div>
+</div>
+<p>By looking at the result we see that the attribute <code>data-dtm-region</code> contains some information about the name of the section (see the word culture in the third node). Let’s extract it:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section[count(.//article)&gt;3]"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_attr</span>(<span class="st">"data-dtm-region"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "portada_apertura"                          
+[2] "portada_tematicos_science,-tech-&amp;-health"  
+[3] "portada_arrevistada_culture"               
+[4] "portada_tematicos_celebrities,-movies-&amp;-tv"
+[5] "portada_tematicos_our-selection"           </code></pre>
+</div>
+</div>
+<p>Examples:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find all sections</span></span>
+<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (23)}
+ [1] &lt;section class="_g _g-md _g-o b b-d" data-dtm-region="portada_apertura"&gt; ...
+ [2] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada"&gt;&lt;div c ...
+ [3] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_s ...
+ [4] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_b ...
+ [5] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_u ...
+ [6] &lt;section class="_g-o b b-bra b-bra-2 _g _g-lg b-bra-thebeatsofmitierra"  ...
+ [7] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada_culture ...
+ [8] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_w ...
+ [9] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada"&gt;&lt;div c ...
+[10] &lt;section class="b b-t b-t-df b-t-1 _g-o " data-dtm-region="portada_temat ...
+[11] &lt;section class="b b-t b-t-df b-t-1 _g-o " data-dtm-region="portada_temat ...
+[12] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[13] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[14] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[15] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[16] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[17] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[18] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[19] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[20] &lt;section class="bl_lmv b b-t b-t-ad _g-o" data-dtm-region="portada_lom"&gt; ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all divs below all sections</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section//div"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (139)}
+ [1] &lt;div class="b-d_a"&gt;\n&lt;article class="c c-d c--m-n   "&gt;&lt;header class="c_h ...
+ [2] &lt;div class="c_a"&gt;&lt;a href="https://english.elpais.com/author/lorena-arroy ...
+ [3] &lt;div class="c_a"&gt;\n&lt;a href="https://english.elpais.com/author/juan-navar ...
+ [4] &lt;div class="b-d_b b_op _g _g-md b_op-1-2"&gt;&lt;article class="c c-d c--m   " ...
+ [5] &lt;div class="c_a"&gt;\n&lt;a href="https://english.elpais.com/author/iker-seisd ...
+ [6] &lt;div class="b-d_d b_col-h b_st b_st-r-lg"&gt;&lt;div class="b_row _g _g-xs b_r ...
+ [7] &lt;div class="b_row _g _g-xs b_row-2 b_el-2 b_row-4-md"&gt;\n&lt;article class=" ...
+ [8] &lt;div class="c_a"&gt;\n&lt;a href="https://english.elpais.com/author/tommaso-ko ...
+ [9] &lt;div class="c_a"&gt;&lt;a href="https://english.elpais.com/author/sergio-del-a ...
+[10] &lt;div class="b_hr-s b_hr-s-t"&gt;&lt;/div&gt;\n
+[11] &lt;div class="b-m_a"&gt;&lt;article class="c c c-m _g _g-lg c--d c-m-r c--m c--c ...
+[12] &lt;div class="c_tx"&gt;\n&lt;header class="c_h"&gt;&lt;h2 class="c_t c_t-xxs c_t-r"&gt;&lt;a ...
+[13] &lt;div class="c_a"&gt;&lt;a href="https://english.elpais.com/author/daniel-soufi ...
+[14] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+[15] &lt;div class="b_h_w _pr"&gt;&lt;a href="https://english.elpais.com/science-tech/ ...
+[16] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_a"&gt;&lt;article class="c c-d c ...
+[17] &lt;div class="b-t_a"&gt;&lt;article class="c c-d c--m   "&gt;&lt;figure class="c_m a_m ...
+[18] &lt;div class="c_a"&gt;&lt;a href="https://english.elpais.com/author/nuno-domingu ...
+[19] &lt;div class="b-t_d b-t_d-4 b_row b_st _g _g-xs"&gt;\n&lt;article class="c c-d c ...
+[20] &lt;div class="c_a"&gt;\n&lt;a href="https://english.elpais.com/author/miguel-jim ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all sections which a div as a child</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section/div"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (35)}
+ [1] &lt;div class="b-d_a"&gt;\n&lt;article class="c c-d c--m-n   "&gt;&lt;header class="c_h ...
+ [2] &lt;div class="b-d_b b_op _g _g-md b_op-1-2"&gt;&lt;article class="c c-d c--m   " ...
+ [3] &lt;div class="b-d_d b_col-h b_st b_st-r-lg"&gt;&lt;div class="b_row _g _g-xs b_r ...
+ [4] &lt;div class="b_hr-s b_hr-s-t"&gt;&lt;/div&gt;\n
+ [5] &lt;div class="b-m_a"&gt;&lt;article class="c c c-m _g _g-lg c--d c-m-r c--m c--c ...
+ [6] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+ [7] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_a"&gt;&lt;article class="c c-d c ...
+ [8] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_bc_w _g _g-md b_st-md"&gt;\n&lt; ...
+ [9] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_a"&gt;&lt;article class="c c c-m ...
+[10] &lt;div class="b_hr-s b_hr-s-t _dn"&gt;&lt;/div&gt;\n
+[11] &lt;div class="b_row _g _g-md"&gt;\n&lt;article class="c c-bra c--m   "&gt;&lt;figure c ...
+[12] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+[13] &lt;div class="b_hr-s b_hr-s-t"&gt;&lt;/div&gt;\n
+[14] &lt;div class="b-m_a"&gt;&lt;article class="c c c-m _g _g-lg c--d c-m-r c--m c--c ...
+[15] &lt;div class="b-m_b b_st b_row-lg b_cnb-lg b_row-2-md b_row-4-lg _g _g-xs" ...
+[16] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+[17] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_bc_w _g _g-md b_st-md"&gt;\n&lt; ...
+[18] &lt;div class="b_hr-s b_hr-s-t"&gt;&lt;/div&gt;\n
+[19] &lt;div class="b-m_a"&gt;&lt;article class="c c c-m _g _g-lg c--d c-m-l c--m c--c ...
+[20] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return the child (any, because of *) of all sections</span></span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section/*"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (52)}
+ [1] &lt;div class="b-d_a"&gt;\n&lt;article class="c c-d c--m-n   "&gt;&lt;header class="c_h ...
+ [2] &lt;div class="b-d_b b_op _g _g-md b_op-1-2"&gt;&lt;article class="c c-d c--m   " ...
+ [3] &lt;div class="b-d_d b_col-h b_st b_st-r-lg"&gt;&lt;div class="b_row _g _g-xs b_r ...
+ [4] &lt;div class="b_hr-s b_hr-s-t"&gt;&lt;/div&gt;\n
+ [5] &lt;div class="b-m_a"&gt;&lt;article class="c c c-m _g _g-lg c--d c-m-r c--m c--c ...
+ [6] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+ [7] &lt;header class="header b_h _df _pr"&gt;&lt;div class="b_h_w _pr"&gt;&lt;a href="https ...
+ [8] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_a"&gt;&lt;article class="c c-d c ...
+ [9] &lt;header class="header b_h _df _pr"&gt;&lt;div class="b_h_w _pr"&gt;&lt;span class="b ...
+[10] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_bc_w _g _g-md b_st-md"&gt;\n&lt; ...
+[11] &lt;div class="b-t_w _g _g-lg"&gt;\n&lt;div class="b-t_a"&gt;&lt;article class="c c c-m ...
+[12] &lt;div class="b_hr-s b_hr-s-t _dn"&gt;&lt;/div&gt;\n
+[13] &lt;header class="b_sp"&gt;&lt;div class="b_sp_l"&gt;&lt;/div&gt;\n&lt;a class="b_sp_n _db" h ...
+[14] &lt;div class="b_row _g _g-md"&gt;\n&lt;article class="c c-bra c--m   "&gt;&lt;figure c ...
+[15] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+[16] &lt;header class="header b_h _df _pr"&gt;&lt;div class="b_h_w _pr"&gt;&lt;span class="b ...
+[17] &lt;div class="b_hr-s b_hr-s-t"&gt;&lt;/div&gt;\n
+[18] &lt;div class="b-m_a"&gt;&lt;article class="c c c-m _g _g-lg c--d c-m-r c--m c--c ...
+[19] &lt;div class="b-m_b b_st b_row-lg b_cnb-lg b_row-2-md b_row-4-lg _g _g-xs" ...
+[20] &lt;div class="b_hr-s b_hr-s-b"&gt;&lt;/div&gt;
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all a tags of all section tags which have two nodes in between</span></span>
+<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section/*/*/a"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (12)}
+ [1] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+ [2] &lt;a href="https://english.elpais.com/economy-and-business/" class="b_h_t  ...
+ [3] &lt;a href="https://english.elpais.com/opinion/the-global-observer/" class= ...
+ [4] &lt;a href="https://english.elpais.com/international/" class="b_h_t _pr"&gt;In ...
+ [5] &lt;a href="https://english.elpais.com/culture/" class="b_h_t _pr"&gt;Culture&lt;/a&gt;
+ [6] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+ [7] &lt;a href="https://english.elpais.com/society/" class="b_h_t _pr"&gt;Americas ...
+ [8] &lt;a href="https://elpais.com/archivo/#?prm=hemeroteca_pie_ep"&gt;Archive&lt;/a&gt;
+ [9] &lt;a href="https://elpais.com/archivo/#?prm=hemeroteca_pie_ep"&gt;&lt;figure cla ...
+[10] &lt;a href="https://play.google.com/store/apps/details?id=com.elpais.elpais ...
+[11] &lt;a href="https://apps.apple.com/es/app/el-pa%C3%ADs/id301049096" target= ...
+[12] &lt;a class="button | flex btn btn-2" href="https://elpais.com/suscripcione ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all a tags below all section tags without a class attribute</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section//a[not(@class)]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (69)}
+ [1] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/is-climate-c ...
+ [2] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/worlds-top-m ...
+ [3] &lt;a href="https://english.elpais.com/usa/2022-10-07/texas-executes-the-in ...
+ [4] &lt;a href="https://english.elpais.com/culture/2022-10-07/the-secret-force- ...
+ [5] &lt;a href="https://english.elpais.com/culture/2022-10-07/calista-flockhart ...
+ [6] &lt;a href="https://english.elpais.com/culture/2022-10-07/from-house-of-the ...
+ [7] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/a-new-drug-t ...
+ [8] &lt;a href="https://english.elpais.com/economy-and-business/2022-10-05/meet ...
+ [9] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+[10] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/ophiuchus-th ...
+[11] &lt;a href="https://english.elpais.com/science-tech/2022-09-17/one-girls-ge ...
+[12] &lt;a href="https://english.elpais.com/economy-and-business/2022-10-07/what ...
+[13] &lt;a href="https://english.elpais.com/opinion/the-global-observer/2022-10- ...
+[14] &lt;a href="https://english.elpais.com/culture/2022-10-06/unseen-beatles-fo ...
+[15] &lt;a href="https://elpais.com/america/sociedad/the-beats-of-mi-tierra/2022 ...
+[16] &lt;a href="https://elpais.com/america/sociedad/the-beats-of-mi-tierra/2022 ...
+[17] &lt;a href="https://english.elpais.com/culture/2022-10-06/annie-ernaux-wins ...
+[18] &lt;a href="https://english.elpais.com/culture/2022-10-05/washington-exhibi ...
+[19] &lt;a href="https://english.elpais.com/international/2022-10-06/juliette-bi ...
+[20] &lt;a href="https://english.elpais.com/culture/2022-10-02/avatars-cult-foll ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all a tags below all section tags that contain a class attribute</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section//a[@class]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (85)}
+ [1] &lt;a href="https://english.elpais.com/author/lorena-arroyo-valles/" class= ...
+ [2] &lt;a href="https://english.elpais.com/author/juan-navarro-garcia/" class=" ...
+ [3] &lt;a href="https://english.elpais.com/usa/2022-10-07/texas-executes-the-in ...
+ [4] &lt;a href="https://english.elpais.com/author/iker-seisdedos/" class="c_a_a ...
+ [5] &lt;a href="https://english.elpais.com/author/tommaso-koch/" class="c_a_a"&gt; ...
+ [6] &lt;a href="https://english.elpais.com/culture/2022-10-07/calista-flockhart ...
+ [7] &lt;a href="https://english.elpais.com/author/sergio-del-amo-aisa/" class=" ...
+ [8] &lt;a href="https://english.elpais.com/culture/2022-10-07/from-house-of-the ...
+ [9] &lt;a href="https://english.elpais.com/author/daniel-soufi-olivero/" class= ...
+[10] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+[11] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/a-new-drug-t ...
+[12] &lt;a href="https://english.elpais.com/author/nuno-dominguez-angulo/" class ...
+[13] &lt;a href="https://english.elpais.com/economy-and-business/2022-10-05/meet ...
+[14] &lt;a href="https://english.elpais.com/author/miguel-jimenez/" class="c_a_a ...
+[15] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+[16] &lt;a href="https://english.elpais.com/author/oriol-guell/" class="c_a_a"&gt;O ...
+[17] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/ophiuchus-th ...
+[18] &lt;a href="https://english.elpais.com/science-tech/2022-09-17/one-girls-ge ...
+[19] &lt;a href="https://english.elpais.com/author/manuel-ansede-vazquez/" class ...
+[20] &lt;a href="https://english.elpais.com/economy-and-business/2022-10-07/what ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all a tags of all section tags which have two nodes in between</span></span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a><span class="co"># and contain some text in the a tag.</span></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section/*/*/a[contains(text(), 'Science')]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (2)}
+[1] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Scie ...
+[2] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Scie ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all span tags in the document with a specific class</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//span[@class='c_a_l']"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (24)}
+ [1] &lt;span class="c_a_l"&gt;Valladolid&lt;/span&gt;
+ [2] &lt;span class="c_a_l"&gt;Washington&lt;/span&gt;
+ [3] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+ [4] &lt;span class="c_a_l"&gt;Washington&lt;/span&gt;
+ [5] &lt;span class="c_a_l"&gt;Barcelona&lt;/span&gt;
+ [6] &lt;span class="c_a_l"&gt;Washington&lt;/span&gt;
+ [7] &lt;span class="c_a_l"&gt;Tokyo&lt;/span&gt;
+ [8] &lt;span class="c_a_l"&gt;Madrid / Paris&lt;/span&gt;
+ [9] &lt;span class="c_a_l"&gt;Washington DC&lt;/span&gt;
+[10] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+[11] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+[12] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+[13] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+[14] &lt;span class="c_a_l"&gt;Los Angeles&lt;/span&gt;
+[15] &lt;span class="c_a_l"&gt;Mexico&lt;/span&gt;
+[16] &lt;span class="c_a_l"&gt;Río de Janeiro&lt;/span&gt;
+[17] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+[18] &lt;span class="c_a_l"&gt;Madrid&lt;/span&gt;
+[19] &lt;span class="c_a_l"&gt;Washington&lt;/span&gt;
+[20] &lt;span class="c_a_l"&gt;Kyiv&lt;/span&gt;
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all span tags in the document that don't have a specific class</span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//span[@class!='c_a_l']"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (43)}
+ [1] &lt;span class="x_e_s"&gt;|&lt;/span&gt;
+ [2] &lt;span class="x_e_s"&gt;|&lt;/span&gt;
+ [3] &lt;span class="_dn" id="l_u_fn"&gt;HOLA&lt;/span&gt;
+ [4] &lt;span class="_dn"&gt;LOG IN&lt;/span&gt;
+ [5] &lt;span class="x_e_s"&gt;|&lt;/span&gt;
+ [6] &lt;span class="x_e_s"&gt;|&lt;/span&gt;
+ [7] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+ [8] &lt;span class="c_m_p_a"&gt;MONICA GONZALEZ&lt;/span&gt;
+ [9] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[10] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[11] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[12] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[13] &lt;span class="b_h_t _pr"&gt;Business &amp;amp; Economy&lt;/span&gt;
+[14] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[15] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[16] &lt;span class="b_h_t _pr"&gt;Culture&lt;/span&gt;
+[17] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[18] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[19] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+[20] &lt;span class="c_a_vr"&gt;|&lt;/span&gt;
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all a tags where an attribute starts with something</span></span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//a[starts-with(@href, 'https://')]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (207)}
+ [1] &lt;a href="https://english.elpais.com/"&gt;&lt;span&gt;USA&lt;/span&gt;&lt;/a&gt;
+ [2] &lt;a href="https://elpais.com/"&gt;&lt;span&gt;España&lt;/span&gt;&lt;/a&gt;
+ [3] &lt;a href="https://elpais.com/america/"&gt;&lt;span&gt;América&lt;/span&gt;&lt;/a&gt;
+ [4] &lt;a href="https://elpais.com/mexico/"&gt;&lt;span&gt;México&lt;/span&gt;&lt;/a&gt;
+ [5] &lt;a href="https://elpais.com/america-colombia/"&gt;&lt;span&gt;Colombia&lt;/span&gt;&lt;/a&gt;
+ [6] &lt;a href="https://elpais.com/chile/"&gt;&lt;span&gt;Chile&lt;/span&gt;&lt;/a&gt;
+ [7] &lt;a href="https://elpais.com/argentina/"&gt;&lt;span&gt;Argentina&lt;/span&gt;&lt;/a&gt;
+ [8] &lt;a href="https://english.elpais.com/"&gt;&lt;span&gt;USA&lt;/span&gt;&lt;/a&gt;
+ [9] &lt;a class="ep_e _db" href="https://english.elpais.com/" data-dtm-region=" ...
+[10] &lt;a class="button | flex btn btn-xs btn-2" href="https://elpais.com/suscr ...
+[11] &lt;a class="btn btn-u" href="https://english.elpais.com/subscriptions/#/si ...
+[12] &lt;a href="https://english.elpais.com/usa/" class=""&gt;USA&lt;/a&gt;
+[13] &lt;a href="https://english.elpais.com/spain/" class=""&gt;Spain&lt;/a&gt;
+[14] &lt;a href="https://english.elpais.com/economy-and-business" class=""&gt;Econo ...
+[15] &lt;a href="https://english.elpais.com/society" class=""&gt;Society&lt;/a&gt;
+[16] &lt;a href="https://english.elpais.com/opinion/" class=""&gt;Opinion&lt;/a&gt;
+[17] &lt;a href="https://english.elpais.com/international" class=""&gt;Internationa ...
+[18] &lt;a href="https://english.elpais.com/culture/" class=""&gt;Culture&lt;/a&gt;
+[19] &lt;a href="https://english.elpais.com/sports" class=""&gt;Sports&lt;/a&gt;
+[20] &lt;a href="https://english.elpais.com/science-tech" class=""&gt;Science &amp;amp; ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all a tags where an attribute contains some text</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//a[contains(@href, 'science-tech')]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (22)}
+ [1] &lt;a href="https://english.elpais.com/science-tech" class=""&gt;Science &amp;amp; ...
+ [2] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/is-climate-c ...
+ [3] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/worlds-top-m ...
+ [4] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+ [5] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/a-new-drug-t ...
+ [6] &lt;a href="https://english.elpais.com/science-tech/2022-10-07/a-new-drug-t ...
+ [7] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+ [8] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+ [9] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/ophiuchus-th ...
+[10] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/ophiuchus-th ...
+[11] &lt;a href="https://english.elpais.com/science-tech/2022-09-17/one-girls-ge ...
+[12] &lt;a href="https://english.elpais.com/science-tech/2022-09-17/one-girls-ge ...
+[13] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/global-warmi ...
+[14] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/global-warmi ...
+[15] &lt;a href="https://english.elpais.com/science-tech/" class="b_h_t _pr"&gt;Sci ...
+[16] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/how-can-a-sm ...
+[17] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/how-can-a-sm ...
+[18] &lt;a href="https://english.elpais.com/science-tech/2022-10-04/the-orbit-of ...
+[19] &lt;a href="https://english.elpais.com/science-tech/2022-10-06/european-med ...
+[20] &lt;a href="https://english.elpais.com/science-tech/2022-10-01/rare-diamond ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all section tags which have tag *descendants (because of the .//)* that have a class attribute</span></span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section[.//a[@class]]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (21)}
+ [1] &lt;section class="_g _g-md _g-o b b-d" data-dtm-region="portada_apertura"&gt; ...
+ [2] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada"&gt;&lt;div c ...
+ [3] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_s ...
+ [4] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_b ...
+ [5] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_u ...
+ [6] &lt;section class="_g-o b b-bra b-bra-2 _g _g-lg b-bra-thebeatsofmitierra"  ...
+ [7] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada_culture ...
+ [8] &lt;section class="b b-t b-t-ad _g-o " data-dtm-region="portada_tematicos_w ...
+ [9] &lt;section class="b b-m _g-o" data-dtm-region="portada_arrevistada"&gt;&lt;div c ...
+[10] &lt;section class="b b-t b-t-df b-t-1 _g-o " data-dtm-region="portada_temat ...
+[11] &lt;section class="b b-t b-t-df b-t-1 _g-o " data-dtm-region="portada_temat ...
+[12] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[13] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[14] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[15] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[16] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[17] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[18] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[19] &lt;section class="b b-sc"&gt;&lt;header class="header b_h _df _pr"&gt;&lt;div class="b ...
+[20] &lt;section class="fo_col"&gt;&lt;div class="fo_col-1" data-dtm-region="footer_po ...
+...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return all section tags which have &lt;td&gt; children</span></span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//section[td]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (0)}</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return the first occurrence of a section tag</span></span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"(//section)[1]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;section class="_g _g-md _g-o b b-d" data-dtm-region="portada_apertura"&gt;&lt; ...</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Return the last occurrence of a section tag</span></span>
+<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a>newspaper <span class="sc">%&gt;%</span></span>
+<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"(//section)[last()]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;section class="_g-o"&gt;&lt;div class="_g _g-lg fo_en"&gt;\n&lt;div class="fo_en-c1" ...</code></pre>
+</div>
+</div>
+<ul>
+<li><p><a href="https://devhints.io/xpath">XPath Cheetsheet</a></p></li>
+<li><p><a href="https://www.lambdatest.com/blog/most-exhaustive-xpath-locators-cheat-sheet/">Extensive XPath Cheetsheet</a></p></li>
+<li><p><a href="https://www.w3schools.com/xml/xpath_intro.asp">XPath tutorial</a></p></li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
