@@ -114,9 +114,9 @@ editor: visual
 
 ## Survey
 
--   [Why Surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Why Surveys.html)
+-   [Why Surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Why%20Surveys.html)
 
--   [Socio-demographic variables in surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Socio-demographic variables in surveys.html)
+-   [Socio-demographic variables in surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Socio-demographic%20variables%20in%20surveys.html)
 
 -   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Missing_data.html)
 
@@ -125,6 +125,14 @@ editor: visual
 -   [Data Harvesting 1](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-1.html)
 
 -   [Data Harvesting 2](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-2.html)
+
+## Advanced Modeling
+
+-   [Featuring Engineering](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/1.1-national-elections.html)
+
+-   [PCA](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/2.1-socioeconomic-PCA.html)
+
+-   Clustering
 
 ## Retired
 
