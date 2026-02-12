@@ -118,7 +118,7 @@ editor: visual
 
 -   [Socio-demographic variables in surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Socio-demographic variables in surveys.html)
 
--   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/Multiple Imputation in Survey Data-20260211/survey-ii/Missing_data.html)
+-   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Missing_data.html)
 
 ## Data Harvesting
 
