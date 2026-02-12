@@ -126,6 +126,8 @@ editor: visual
 
 -   [Data Harvesting 2](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-2.html)
 
+-   [Data Harvesting 3](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-3.html)
+
 ## Advanced Modeling
 
 -   [Featuring Engineering](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/1.1-national-elections.html)

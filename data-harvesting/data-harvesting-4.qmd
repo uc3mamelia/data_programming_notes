@@ -1,0 +1,26 @@
+---
+title: "Scraping Javascript based website"
+format: html
+editor: visual
+---
+
+Javascript allows dynamic elements on the page. It also makes scraping the website difficult since it is not available in the code directly. If we download a copy of the website, we cannot access these elements.
+
+We are going to use `RSelenium` that allows the bot to behave like a human and click on elements.
+
+```{r}
+library(RSelenium)
+library(selenium)
+library(scrapex)
+library(xml2)
+library(magrittr)
+library(lubridate)
+library(dplyr)
+library(tidyr)
+
+blog_link <- gelman_blog_ex()
+```
+
+```{r}
+remDr <- rsDriver(browser = "firefox", phantomver = NULL, port = 4345L)
+```
