@@ -120,6 +120,10 @@ editor: visual
 
 -   [Missing Data](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Missing_data.html)
 
+-   [Paradata](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Paradata.html#/title-slide)
+
+-   [Class Imbalance Data](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Dealing%20with%20class%20imbalance.html)
+
 ## Data Harvesting
 
 -   [Data Harvesting 1](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-1.html)
@@ -135,6 +139,8 @@ editor: visual
 -   [PCA](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/2.1-socioeconomic-PCA.html)
 
 -   Clustering
+
+-   [Probabilistic Learning](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/3.1-probabilistic-learning-and-knn.html)
 
 ## Retired
 

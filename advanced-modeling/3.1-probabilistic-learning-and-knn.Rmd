@@ -1,0 +1,685 @@
+---
+title: "Topic 3.1: Probabilistic Learning and k-NN"
+subtitle: "Simple examples + Case Study: Failure Case Study"
+author: "Advanced Modelling, Master in Computational Social Science"
+date: 'UC3M, 2026'
+output:
+  html_document:
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+set.seed(2026)
+```
+
+# Introduction
+
+In this notebook we will practice with the tools seen in topic 3.1, where we introduced supervised learning and focused on probabilistic learning model based on Bayes rule (LDA, QDA, Naive Bayes) as well as k-Nearest Neighbors.
+
+We will start with a few "toy" examples and then we will try to apply some of these techniques in a real case study about student failure prediction using socioeconomic variables.
+
+```{r libraries}
+# Required packages
+library(tidyverse)
+library(caret)
+library(MASS)
+library(e1071)
+library(class)
+```
+
+# Multiclass Classification Example (Iris)
+
+In this first example we use a well known example dataset, which consists of 3 flower species (the three classes we will try to predict, the response Y), where 4 variables have been measured, with the sepal and petal widths and lenghts (the X matrix that we will use to predict). For more information read [the Wikipedia page](https://es.wikipedia.org/wiki/Conjunto_de_datos_flor_iris).
+
+Lets have a look to our data:
+
+```{r iris-data}
+data(iris)
+glimpse(iris)
+summary(iris)
+```
+
+Before creating any model, we knwo that we should first have some validation strategy. Lets start by using a simple train/test split for simplicity in this example, even if a cross validation approach would be more robust.
+
+```{r iris-split}
+set.seed(123)
+iris_idx <- createDataPartition(iris$Species, p = 0.7, list = FALSE)
+iris_train <- iris[iris_idx, ]
+iris_test <- iris[-iris_idx, ]
+
+cat("Training set:", nrow(iris_train), "observations\n")
+cat("Test set:", nrow(iris_test), "observations\n")
+```
+
+We will now use the three classifier models from Bayesian learning (LDA, QDA and Naive Bayes) and the ML model k-NN as seen in topic 3.1.
+
+For k-NN, we need to scale the data. In general its best practice to do so using training statistics and apply the same scaling to the test set, to avoid data-leakage.
+
+> Note how we are specifying the package where we can get each of the models´
+
+```{r iris-models}
+# LDA
+iris_lda <- MASS::lda(Species ~ ., data = iris_train)
+iris_lda_pred <- predict(iris_lda, newdata = iris_test)$class
+
+# QDA
+iris_qda <- MASS::qda(Species ~ ., data = iris_train)
+iris_qda_pred <- predict(iris_qda, newdata = iris_test)$class
+
+# Naive Bayes
+iris_nb <- e1071::naiveBayes(Species ~ ., data = iris_train)
+iris_nb_pred <- predict(iris_nb, newdata = iris_test)
+
+# k-NN: Scaling + model predictions (remember how this model does not require 
+# training, as it only requires the data to be stored)
+train_scaled <- scale(iris_train[, 1:4])
+test_scaled <- scale(
+  iris_test[, 1:4],
+  center = attr(train_scaled, "scaled:center"),
+  scale = attr(train_scaled, "scaled:scale")
+)
+
+# k-NN predictions for different k values
+iris_knn_pred_k1 <- class::knn(
+  train = train_scaled,
+  test = test_scaled,
+  cl = iris_train$Species,
+  k = 1
+)
+
+iris_knn_pred_k5 <- class::knn(
+  train = train_scaled,
+  test = test_scaled,
+  cl = iris_train$Species,
+  k = 5
+)
+
+iris_knn_pred_k20 <- class::knn(
+  train = train_scaled,
+  test = test_scaled,
+  cl = iris_train$Species,
+  k = 20
+)
+```
+
+Use the training data's mean and standard deviation to scale the train data AND the test data. Do not include test data, otherwise you will result with data leakage.
+
+When dealing with classification problems, recall from the topic 1 introduction that we can use the confusion matrix to represent our results as well as metrics such as the accuracy or others related with the false positives or false negatives.
+
+We want to look at accuracy here. When we care more about false positives and false negatives, we might look at other metrics.
+
+```{r iris-cm}
+cm_iris_lda <- confusionMatrix(iris_lda_pred, iris_test$Species)
+cm_iris_qda <- confusionMatrix(iris_qda_pred, iris_test$Species)
+cm_iris_nb <- confusionMatrix(iris_nb_pred, iris_test$Species)
+cm_iris_knn_k1 <- confusionMatrix(iris_knn_pred_k1, iris_test$Species)
+cm_iris_knn_k5 <- confusionMatrix(iris_knn_pred_k5, iris_test$Species)
+cm_iris_knn_k20 <- confusionMatrix(iris_knn_pred_k20, iris_test$Species)
+
+cm_iris_lda
+cm_iris_qda
+cm_iris_nb
+cm_iris_knn_k1
+cm_iris_knn_k5
+cm_iris_knn_k20
+```
+
+And we can create a summary table:
+
+```{r iris-summary}
+iris_summary <- tibble(
+  Method = c("LDA", "QDA", "Naive Bayes", "k-NN (k=1)", "k-NN (k=5)", "k-NN (k=20)"),
+  Accuracy = c(
+    as.numeric(cm_iris_lda$overall["Accuracy"]),
+    as.numeric(cm_iris_qda$overall["Accuracy"]),
+    as.numeric(cm_iris_nb$overall["Accuracy"]),
+    as.numeric(cm_iris_knn_k1$overall["Accuracy"]),
+    as.numeric(cm_iris_knn_k5$overall["Accuracy"]),
+    as.numeric(cm_iris_knn_k20$overall["Accuracy"])
+  )
+)
+
+knitr::kable(iris_summary, digits = 3)
+```
+
+When dealing with classification problems, we can try to visualize the decision boundaries of each of our models by plotting our data space (or just a 2D version of it with PCA or selecting two variables) and assigning a color to each point in the space depending on the class that would be predicted to it.
+
+In our case we use only two predictors in the plot: `Petal.Length` and `Petal.Width`.
+
+```{r iris-boundaries}
+# Two-feature training data
+train_2d <- iris_train %>% dplyr::select(Petal.Length, Petal.Width, Species)
+
+# Scale 2D features with train statistics
+train_2d_scaled <- scale(train_2d[, c("Petal.Length", "Petal.Width")])
+train_2d_df <- data.frame(train_2d_scaled, Species = train_2d$Species)
+
+# Fit models on scaled 2D features
+lda_2d <- lda(Species ~ ., data = train_2d_df)
+qda_2d <- qda(Species ~ ., data = train_2d_df)
+nb_2d <- naiveBayes(Species ~ ., data = train_2d_df)
+
+# Prediction grid
+x_range <- seq(min(train_2d_df$Petal.Length) - 0.5, max(train_2d_df$Petal.Length) + 0.5, length.out = 150)
+y_range <- seq(min(train_2d_df$Petal.Width) - 0.5, max(train_2d_df$Petal.Width) + 0.5, length.out = 150)
+grid <- expand.grid(Petal.Length = x_range, Petal.Width = y_range)
+
+# LDA
+grid_lda <- grid
+grid_lda$Pred <- predict(lda_2d, newdata = grid)$class
+grid_lda$Method <- "LDA"
+
+# QDA
+grid_qda <- grid
+grid_qda$Pred <- predict(qda_2d, newdata = grid)$class
+grid_qda$Method <- "QDA"
+
+# Naive Bayes
+grid_nb <- grid
+grid_nb$Pred <- predict(nb_2d, newdata = grid)
+grid_nb$Method <- "Naive Bayes"
+
+# k-NN (k=1)
+grid_knn_k1 <- grid
+grid_knn_k1$Pred <- class::knn(
+  train = as.matrix(train_2d_df[, c("Petal.Length", "Petal.Width")]),
+  test = as.matrix(grid),
+  cl = train_2d_df$Species,
+  k = 1
+)
+grid_knn_k1$Method <- "k-NN (k=1)"
+
+# k-NN (k=5)
+grid_knn_k5 <- grid
+grid_knn_k5$Pred <- class::knn(
+  train = as.matrix(train_2d_df[, c("Petal.Length", "Petal.Width")]),
+  test = as.matrix(grid),
+  cl = train_2d_df$Species,
+  k = 5
+)
+grid_knn_k5$Method <- "k-NN (k=5)"
+
+# k-NN (k=20)
+grid_knn_k20 <- grid
+grid_knn_k20$Pred <- class::knn(
+  train = as.matrix(train_2d_df[, c("Petal.Length", "Petal.Width")]),
+  test = as.matrix(grid),
+  cl = train_2d_df$Species,
+  k = 20
+)
+grid_knn_k20$Method <- "k-NN (k=20)"
+
+boundary_data <- bind_rows(
+  grid_lda, grid_qda, grid_nb,
+  grid_knn_k1, grid_knn_k5, grid_knn_k20
+)
+
+ggplot() +
+  geom_tile(
+    data = boundary_data,
+    aes(x = Petal.Length, y = Petal.Width, fill = Pred),
+    alpha = 0.30
+  ) +
+  geom_point(
+    data = train_2d_df,
+    aes(x = Petal.Length, y = Petal.Width, color = Species),
+    size = 1.4,
+    alpha = 0.85
+  ) +
+  facet_wrap(~ Method, ncol = 3) +
+  labs(
+    title = "Iris Example: Decision Regions",
+    subtitle = "LDA, QDA, Naive Bayes, and k-NN with k = 1, 5, 20"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1")
+```
+
+# k-NN Regression Example
+
+We have seen a classification example, but this type of model can also be extended to regression problems, where we predict a **continuous target**.
+
+To do so, we will use the `mtcars` example dataset, which contains information about several car models and brands. For visualization purposes we will try to predict the miles per gallon `mpg` variable using their weight `wt` as predictor.
+
+Lets first see the data and create a train and test split with `caret`.
+
+```{r mtcars-data}
+data(mtcars)
+glimpse(mtcars)
+
+set.seed(456)
+mt_idx <- caret::createDataPartition(mtcars$mpg, p = 0.75, list = FALSE)
+mt_train <- mtcars[mt_idx, ]
+mt_test <- mtcars[-mt_idx, ]
+
+cat("Training set:", nrow(mt_train), "cars\n")
+cat("Test set:", nrow(mt_test), "cars\n")
+```
+
+In this case we will use a 5 fold cross validation, which can be set also with `caret`, and we will create a for loop to go over several `k` values to find the optimal one.
+
+```{r mtcars-knn-reg}
+ctrl_reg <- trainControl(method = "cv", number = 5)
+k_values_reg <- 1:20
+
+knn_reg_models <- list()
+
+for (k_val in k_values_reg) {
+  knn_reg_models[[as.character(k_val)]] <- train(
+    mpg ~ wt,
+    data = mt_train,
+    method = "knn",
+    preProcess = c("center", "scale"),
+    trControl = ctrl_reg,
+    tuneGrid = data.frame(k = k_val),
+    metric = "RMSE"
+  )
+}
+
+# We can see the output for some of the models
+knn_reg_models[["1"]]
+knn_reg_models[["5"]]
+knn_reg_models[["10"]]
+knn_reg_models[["20"]]
+```
+
+And we can create a scree plot to choose the optimal `k` value, which seems to be 2
+
+```{r mtcars-scree}
+
+k_values_reg %>%
+  map_dfr(function(k) {
+    model <- knn_reg_models[[as.character(k)]]
+    pred  <- predict(model, newdata = mt_test)
+
+    tibble(
+      k    = k,
+      RMSE = RMSE(pred, mt_test$mpg),
+      MAE  = MAE(pred, mt_test$mpg)
+    )
+  }) %>%
+  pivot_longer(cols = c(RMSE, MAE), names_to = "Metric", values_to = "Value") %>%
+  ggplot(aes(x = k, y = Value, color = Metric)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_x_continuous(breaks = k_values_reg) +
+  labs(
+    title = "k-NN Regression: Metric by k",
+    subtitle = "Lower RMSE/MAE indicates better performance",
+    x = "k",
+    y = "Error"
+  ) +
+  theme_minimal()
+```
+
+We can also compare our results with a linear regression with the following visualization:
+
+```{r mtcars-shape}
+wt_grid <- tibble(wt = seq(min(mt_train$wt), max(mt_train$wt), length.out = 200))
+lm_wt <- lm(mpg ~ wt, data = mt_train)
+
+k_keep <- c(1, 2, 5, 10, 15, 20)
+
+plot_data <- tibble()
+
+for (k_val in intersect(k_values_reg, k_keep)) {
+  model_k <- knn_reg_models[[as.character(k_val)]]
+  plot_data <- bind_rows(
+    plot_data,
+    tibble(
+      wt = wt_grid$wt,
+      mpg_knn = predict(model_k, newdata = wt_grid),
+      k_label = paste0("k=", k_val)
+    )
+  )
+}
+
+# control facet order, which would be alphabetical if not controlled
+plot_data <- plot_data %>%
+  mutate(k_label = factor(k_label, levels = paste0("k=", k_keep)))
+
+lm_data <- tibble(
+  wt = wt_grid$wt,
+  mpg_lm = predict(lm_wt, newdata = wt_grid)
+)
+
+ggplot() +
+  geom_point(data = mt_train, aes(x = wt, y = mpg), color = "firebrick", alpha = 0.70) +
+  geom_step(data = plot_data, aes(x = wt, y = mpg_knn), color = "royalblue", linewidth = 0.9) +
+  geom_line(data = lm_data, aes(x = wt, y = mpg_lm), color = "black", linewidth = 0.9) +
+  facet_wrap(~ k_label, ncol = 3) +
+  labs(
+    title = "k-NN Regression Shape vs Linear Regression",
+    subtitle = "Blue: k-NN step fit | Black: linear fit",
+    x = "wt (1000 lbs)",
+    y = "mpg"
+  ) +
+  theme_minimal()
+```
+
+# Real Case Study: Student Failure
+
+Now we apply these methods to a real social-science problem: predicting student failure in mathematics.
+
+## Context and Variables
+
+Education is a crucial factor for achieving long-term economic growth.
+
+-   Can we explain rates of school failure and dropout?
+-   Can we predict student performance?
+
+In particular, in Portugal failure in Mathematics and Portuguese is extremely severe. In this case study, we will analyze the factors affecting bad grading in Mathematics in Portuguese schools, and then try to predict their performance based on attributes like demographic, social and school related features.
+
+The dataset we'll be using contains information on Portuguese secondary school students, with demographic, family, social, and study-related features, plus grades (`G1`, `G2`, `G3`). For this case study we define failure as `G3 < 5` and focus on a compact set of predictors.
+
+Attribute Information:
+
+1.  school - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
+
+2.  sex - student's sex (binary: 'F' - female or 'M' - male)
+
+3.  age - student's age (numeric: from 15 to 22)
+
+4.  address - student's home address type (binary: 'U' - urban or 'R' - rural)
+
+5.  famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
+
+6.  Pstatus - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
+
+7.  Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 5th to 9th grade, 3 secondary education or 4 higher education)
+
+8.  Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 5th to 9th grade, 3 secondary education or 4 higher education)
+
+9.  Mjob - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+
+10. Fjob - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+
+11. reason - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
+
+12. guardian - student's guardian (nominal: 'mother', 'father' or 'other')
+
+13. traveltime - home to school travel time (numeric: 1 - \<15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - \>1 hour)
+
+14. studytime - weekly study time (numeric: 1 - \<2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - \>10 hours)
+
+15. failures - number of past class failures (numeric: n if 1\<=n\<3, else 4)
+
+16. schoolsup - extra educational support (binary: yes or no)
+
+17. famsup - family educational support (binary: yes or no)
+
+18. paid - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
+
+19. activities - extra-curricular activities (binary: yes or no)
+
+20. nursery - attended nursery school (binary: yes or no)
+
+21. higher - wants to take higher education (binary: yes or no)
+
+22. internet - Internet access at home (binary: yes or no)
+
+23. romantic - with a romantic relationship (binary: yes or no)
+
+24. famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
+
+25. freetime - free time after school (numeric: from 1 - very low to 5 - very high)
+
+26. goout - going out with friends (numeric: from 1 - very low to 5 - very high)
+
+27. Dalc - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
+
+28. Walc - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
+
+29. health - current health status (numeric: from 1 - very bad to 5 - very good)
+
+30. absences - number of school absences (numeric: from 0 to 93)
+
+31. Grades are related with the course subject, Math or Portuguese:
+
+32. G1 - first period grade (numeric: from 0 to 20)
+
+33. G2 - second period grade (numeric: from 0 to 20)
+
+34. G3 - final grade (numeric: from 0 to 20, output target)
+
+```{r student-data-overview}
+math_raw <- read.csv2("student-mat.csv", stringsAsFactors = TRUE)
+
+dim(math_raw)
+glimpse(math_raw)
+summary(math_raw$G3)
+```
+
+We can do a simple data exploration:
+
+```{r student-eda}
+# Missingness and duplicates
+cat("NAs in raw data:", sum(is.na(math_raw)), "\n")
+cat("Duplicated rows in raw data:", sum(duplicated(math_raw)), "\n")
+
+# Distribution of final grade
+math_raw %>%
+  ggplot(aes(x = G3)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(title = "Distribution of Final Grade (G3)", x = "G3", y = "Count") +
+  theme_minimal()
+
+# How failures relate to G3
+math_raw %>%
+  ggplot(aes(x = as.factor(failures), y = G3)) +
+  geom_boxplot(fill = "gray80") +
+  labs(title = "G3 by Number of Previous Failures", x = "Previous failures", y = "G3") +
+  theme_minimal()
+```
+
+Correlations
+
+```{r strudent-corr}
+GGally::ggcorr(math_raw, label = T)
+```
+
+## Data Preprocessing
+
+```{r student-preprocess}
+math <- math_raw %>%
+  mutate(Fail = factor(G3 < 5, levels = c(FALSE, TRUE), labels = c("No", "Yes"))) %>%
+  dplyr::select(Fail, failures, absences, studytime, Medu, Fedu, Walc, goout, age)
+
+summary(math)
+prop.table(table(math$Fail))
+```
+
+We also do a train/test split
+
+```{r student-split}
+set.seed(2026)
+in_train <- createDataPartition(math$Fail, p = 0.8, list = FALSE)
+train_df <- math[in_train, ]
+test_df <- math[-in_train, ]
+
+cat("Training set:", nrow(train_df), "observations\n")
+cat("Test set:", nrow(test_df), "observations\n")
+```
+
+## Fitting the models
+
+Before fitting all the models, we will use a simple variable-selection step with logistic regression (`step`) and then use the selected predictors for LDA, QDA, Naive Bayes and alos for k-NN. However, this cvariable selection could be donde for each of the models by themselves, and they could find different variables to be selected. In this case, for simplicity, we assume that the best variables found by the logistic regression are useful for the rest of the models.
+
+You can start with all the features and remove them one by one, or start with one feature and add features to see if it gets better.
+
+```{r student-fit-models}
+# 1) Logistic regression with variable selection
+logit_full <- glm(Fail ~ ., family = binomial(link = "logit"), data = train_df)
+logit_model <- step(logit_full, direction = "both", trace = 0)
+
+selected_terms <- attr(terms(logit_model), "term.labels")
+if (length(selected_terms) == 0) {
+  selected_formula <- Fail ~ failures + absences + studytime + Medu + Fedu + Walc + goout + age
+  cat("Stepwise selected no predictors. Falling back to predefined compact feature set.\n")
+} else {
+  selected_formula <- as.formula(paste("Fail ~", paste(selected_terms, collapse = " + ")))
+  cat("Selected predictors:", paste(selected_terms, collapse = ", "), "\n")
+}
+
+logit_prob <- predict(logit_model, newdata = test_df, type = "response")
+logit_pred <- factor(ifelse(logit_prob > 0.5, "Yes", "No"), levels = c("No", "Yes"))
+
+# 2) LDA
+lda_model <- lda(selected_formula, data = train_df)
+lda_pred <- predict(lda_model, newdata = test_df)$class
+
+# 3) QDA
+qda_model <- qda(selected_formula, data = train_df)
+qda_pred <- predict(qda_model, newdata = test_df)$class
+
+# 4) Naive Bayes
+nb_model <- naiveBayes(selected_formula, data = train_df)
+nb_pred <- predict(nb_model, newdata = test_df)
+```
+
+With k-NN we do a scree plot to select the optimal `k`
+
+```{r student-knn-tuning}
+ctrl_knn <- trainControl(method = "cv", number = 5)
+knn_grid <- data.frame(k = c(1, 3, 5, 7, 9, 11, 15, 20))
+
+knn_model <- train(
+  selected_formula,
+  data = train_df,
+  method = "knn",
+  preProcess = c("center", "scale"),
+  trControl = ctrl_knn,
+  tuneGrid = knn_grid,
+  metric = "Accuracy"
+)
+
+knn_pred <- predict(knn_model, newdata = test_df)
+
+knn_tuning <- knn_model$results %>% dplyr::select(k, Accuracy)
+knn_tuning
+
+best_k <- knn_model$bestTune$k
+cat("Best k selected by CV:", best_k, "\n")
+
+# Scree-like curve
+ggplot(knn_tuning, aes(x = k, y = Accuracy)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_vline(xintercept = best_k, linetype = "dashed", color = "red") +
+  labs(
+    title = "k-NN Tuning on Student Case Study",
+    subtitle = "Cross-validated accuracy by k",
+    x = "k",
+    y = "CV Accuracy"
+  ) +
+  theme_minimal()
+```
+
+## Results
+
+Confussion matrices:
+
+```{r student-cm}
+cm_logit <- confusionMatrix(logit_pred, test_df$Fail, positive = "Yes")
+cm_lda <- confusionMatrix(lda_pred, test_df$Fail, positive = "Yes")
+cm_qda <- confusionMatrix(qda_pred, test_df$Fail, positive = "Yes")
+cm_nb <- confusionMatrix(nb_pred, test_df$Fail, positive = "Yes")
+cm_knn <- confusionMatrix(knn_pred, test_df$Fail, positive = "Yes")
+
+cm_logit
+cm_lda
+cm_qda
+cm_nb
+cm_knn
+```
+
+When classes are imbalanced (here, failures are the minority), plain accuracy can be misleading.
+
+Balanced Accuracy gives equal importance to the positive and negative classes:
+
+$$
+\text{Balanced Accuracy} = \frac{\text{Sensitivity} + \text{Specificity}}{2}
+$$
+
+-   **Sensitivity**: how many actual failures are correctly detected.
+-   **Specificity**: how many non-failures are correctly detected.
+
+We can now build a table with several metrics:
+
+```{r student-metrics}
+extract_metrics <- function(cm_object) {
+  tibble(
+    Accuracy = as.numeric(cm_object$overall["Accuracy"]),
+    Sensitivity = as.numeric(cm_object$byClass["Sensitivity"]),
+    Specificity = as.numeric(cm_object$byClass["Specificity"]),
+    `Balanced Accuracy` = as.numeric(cm_object$byClass["Balanced Accuracy"])
+  )
+}
+
+student_results <- bind_rows(
+  extract_metrics(cm_logit) %>% mutate(Method = "Logit"),
+  extract_metrics(cm_lda) %>% mutate(Method = "LDA"),
+  extract_metrics(cm_qda) %>% mutate(Method = "QDA"),
+  extract_metrics(cm_nb) %>% mutate(Method = "Naive Bayes"),
+  extract_metrics(cm_knn) %>% mutate(Method = paste0("k-NN (k=", best_k, ")"))
+) %>%
+  dplyr::select(Method, Accuracy, Sensitivity, Specificity, `Balanced Accuracy`)
+
+knitr::kable(student_results, digits = 3)
+```
+
+And we can also visualize the results comparing the balanced accuracy (ordered from best o worst) and the accuracy.
+
+```{r student-plot}
+plot_df <- student_results %>%
+  dplyr::select(Method, Accuracy, `Balanced Accuracy`) %>%
+  pivot_longer(cols = c(Accuracy, `Balanced Accuracy`), names_to = "Metric", values_to = "Value")
+
+ggplot(plot_df, aes(x = reorder(Method, Value), y = Value, fill = Metric)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  ylim(0, 1) +
+  labs(
+    title = "Student Failure: Model Comparison",
+    x = "Model",
+    y = "Score"
+  ) +
+  theme_minimal()
+```
+
+# Practice Extension
+
+As a practice idea, repeat the same workflow for Portuguese grades (`student-por.csv`) and compare whether the best model is the same.
+
+```{r practice-extension}
+por_raw <- read.csv2("student-por.csv", stringsAsFactors = TRUE)
+
+por <- por_raw %>%
+  mutate(Fail = factor(G3 < 5, levels = c(FALSE, TRUE), labels = c("No", "Yes"))) %>%
+  dplyr::select(Fail, failures, absences, studytime, Medu, Fedu, Walc, goout, age)
+
+summary(por)
+prop.table(table(por$Fail))
+```
+
+# Some R packages and advanced Bayesian learning methods
+
+-   **Factor-Based Linear Discriminant Analysis:** `HiDimDA`
+-   **Linear Discriminant Analysis with Stepwise Feature Selection:** `klaR`, `MASS`
+-   **Penalized Discriminant Analysis:** `mda`, `penalizedLDA`, `klaR`, `rlda`, `sda`, `sparsediscrim`
+-   **Sparse Linear Discriminant Analysis:** `sparseLDA`, `sparsediscrim`
+-   **Naive Bayes:** `naivebayes`, `klaR`

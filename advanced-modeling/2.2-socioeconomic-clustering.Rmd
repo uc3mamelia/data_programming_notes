@@ -1,0 +1,320 @@
+---
+title: "Clustering: organize countries by socio-economic-health information"
+author: "Advanced Modelling, Master in Computational Social Science"
+date: 'UC3M, 2026'
+output:
+  html_document: 
+    css: my-theme.css
+    theme: cerulean
+    highlight: tango
+    number_sections: no
+    toc: no
+    toc_depth: 1
+  pdf_document:
+    css: my-theme.css
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+editor_options:
+  chunk_output_type: console
+---
+
+
+```{r global_options, include=T, echo = F}
+knitr::opts_chunk$set(echo = T, warning=FALSE, message=FALSE)
+```
+
+
+# Introduction
+
+In this notebook we are going to use the same data as in our 2.1 PCA notebook, so we will be working with countries as observations and several socio economic  and health data as our variables.
+
+In this case we want to explore whether we can automatically organize the countries of the world based on these set of indicators. These can provide a more relevant grouping of countries rather than just using GDP or regions.
+
+
+```{r}
+library(tidyverse)
+library(GGally) # ggplot2-based visualization of correlations
+library(factoextra) # ggplot2-based visualization of pca
+library(countrycode)
+library(rworldmap)
+library(mice)
+library(plotly)
+
+
+# Clustering libraries
+library(cluster)
+library(mclust)
+```
+
+## The dataset 
+
+Remember from the previous notebook that the variables are:
+
+  - Life expectancy at birth (years)
+  - Infant mortality rate (probability of dying between birth and age 1 per 1000 live births)
+  - Population (in thousands) total
+  - Ambient air pollution (Annual PM2.5 [ug/m3])
+  - Estimates of rates of homicides per 100 000 population
+  - Health expenditure as percentage of GDP (%)
+  - Medical doctors (per 10 000 population)
+  - Hospital beds (per 10 000 population)
+  - Percentage of individuals using the Internet
+  - Literacy rate (% of people ages 15 and above)
+  - Expected Years Of School
+  - Unemployment, total (% of total labor force)
+  - GDP per capita (constant 2015 US$)
+  
+
+```{r}
+WHO = read.table("WorldData2025.txt", sep=",")  
+```
+
+The preliminar analysis has already been done in the PCA notebook, so we can skip it. Lets just do the same data preparation to work in the same way as in that notebook.
+
+
+```{r}
+# Remove first countries with no population 
+WHO = WHO %>% drop_na(Population)
+# Automatic imputation of NAs:
+m = 4 # number of multiple imputations
+mice_mod <- mice(WHO, m=m, method='rf')
+WHO <- complete(mice_mod, action=m)
+```
+
+
+```{r}
+X = WHO %>% dplyr::select(-Continent,-Region,-Country, -COUNTRY,-Population,-capital)
+
+# We need to apply the log to the GDP because it is highly asymetric
+X$GDP = log(X$GDP)
+
+# We just save the names and continents for the graphs
+names=WHO$Country
+continent = WHO$Continent
+```
+
+## Distance measures
+
+The choice of distance measure affects the shape of clusters. For numeric data, common choices are:
+
+- **Euclidean**: Standard "straight line" distance. Sensitive to scale differences.
+- **Manhattan**: Sum of absolute differences. More robust to outliers.
+- **Mahalanobis**: Accounts for correlations between variables.
+
+In R we can compute the distance matrix for some data X with the `dist()` function. Some of the more advanced types of distances are not available in `dist()`,
+
+For mixed data (numeric + categorical), use **Gower distance**.
+
+IMPORTANT: Scale the data! Different units in  variables can create distances were irrelevant variables have more weight.
+
+```{r}
+# Compare different distance matrices
+d_eucl = dist(scale(X), method = "euclidean")
+d_manh = dist(scale(X), method = "manhattan")
+
+# The gower distance requires a different package such as StatMatch. Note that in this case wqe have all numerical variables, so Gower distance should not be needed for this case study
+d_gower = StatMatch::gower.dist(scale(X)) 
+
+# Visualize first few pairwise distances
+head(as.matrix(d_eucl)[1:5, 1:5])
+head(as.matrix(d_manh)[1:5, 1:5])
+```
+
+# Clustering
+
+## K-means
+
+In this type of method we do need to specify the number of clusters. Lets use an initial guess for the number of clusters: 5 (as the number of continents), and then we will see how to specify the number of clusters.
+
+```{r}
+k = 5
+set.seed(123)
+fit = kmeans(scale(X), centers = k, nstart = 100)
+# nstart chooses how many times we run the algorithm and then keep the best result
+```
+
+What does the kmeans result contain?
+
+```{r}
+names(fit)
+```
+
+
+We can see how many countries we got on each cluster:
+
+```{r}
+groups = fit$cluster
+barplot(table(groups), col = "steelblue", main = "Cluster sizes (k = 5)")
+```
+
+
+We can also get the centers and interprent their characteristics
+
+```{r}
+centers=fit$centers
+
+par(mfrow = c(2, 3))
+for (i in 1:k) {
+  barplot(centers[i, ], 
+          main = paste("Cluster", i, "Center"), 
+          las = 2, 
+          col = "steelblue",
+          ylim = c(min(centers), max(centers)))
+}
+par(mfrow = c(1, 1))
+```
+
+
+```{r}
+centers=fit$centers
+
+barplot(centers[1,], las=2, col="darkblue")
+barplot(centers[2,], las=2, col="darkblue")
+barplot(centers[3,], las=2, col="darkblue")
+barplot(centers[4,], las=2, col="darkblue")
+barplot(centers[5,], las=2, col="darkblue")
+```
+
+Insights?
+
+
+To plot the countries we can do a 2D PCA graph and add colors for the groups
+
+```{r}
+# clusplot
+fviz_cluster(fit, data = X, geom = c("point"),ellipse.type = 'norm', pointsize=1)+
+  theme_minimal()+geom_text(label=names,hjust=0, vjust=0,size=2,check_overlap = F)+scale_fill_brewer(palette="Paired")
+```
+
+Remember the meaning of the first PCA from our previous notebook!
+
+Also, why are the groups overlaping? Note that with PCA we reduce the dimensional space, so observations that belong to different groups can be in the same area, and the cluster "circles" overlap there. However, in the full dimension space the observations either belong to one cluster or anotherone, the grupos need to be disjoint so no overlap happens. This is just an effect of trying to visualize hogher dimensional spaces.
+
+
+## Number of groups? 
+
+We can get some hints using different methods: within cluster sums of squares, average silhouette and gap statistics.
+
+```{r}
+fviz_nbclust(scale(X), kmeans, method = 'wss', k.max = 20, nstart = 1000)
+fviz_nbclust(scale(X), kmeans, method = 'silhouette', k.max = 20, nstart = 1000)
+fviz_nbclust(scale(X), kmeans, method = 'gap_stat', k.max = 10, nstart = 100, nboot = 200)
+```
+
+Any insight about the number of groups?
+
+```{r}
+set.seed(123)
+k_opt = 8 # It is not clear the value for K so try several ones.
+fit.km = kmeans(scale(X), centers = k_opt, nstart = 1000)
+barplot(table(fit.km$cluster), col = "darkgreen",
+        main = paste("Cluster sizes (k =", k_opt, ")"))
+```
+
+## Map the clustering in a map:
+  
+```{r}
+# Select here your favorite clustering tool
+map = data.frame(country=names, value=fit.km$cluster)
+#map = data.frame(country=names, value=fit.kmeans$cluster)
+
+#Convert the country code into iso3c using the function countrycode()
+map$country = countrycode(map$country, 'country.name', 'iso3c')
+#Create data object supporting the map
+matched <- joinCountryData2Map(map, joinCode = "ISO3",
+                               nameJoinColumn = "country")
+#Draw the map
+mapCountryData(matched,nameColumnToPlot="value",missingCountryCol = "white",
+               borderCol = "#C7D9FF",
+               catMethod = "pretty", colourPalette = "rainbow",
+               mapTitle = c("Clusters"), lwd=1)
+```
+
+# Hierarchical clustering
+
+Important to decide distance between observations and linkage to join groups
+
+We need to decide first the distance and linkage
+
+```{r}
+d = dist(scale(X), method = "euclidean")
+hc = hclust(d, method = "ward.D2")
+plot(hc, labels = FALSE, main = "Hierarchical clustering (Ward.D2)")
+
+```
+
+## Linkage comparison
+
+Different linkage methods produce different cluster structures:
+
+- **Single**: Tends to produce elongated, "chaining" clusters
+- **Complete**: Tends to produce compact, spherical clusters
+- **Average**: Compromise between single and complete
+- **Ward**: Minimizes within-cluster variance; tends to produce balanced clusters
+
+```{r}
+# Compare linkage methods
+d = dist(scale(X), method = "euclidean")
+
+par(mfrow = c(2, 2))
+plot(hclust(d, method = "single"), main = "Single linkage", labels = FALSE)
+plot(hclust(d, method = "complete"), main = "Complete linkage", labels = FALSE)
+plot(hclust(d, method = "average"), main = "Average linkage", labels = FALSE)
+plot(hclust(d, method = "ward.D2"), main = "Ward linkage", labels = FALSE)
+par(mfrow = c(1, 1))
+```
+
+## Visualization
+
+Classical dendrogram:
+
+```{r}
+hc$labels <- names
+
+fviz_dend(x = hc, 
+          k=8,
+          palette = "jco", 
+          rect = TRUE, rect_fill = TRUE, cex=0.5,
+          rect_border = "jco"          
+)
+```
+
+Difficult to visualize the countries
+
+Let's use a phylogenic tree:
+
+```{r}
+fviz_dend(x = hc,
+          k = 8,
+          color_labels_by_k = TRUE,
+          cex = 0.8,
+          type = "phylogenic",
+          repel = TRUE)+  labs(title="Socio-economic-health tree clustering of the world") + theme(axis.text.x=element_blank(),axis.text.y=element_blank())
+```
+
+Insights?
+
+Now in a geographical map
+
+```{r}
+groups.hc = cutree(hc, k = 8)
+
+# Map our PCA index in a map:
+map = data.frame(country=names, value=groups.hc)
+#Convert the country code into iso3c using the function countrycode()
+map$country = countrycode(map$country, 'country.name', 'iso3c')
+#Create data object supporting the map
+matched <- joinCountryData2Map(map, joinCode = "ISO3",
+                               nameJoinColumn = "country")
+#Draw the map
+mapCountryData(matched,nameColumnToPlot="value",missingCountryCol = "white",
+               borderCol = "#C7D9FF",
+               catMethod = "pretty", colourPalette = "rainbow",
+               mapTitle = c("Clusters"), lwd=1)
+
+```
+
+
