@@ -1,0 +1,137 @@
+---
+title: "Stargazer example"
+subtitle: "Survey Research Methodology II"
+author:
+  - name: "Marga Torre"
+    email: "margarita.torre@uc3m.es"
+format:
+  html:
+    toc: true
+    toc-location: left
+    theme: 
+    - united
+    self-contained: true
+    number-sections: true
+execute:
+  echo: true
+  warning: false
+  message: false
+lang: en
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=T, message=FALSE, warning=FALSE, knitr.purl.inline = TRUE )
+```
+
+## Example: Determinants of Low Self-Esteem
+
+In this example, we estimate different logistic regression models to explain **low self-esteem**.
+
+The dependent variable is binary:
+
+-   `1 = low self-esteem`
+-   `0 = otherwise`
+
+We progressively add groups of predictors to compare model specifications.
+
+# Generate synthetic survey data
+
+```{r}
+library(tidyverse)
+library(stargazer)
+
+set.seed(123)
+
+n <- 1200
+
+df <- tibble(
+  age = round(rnorm(n, mean = 35, sd = 12)),
+  female = rbinom(n, 1, 0.55),
+  education = sample(1:5, n, replace = TRUE,
+                     prob = c(0.15, 0.25, 0.30, 0.20, 0.10)),
+  unemployed = rbinom(n, 1, 0.10),
+  income = round(rlnorm(n, meanlog = 10.2, sdlog = 0.5)),
+  social_media_hours = round(pmax(rnorm(n, 2.5, 1.5), 0), 1),
+  bullying_experience = rbinom(n, 1, 0.20),
+  social_support = round(pmin(pmax(rnorm(n, 6, 2), 0), 10), 0)
+) %>%
+  mutate(
+    log_income = log(income),
+    linpred = -2.0 +
+      0.30 * female +
+      0.60 * unemployed -
+      0.20 * education -
+      0.15 * log_income +
+      0.25 * social_media_hours +
+      0.90 * bullying_experience -
+      0.35 * social_support +
+      rnorm(n, 0, 0.5),
+    low_self_esteem = rbinom(n, 1, plogis(linpred))
+  )
+```
+
+Check the df
+
+```{r}
+head(df)
+```
+
+### Model Specifications
+
+We estimate three logistic regression models:
+
+-   **Model 1**: Demographic variables\
+-   **Model 2**: Adds socioeconomic characteristics\
+-   **Model 3**: Adds psychosocial factors
+
+```{r}
+# Model 1: Demographics
+m1 <- glm(low_self_esteem ~ age + female,
+          data = df, family = binomial)
+summary(m1)
+# Model 2: Add socioeconomic variables
+m2 <- glm(low_self_esteem ~ age + female + education + unemployed + log_income,
+          data = df, family = binomial)
+summary(m2)
+# Model 3: Add psychosocial factors
+m3 <- glm(low_self_esteem ~ age + female + education + unemployed + log_income +
+            social_media_hours + bullying_experience + social_support,
+          data = df, family = binomial)
+summary(m3)
+```
+
+### Comparing Models with Stargazer
+
+The table below compares the three specifications. Coefficients are reported in **log-odds**, with standard errors in parentheses.
+
+```{r}
+stargazer(
+  m1, m2, m3,
+  type = "text",  
+  title = "Determinants of Low Self-Esteem (Logit Models)",
+  dep.var.labels = "Low Self-Esteem (1 = yes)",
+  column.labels = c("Model 1", "Model 2", "Model 3"),
+  covariate.labels = c(
+    "Age",
+    "Female",
+    "Education (1-5)",
+    "Unemployed",
+    "Log Income",
+    "Social Media Hours",
+    "Experienced Bullying",
+    "Social Support (0-10)"
+  ),
+  digits = 3,
+  star.cutoffs = c(0.05, 0.01, 0.001),
+  notes = "Logit coefficients (log-odds). Standard errors in parentheses."
+)
+```
+
+In the table:
+
+-   Each column corresponds to a different model specification
+-   Each row shows the estimated effect of a predictor
+-   Standard errors are reported in parentheses below the coefficients
+-   Stars indicate statistical significance (\* p \< 0.05; \*\* p \< 0.01; \*\*\* p \< 0.001)
+
+Stargazer offers many additional customization options that can be explored in the official documentation. For example, you can display odds ratios instead of log-odds (`apply.coef = exp`), omit specific statistics (`omit.stat = c("f", "ser")`), rename variables (`covariate.labels = ...`), change significance thresholds (`star.cutoffs = ...`), or export tables directly to HTML or LaTeX (`type = "html"` or `type = "latex"`).
