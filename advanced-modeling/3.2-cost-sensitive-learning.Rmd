@@ -1,0 +1,433 @@
+---
+title: "Topic 3.2: Cost-Sensitive Learning"
+subtitle: "Handling Imbalanced Classes and Unequal Error Costs"
+author: "Advanced Modelling, Master in Computational Social Science"
+date: 'UC3M, 2026'
+output:
+  html_document:
+    theme: cosmo
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 10, fig.height = 6)
+```
+
+# Introduction
+
+In this notebook, we will focus on **cost-sensitive learning** for
+classification problems with imbalanced classes and asymmetric error
+costs.
+
+```{r libraries}
+# Core packages
+library(tidyverse)    # Data manipulation and visualization
+library(caret)        # Model training and evaluation
+library(pROC)         # ROC curve analysis
+
+# Visualization
+library(ggplot2)
+library(patchwork)
+library(viridis)
+
+# Set seed for reproducibility
+set.seed(42)
+```
+
+We will also define two helper functions.
+
+```{r helper-functions}
+# Theoretical decision threshold from the cost matrix in binary classification
+# c00: TN cost, c01: FP cost, c10: FN cost, c11: TP cost
+theoretical_threshold <- function(c01, c10, c00 = 0, c11 = 0) {
+  numerator <- c01 - c00
+  denominator <- (c01 - c00) + (c10 - c11)
+
+  if (denominator <= 0) {
+    stop("Invalid costs: denominator must be positive.")
+  }
+
+  numerator / denominator
+}
+
+# Expected cost using a cost matrix with:
+# rows = actual class, columns = predicted class
+expected_cost <- function(pred, actual, cost_matrix, normalize = TRUE) {
+
+  actual <- factor(actual, levels = rownames(cost_matrix))
+  pred <- factor(pred, levels = colnames(cost_matrix))
+
+  cm <- table(actual, pred)
+  total_cost <- sum(cm * cost_matrix)
+
+  if (normalize) total_cost / sum(cm) else total_cost
+}
+```
+
+------------------------------------------------------------------------
+
+# The Problem of Imbalanced Classes: Simulated Credit Card Fraud Example
+
+In many real-world problems, classes are not equally distributed. This
+causes standard classifiers to: - Favor the majority class - Achieve
+high overall accuracy while performing poorly on minority classes
+
+We will generate a simulated dataset to study imbalance problems,
+supposing that we have a binary classification problem related with
+credit card fraud.
+
+```{r imbalanced-data}
+# Create an imbalanced dataset
+set.seed(42)
+n <- 1000
+
+# Generate features
+X1 <- c(rnorm(950, mean = 0, sd = 1), rnorm(50, mean = 2, sd = 1.5))
+X2 <- c(rnorm(950, mean = 0, sd = 1), rnorm(50, mean = 1.5, sd = 1.5))
+
+# Create dataset
+imbalanced_data <- data.frame(
+  X1 = X1,
+  X2 = X2,
+  Class = factor(c(rep("Legitimate", 950), rep("Fraud", 50)),
+                 levels = c("Legitimate", "Fraud"))
+)
+
+# Check class distribution
+table(imbalanced_data$Class)
+prop.table(table(imbalanced_data$Class))
+
+# Visualize
+ggplot(imbalanced_data, aes(x = X1, y = X2, color = Class)) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Imbalanced Dataset: Fraud Detection",
+       subtitle = "Only 5% of observations are fraud cases") +
+  theme_minimal() +
+  scale_color_manual(values = c("Fraud" = "red", "Legitimate" = "steelblue"))
+```
+
+## The Problem with Standard Classification
+
+We first fit a logistic regression directly on the data
+
+```{r standard-classification}
+# Split data
+set.seed(123)
+train_idx <- createDataPartition(imbalanced_data$Class, p = 0.7, list = FALSE)
+train_imb <- imbalanced_data[train_idx, ]
+test_imb <- imbalanced_data[-train_idx, ]
+
+# Train a standard logistic regression with cross validation
+logit_standard <- train(Class ~ X1 + X2,
+                        data = train_imb,
+                        method = "glm",
+                        family = binomial(),
+                        trControl = trainControl(method = "cv", number = 5))
+
+# Predictions
+pred_standard <- predict(logit_standard, test_imb)
+
+# Confusion matrix
+cm_standard <- confusionMatrix(pred_standard, test_imb$Class, positive = "Fraud")
+cm_standard
+```
+
+**Problem**: High accuracy but poor fraud detection
+
+## Solution 1: Adjusting the Decision Threshold
+
+Instead of using 0.5 as the threshold, we can lower it to catch more
+positive cases.
+
+```{r threshold-adjustment}
+# Get probability predictions from logistic regression
+logit_prob <- train(Class ~ X1 + X2,
+                    data = train_imb,
+                    method = "glm",
+                    family = binomial(),
+                    trControl = trainControl(method = "cv", number = 5, classProbs = TRUE))
+
+# Get probabilities
+probs <- predict(logit_prob, test_imb, type = "prob")
+head(probs)
+
+# Evaluate different thresholds
+thresholds <- seq(0.05, 0.95, by = 0.05)
+results <- data.frame()
+
+for (thresh in thresholds) {
+  pred <- ifelse(probs$Fraud > thresh, "Fraud", "Legitimate")
+  pred <- factor(pred, levels = c("Legitimate", "Fraud"))
+
+  cm <- confusionMatrix(pred, test_imb$Class, positive = "Fraud")
+
+  results <- rbind(results, data.frame(
+    Threshold = thresh,
+    Accuracy = cm$overall["Accuracy"],
+    Sensitivity = cm$byClass["Sensitivity"],  # True Positive Rate
+    Specificity = cm$byClass["Specificity"],   # True Negative Rate
+    Precision = cm$byClass["Precision"]
+  ))
+}
+
+# Visualize threshold effects
+results_long <- results %>%
+  pivot_longer(cols = -Threshold, names_to = "Metric", values_to = "Value")
+
+ggplot(results_long, aes(x = Threshold, y = Value, color = Metric)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(title = "Effect of Decision Threshold on Classification Metrics",
+       subtitle = "Lower threshold = more fraud detected, but more false positives",
+       x = "Probability Threshold", y = "Metric Value") +
+  theme_minimal() +
+  scale_color_viridis_d()
+```
+
+Another way of choosing the threshold is using the **ROC curve**, which
+shows the tradeoff between sensitivity and specificity across all
+thresholds.
+
+Using the `proc::coords()` function we can get the optimal threshold
+according to several methods, such as the Youden's J statistic. (See
+<https://www.rdocumentation.org/packages/pROC/versions/1.19.0.1/topics/coords>
+for details).
+
+```{r roc-curve}
+# Calculate ROC curve
+roc_obj <- roc(test_imb$Class, probs$Fraud, levels = c("Legitimate", "Fraud"))
+
+# Plot ROC curve
+plot(roc_obj, main = "ROC Curve for Fraud Detection",
+     print.thres = TRUE, print.thres.pattern = "Threshold: %.2f\nSens: %.2f\nSpec: %.2f")
+
+# Area Under Curve
+cat("\nAUC:", auc(roc_obj), "\n")
+
+# Find optimal threshold (Youden's J statistic)
+coords <- coords(roc_obj, "best", ret = c("threshold", "sensitivity", "specificity"))
+cat("Optimal threshold:", coords$threshold, "\n")
+cat("At this threshold - Sensitivity:", coords$sensitivity, ", Specificity:", coords$specificity, "\n")
+```
+
+## Solution 2: Cost-Sensitive Learning
+
+When different errors have different costs, we should minimize
+**expected cost** instead of error rate.
+
+Consider the following costs: - **False Negative** (missing fraud): Very
+costly (loosing money due to the fraud) - Cost = 100 - **False
+Positive** (treating a legitimate case as fraud): Moderate cost
+(checking details to confirm it was legitimate) - Cost = 10 - **True
+Positive/Negative**: No cost = 0
+
+```{r cost-matrix}
+# Define cost matrix using the same convention as the slides:
+# rows = actual class, columns = predicted class
+cost_matrix <- matrix(c(
+  0,  10,   # Actual Legitimate: TN = 0, FP = 10
+  100, 0    # Actual Fraud: FN = 100, TP = 0
+), nrow = 2, byrow = TRUE,
+dimnames = list(
+  Actual = c("Legitimate", "Fraud"),
+  Predicted = c("Legitimate", "Fraud")
+))
+
+cat("Cost Matrix:\n")
+print(cost_matrix)
+```
+
+Remember how we derived the optimal thresholds given a cost matrix. For
+a binary classifier with $p = P(Y=1\mid x)$, we compare:
+
+$$
+R(0\mid x) = P(Y=0\mid x)c_{00} + P(Y=1\mid x)c_{10}
+$$ $$
+R(1\mid x) = P(Y=0\mid x)c_{01} + P(Y=1\mid x)c_{11}
+$$
+
+Predict class $1$ when $R(1\mid x) \le R(0\mid x)$, which yields:
+
+$$
+p^* = \frac{c_{01} - c_{00}}{(c_{01} - c_{00}) + (c_{10} - c_{11})}
+$$
+
+If $c_{00}=c_{11}=0$, this simplifies to
+$p^* = \frac{c_{01}}{c_{01}+c_{10}}$.
+
+```{r risk-threshold-derivation}
+# Extract c_ij values from the matrix
+c00 <- cost_matrix["Legitimate", "Legitimate"]  # TN cost
+c01 <- cost_matrix["Legitimate", "Fraud"]       # FP cost
+c10 <- cost_matrix["Fraud", "Legitimate"]       # FN cost
+c11 <- cost_matrix["Fraud", "Fraud"]            # TP cost
+
+p_star_theory <- theoretical_threshold(c01 = c01, c10 = c10, c00 = c00, c11 = c11)
+
+cat(sprintf("Theoretical threshold for this matrix: %.3f\n", p_star_theory))
+```
+
+However, this optimal value assumed one important thing: that we knew
+the theoretical posterior probabilities.
+
+In practice, we can evaluate a grid of thresholds and choose the one
+that minimizes the expected cost value.
+
+```{r cost-optimal-threshold}
+# Evaluate expected cost on a threshold grid
+cost_results <- data.frame()
+
+for (thresh in thresholds) {
+  pred <- ifelse(probs$Fraud > thresh, "Fraud", "Legitimate")
+  pred <- factor(pred, levels = c("Legitimate", "Fraud"))
+
+  expected_cost_value <- expected_cost(
+    pred = pred,
+    actual = test_imb$Class,
+    cost_matrix = cost_matrix,
+    normalize = TRUE
+  )
+
+  cost_results <- rbind(cost_results, data.frame(
+    Threshold = thresh,
+    Expected_Cost = expected_cost_value
+  ))
+}
+
+# Find optimal threshold
+optimal_thresh <- cost_results$Threshold[which.min(cost_results$Expected_Cost)]
+
+# Plot
+ggplot(cost_results, aes(x = Threshold, y = Expected_Cost)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_vline(xintercept = optimal_thresh, linetype = "dashed", color = "red") +
+  annotate("text", x = optimal_thresh + 0.1, y = max(cost_results$Expected_Cost) * 0.8,
+           label = paste("Optimal =", optimal_thresh), color = "red") +
+  labs(title = "Expected Cost vs Decision Threshold",
+       subtitle = "Minimizing total expected misclassification cost",
+       x = "Probability Threshold", y = "Expected Cost per Observation") +
+  theme_minimal()
+
+cat("Cost-optimal threshold:", optimal_thresh, "\n")
+cat("Minimum expected cost:", min(cost_results$Expected_Cost), "\n")
+cat("Theoretical threshold from cost matrix:", round(p_star_theory, 3), "\n")
+```
+
+## Solution 3: Adjusting Prior Probabilities (Bayes Classifiers)
+
+We saw that in Bayesian classifiers we can use balanced priors instead
+of sample priors.
+
+```{r prior-adjustment}
+# LDA with empirical priors (sample imbalance)
+lda_emp <- MASS::lda(Class ~ X1 + X2, data = train_imb)
+
+# LDA with balanced priors
+lda_bal <- MASS::lda(Class ~ X1 + X2, data = train_imb, prior = c(0.5, 0.5))
+
+pred_lda_emp <- predict(lda_emp, test_imb)$class
+pred_lda_bal <- predict(lda_bal, test_imb)$class
+
+cm_lda_emp <- confusionMatrix(pred_lda_emp, test_imb$Class, positive = "Fraud")
+cm_lda_bal <- confusionMatrix(pred_lda_bal, test_imb$Class, positive = "Fraud")
+
+# Show confusion matrices to inspect the FN/FP trade-off directly
+knitr::kable(cm_lda_emp$table,
+             caption = "Confusion Matrix: LDA with Empirical Priors")
+knitr::kable(cm_lda_bal$table,
+             caption = "Confusion Matrix: LDA with Balanced Priors")
+
+prior_comparison <- tibble(
+  Model = c("LDA (empirical priors)", "LDA (balanced priors)"),
+  Accuracy = c(cm_lda_emp$overall["Accuracy"], cm_lda_bal$overall["Accuracy"]),
+  Sensitivity = c(cm_lda_emp$byClass["Sensitivity"], cm_lda_bal$byClass["Sensitivity"]),
+  Specificity = c(cm_lda_emp$byClass["Specificity"], cm_lda_bal$byClass["Specificity"]),
+  Precision = c(cm_lda_emp$byClass["Precision"], cm_lda_bal$byClass["Precision"]),
+  Expected_Cost = c(
+    expected_cost(pred_lda_emp, test_imb$Class, cost_matrix),
+    expected_cost(pred_lda_bal, test_imb$Class, cost_matrix)
+  )
+)
+
+knitr::kable(prior_comparison, digits = 3,
+             caption = "Effect of Prior Probability Adjustment in LDA")
+```
+
+We can see how its slighlty more balanced, but the expected cost does
+not improve too much.
+
+## Solution 4: Resampling (Undersampling and Oversampling)
+
+Regarding some data-level strategies, we can resample our observations.
+Below we compare no resampling, random undersampling, and random
+oversampling. These are done using `caret`. In the undersampling case we
+simply remove some of the majority class observations, while in the
+upsampling case we repeat some of the minority observations. We will
+evaluate the results with cross validation too.
+
+```{r resampling-comparison}
+train_x <- train_imb %>% dplyr::select(X1, X2)
+train_y <- train_imb$Class
+
+train_down <- downSample(x = train_x, y = train_y, yname = "Class")
+train_up <- upSample(x = train_x, y = train_y, yname = "Class")
+
+ctrl_resample <- trainControl(method = "cv", number = 5, classProbs = TRUE)
+
+logit_down <- train(Class ~ ., data = train_down, method = "glm",
+                    family = binomial(), trControl = ctrl_resample)
+
+logit_up <- train(Class ~ ., data = train_up, method = "glm",
+                  family = binomial(), trControl = ctrl_resample)
+
+prob_base <- probs$Fraud
+prob_down <- predict(logit_down, test_imb, type = "prob")[, "Fraud"]
+prob_up <- predict(logit_up, test_imb, type = "prob")[, "Fraud"]
+
+pred_base <- factor(ifelse(prob_base >= 0.5, "Fraud", "Legitimate"),
+                    levels = c("Legitimate", "Fraud"))
+pred_down <- factor(ifelse(prob_down >= 0.5, "Fraud", "Legitimate"),
+                    levels = c("Legitimate", "Fraud"))
+pred_up <- factor(ifelse(prob_up >= 0.5, "Fraud", "Legitimate"),
+                  levels = c("Legitimate", "Fraud"))
+
+cm_base <- confusionMatrix(pred_base, test_imb$Class, positive = "Fraud")
+cm_down <- confusionMatrix(pred_down, test_imb$Class, positive = "Fraud")
+cm_up <- confusionMatrix(pred_up, test_imb$Class, positive = "Fraud")
+
+resampling_results <- tibble(
+  Strategy = c("No resampling", "Downsampling", "Oversampling"),
+  Accuracy = c(cm_base$overall["Accuracy"], cm_down$overall["Accuracy"], cm_up$overall["Accuracy"]),
+  Sensitivity = c(cm_base$byClass["Sensitivity"], cm_down$byClass["Sensitivity"], cm_up$byClass["Sensitivity"]),
+  Specificity = c(cm_base$byClass["Specificity"], cm_down$byClass["Specificity"], cm_up$byClass["Specificity"]),
+  Precision = c(cm_base$byClass["Precision"], cm_down$byClass["Precision"], cm_up$byClass["Precision"]),
+  Expected_Cost = c(
+    expected_cost(pred_base, test_imb$Class, cost_matrix),
+    expected_cost(pred_down, test_imb$Class, cost_matrix),
+    expected_cost(pred_up, test_imb$Class, cost_matrix)
+  )
+)
+
+knitr::kable(resampling_results, digits = 3,
+             caption = "Resampling Strategies at Threshold 0.5")
+```
+
+SMOTE can also be included in `caret` if the required package is
+installed:
+
+```{r smote-optional, eval=FALSE}
+ctrl_smote <- trainControl(method = "cv", number = 5, classProbs = TRUE, sampling = "smote")
+logit_smote <- train(Class ~ X1 + X2, data = train_imb, method = "glm",
+                     family = binomial(), trControl = ctrl_smote)
+```
