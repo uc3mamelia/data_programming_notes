@@ -134,11 +134,17 @@ editor: visual
 
 ## Data Harvesting
 
--   [Data Harvesting 1](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-1.html)
+-   [A primer on Webscraping](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-1.html)
 
--   [Data Harvesting 2](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-2.html)
+-   [Regular Expressions](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-2.html)
 
--   [Data Harvesting 3](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-3.html)
+-   [Case Study: Scraping Spanish Schools in Spain](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-3.html)
+
+-   [Scraping Javascript based website](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-4.html)
+
+-   [APIs](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-5.html)
+
+-   [Introduction to JSON](https://uc3mamelia.github.io/data_programming_notes/data-harvesting/data-harvesting-6.html)
 
 ## Advanced Modeling
 

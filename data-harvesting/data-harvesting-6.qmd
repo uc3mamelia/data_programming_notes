@@ -1,5 +1,5 @@
 ---
-title: "Data Harvesting 6"
+title: "Introduction to JSON"
 format: html
 editor: visual
 ---
@@ -9,8 +9,6 @@ library(jsonlite)
 library(tibble)
 library(tidyr)
 ```
-
-## Introduction to JSON
 
 -   most APIs will return data in Javascript Object Notation (JSON)
 
@@ -161,4 +159,32 @@ json_str <- '
 
 res <- fromJSON(json_str)
 res
+```
+
+The clients are split into two dataframes. The dataframes have the same structure.
+
+![](images/clipboard-489039188.png)
+
+The information is saved as lists within lists. Ways to access them:
+
+```{r}
+# access the client
+res$client1
+
+# access the device
+res$client1$device[[1]]
+
+# access the device location
+res$client1$device[[1]]$location[[1]]
+```
+
+To unnest these things:
+
+```{r}
+all_res <- res |>
+  enframe(name = "client") |>
+  unnest(cols = "value") |>
+  unnest(cols = "device") |>
+  unnest(cols = "location")
+all_res
 ```

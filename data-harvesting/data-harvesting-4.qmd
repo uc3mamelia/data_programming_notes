@@ -22,5 +22,5 @@ blog_link <- gelman_blog_ex()
 ```
 
 ```{r}
-remDr <- rsDriver(browser = "firefox", phantomver = NULL, port = 4345L)
+# remDr <- rsDriver(browser = "firefox", phantomver = NULL, port = 4345L)
 ```
