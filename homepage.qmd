@@ -110,7 +110,11 @@ editor: visual
 
 -   [Sentiment Analysis](https://uc3mamelia.github.io/data_programming_notes/text-mining/2---Sentiment-analysis_SOLVED.html)
 
--   Term Frequency and Lammatize
+-   [Term Frequency](https://uc3mamelia.github.io/data_programming_notes/text-mining/3---Term-frequency_SOLVED.html)
+
+-   [Lemmatize](https://uc3mamelia.github.io/data_programming_notes/text-mining/lemmatize.html)
+
+-   [N Grams](https://uc3mamelia.github.io/data_programming_notes/text-mining/4---N-grams.html)
 
 ## Survey
 

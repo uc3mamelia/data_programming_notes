@@ -1,0 +1,260 @@
+---
+title: "data harvesting 5"
+format: html
+editor: visual
+---
+
+```{r}
+library(scrapex)
+library(httr2)
+library(dplyr)
+library(ggplot2)
+```
+
+## What is an API?
+
+We are moving our data to a computer hosted elsewhere in the world where professionals can take care of making backups of the data and if the computer breaks they can immediately launch a new computer with a copy of the data.
+
+Servers are ON all the time, so we can access the data whenever we want.
+
+Every website in the world has a computer behind it that hosts the data and information showed in the website. The browser prettifies the information and renders it for you. This "dialogue" between your request and the server happens every time someone enters a website.
+
+When you use a browser, the browser makes the request for you. When you webscrape, you make requests yourself. `read_html` and `read_xml` do the requests.
+
+### Anatomy of the GET Request:
+
++----------------------------------+
+| GET / HTTP                       |
+|                                  |
+| User-Agent: \[your browser tag\] |
+|                                  |
+| Host: google.com                 |
+|                                  |
+| Accept: \*/\*                    |
++----------------------------------+
+
+Get request on HTTP, your browser's tag, we indicate the host - the website we are requesting data from, and the format we are able to accept (\*/\* means your browser accepts any format).
+
+### Anatomy of the Response:
+
++---------------------------------------------+
+| HTTP/3 301 Moved Permanently                |
+|                                             |
+| Date: \[date\]                              |
+|                                             |
+| Server: \[their server info\]               |
+|                                             |
+| Location: \[website we pulled from\]        |
+|                                             |
+| Vary: Accept-Encoding                       |
+|                                             |
+| Content-Length: 312                         |
+|                                             |
+| Content-Type: text/html; charset=iso-8859-1 |
+|                                             |
+| \<!DOCTYPE html\>                           |
+|                                             |
+| <html lang="en-us">                         |
+|                                             |
+| ...                                         |
+|                                             |
+| </html>                                     |
++---------------------------------------------+
+
+### Types of Requests:
+
+Most common is GET.
+
+-   **GET**: retrieves whatever information is identified by the URL
+
+-   **POST**: requests data just as GET but allows to enclose data in the "body" of the request (when we fill a form)
+
+-   **HEAD**: identical to GET except the server MUST NOT return a message-body in the response. (checking the header)
+
+-   **PUT**: request that creates a new resource or replaces a resource on the server. (create or update a resource)
+
+-   **DELETE**: deletes a resource on the server
+
+### Anatomy of a POST Request:
+
+|                                                 |
+|-------------------------------------------------|
+| POST /test / HTTP/3                             
+ Host: foo.example                                
+ Content-Type: application/x-www-form-urlencoded  
+ Content-Length: 27                               
+                                                  
+ main_plate=poke_bowl&drinks=water                |
+
+Essentially the same, but with a different header
+
+### Ethics in API:
+
+Excessive requests: servers have a finite amount of bandwidth they can use. Sleep your requests.
+
+Read the terms of service: companies are sharing data freely over the web, but that doesn't mean you can do anything with it.
+
+Authentication: many APIs require authentication. Make sure to do this every time it is needed.
+
+### Why use an API:
+
+-   you can schedule it to download data on a specific interval of time
+
+-   you can persist thousands of requests per minute
+
+-   you can pull real-time data to train a machine learning algorithm or respond to user input
+
+We are using an API from the COVerAGE-DB database which includes confirmed COVID-19 cases, deaths, tests, and vaccines by sex and age.
+
+We want to build a plot.
+
+1.  Launch the API
+
+    ```{r}
+    api_covid <- api_coveragedb()
+    ```
+
+Usually, you won't need to launch an API, but we are using a local API.
+
+It has two endpoints - one for COVID cases for California, Utah, and New York and one for COVID vaccines.
+
+The API also has two parameters - region and sex. Both are required.
+
+The endpoint returns a JSON structured response and usual return codes (200 is successful and 500 is error).
+
+An endpoint is composed of three things:
+
+-   a base URL
+
+-   the endpoint URL (in this case, /api/v1/covid_cases)
+
+-   the parameters in the endpoing which are specified after a ? and each parameter is then concatenated with a &
+
+Building an endpoint:
+
+```{r}
+# COVID cases endpoint
+api_web <- paste0(api_covid$api_web, "/api/v1/covid_cases")
+
+# Filtering only for males in California
+cases_endpoint <- paste0(api_web, "?region=California&sex=m")
+
+cases_endpoint
+```
+
+## Make a request
+
+```{r}
+# COVID cases endpoint
+api_web <- paste0(api_covid$api_web, "/api/v1/covid_cases")
+req <- request(api_web)
+req
+```
+
+The request function from httr2 builds a placeholder for the request. It says it has the endpoint URL, but not the parameters or headers.
+
+```{r}
+req_california_m <-
+  req %>%
+  req_url_query(region = "California", sex = "m")
+
+req_california_m
+```
+
+The function `req_url_query` constructs the endpoint by adding as many parameters as we specify.
+
+```{r}
+req_california_m %>%
+  req_auth_basic(username = "fake name", password = "fake password") %>%
+  req_retry(max_tries = 3, max_seconds = 5)
+```
+
+This adds the header with the code of our authentication, as well as specifying what to do if the request fails for some reason.
+
+When we are happy with the request, we can make it with `req_perform`
+
+```{r}
+resp_california_m <- 
+  req_california_m %>%
+  req_perform()
+
+resp_california_m
+```
+
+We can interpret this request was successful (code 200). Second, the response returned a JSON response. Finally, the body of the request has data, which is now loaded into RAM memory instead of just the harddrive.
+
+All functions for working with the request start with `req_`. Search for functions that begin with this to find them all. All functions relating to the response begin with `resp_`. For example:
+
+```{r}
+resp_status(resp_california_m)
+## [1] 200
+```
+
+Hoe to extract the body containing data from the request:
+
+```{r}
+resp_body_california_m <-
+  resp_california_m %>%
+  resp_body_json(simplifyVector = TRUE) %>%
+  as_tibble()
+
+resp_body_california_m
+```
+
+Visualization:
+
+```{r}
+# To avoid scientific numbering
+options(scipen = 231241231)
+
+resp_body_california_m <-
+  resp_body_california_m %>%
+  mutate(Date = lubridate::ymd(Date)) %>%
+  group_by(Date, Sex) %>%
+  summarize(cases = sum(Value))
+## `summarise()` has grouped output by 'Date'. You can override using the
+## `.groups` argument.
+
+resp_body_california_m %>%
+  ggplot(aes(Date, cases)) +
+  geom_line() +
+  theme_bw()
+```
+
+Now see a trend for females compare to the overall trend:
+
+```{r}
+
+# Perform the same request but for females and grab the JSON result
+resp_body_california_f <-
+  req %>%
+  req_url_query(region = "California", sex = 'f') %>%
+  req_perform() %>%
+  resp_body_json(simplifyVector = TRUE) %>%
+  as_tibble()
+
+# Add the total number of cases per date for females
+resp_body_california_f <-
+  resp_body_california_f %>%
+  mutate(Date = lubridate::ymd(Date)) %>%
+  group_by(Date, Sex) %>%
+  summarize(cases = sum(Value))
+## `summarise()` has grouped output by 'Date'. You can override using the
+## `.groups` argument.
+
+# Combine the female cases with the male cases
+resp_body_california <- bind_rows(resp_body_california_f, resp_body_california_m)
+
+# Visualize both female and male cases
+resp_body_california %>%
+  ggplot(aes(Date, cases, color = Sex, group = Sex)) +
+  geom_line() +
+  theme_bw()
+```
+
+Can you make a request specifying sex but an unavailable region (Florida, for example)
+
+```{r}
+florida_url <- paste0(api_covid$api_web, "/api/v1/covid_vaccines", "?region=Florida")
+resp_fl
+```
