@@ -126,6 +126,8 @@ editor: visual
 
 -   [Paradata](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Paradata.html#/title-slide)
 
+-   [Paradata Exercise](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Excercise_paradata.html)
+
 -   [Class Imbalance Data](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Dealing%20with%20class%20imbalance.html)
 
 -   [Stargazer Example](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Stargazer_example.html)
