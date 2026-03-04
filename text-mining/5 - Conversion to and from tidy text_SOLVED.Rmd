@@ -160,22 +160,22 @@ It seems like all US presidents used "fellow-citizens" at least once in their sp
 Since we have our tidy dataframe, we can easily perform a tf_idf.
 
 ```{r}
-speeches_tf_idf <- tidy_speeches %>%
-  bind_tf_idf(term, document, count) %>%
+speeches_tf_idf <- tidy_speeches |>
+  bind_tf_idf(term, document, count) |>
   arrange(desc(tf_idf))
 
-speeches_tf_idf
+speeches_tf_idfç
 ```
 
 Let's choose four representative speeches to analyse the most distinctive words.
 
 ```{r}
-speeches_tf_idf %>%
-    filter(document %in% c("1945-Roosevelt", "1961-Kennedy","2013-Obama", "2021-Biden")) %>%
-  group_by(document) %>% 
-  slice_max(tf_idf, n = 15) %>% 
-  ungroup() %>%
-  mutate(word = reorder(term, tf_idf)) %>%
+speeches_tf_idf |>
+    filter(document %in% c("1945-Roosevelt", "1961-Kennedy","2013-Obama", "2021-Biden")) |>
+  group_by(document) |>
+  slice_max(tf_idf, n = 15) |>
+  ungroup() |>
+  mutate(word = reorder(term, tf_idf)) |>
   ggplot(aes(tf_idf, term, fill = document)) +
   geom_col(show.legend = FALSE) +
   labs(x = "tf-idf", y = NULL) +
@@ -198,6 +198,14 @@ In 1961, John F. Kennedy was not talking about separate `sides`, but about mutua
 
 ------------------------------------------------------------------------
 
+Obama's Speech:
+
+*Today we continue a never-ending journey to bridge the meaning of those words with the realities of our time.  For history tells us that while these truths may be self-evident, they’ve never been self-executing; that while freedom is a gift from God, it must be secured by His people here on Earth.  (Applause.)  The patriots of 1776 did not fight to replace the tyranny of a king with the privileges of a few or the rule of a mob.  They gave to us a republic, a government of, and by, and for the people, entrusting each generation to keep safe our founding creed.*  
+
+Biden's Speech:
+
+*I know speaking of unity can sound to some like a foolish fantasy these days. I know the forces that divide us are deep and they are real. But I also know they are not new. Our history has been a constant struggle between the American ideal that we all are created equal, and the harsh, ugly reality that racism, nativism, fear, demonization have long torn us apart.*
+
 #### Count words by year
 
 This is an easy task with a tricky point.
@@ -207,11 +215,11 @@ From the inaugural speeches corpus, we want to extract the year out of each docu
 ```{r}
 library(tidyr)
 
-year_term_counts <- tidy_speeches %>%
+year_term_counts <- tidy_speeches |>
   #we extract just the digit out of the name of each document
-  extract(document, "year", "(\\d+)", convert = TRUE) %>%
+  extract(document, "year", "(\\d+)", convert = TRUE) |>
   #we group by year
-  group_by(year) %>%
+  group_by(year) |>
   #we create a new column with the total sum by year
   mutate(year_total = sum(count))
 
@@ -223,11 +231,11 @@ It seems to work OK. Easy so far.
 But note that in this tibble **we do not have all words**. We are working originally from a sparse matrix, so for the word count we are losing all zeros: words not appearing in some documents. To do this analysis we need the whole matrix, so we use the function `complete()`.
 
 ```{r}
-year_term_counts <- tidy_speeches %>%
-  extract(document, "year", "(\\d+)", convert = TRUE) %>%
+year_term_counts <- tidy_speeches |>
+  extract(document, "year", "(\\d+)", convert = TRUE) |>
   #we complete the matrix with zeros to turn into a dense matrix
-  complete(year, term, fill = list(count = 0)) %>%
-  group_by(year) %>%
+  complete(year, term, fill = list(count = 0)) |>
+  group_by(year) |>
   mutate(year_total = sum(count))
 
 year_term_counts
@@ -242,9 +250,9 @@ Another important finding here: dfm() base **tokenization settings** are out of 
 Over the `year_term_counts` dataframe, explore how a word has changed its frequency over time in these inaugural speeches can be a good insight too. We can try with "God", "America", "constitution" or "freedom".
 
 ```{r}
-year_term_counts %>%
+year_term_counts |>
   #we filter by our terms vector
-  filter(term %in% c("god", "america", "constitution", "freedom")) %>%
+  filter(term %in% c("god", "america", "constitution", "freedom")) |>
   ggplot(aes(year, count / year_total)) +
   geom_point() +
   geom_smooth() +
@@ -255,14 +263,26 @@ year_term_counts %>%
 
 We can see that `America` is used much more often nowadays. The word `God` is stable, and used more and more across the years, and the word `freedom` has had an increasing use during the 20th century, dropping now. Constitution is less and less used.
 
+```{r}
+year_term_counts |>
+  #we filter by our terms vector
+  filter(term %in% c("peace", "win", "equality", "democracy")) |>
+  ggplot(aes(year, count / year_total)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~ term, scales = "free_y") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(y = "% frequency of word in inaugural address")
+```
+
 ------------------------------------------------------------------------
 
 **Exercise**: try the same analysis with different words. Think of 3-4 interesting concepts that might have changed over time in US inaugural speeches and repeat the plot.
 
 ```{r}
-year_term_counts %>%
+year_term_counts |>
   #we filter by our terms vector
-  filter(term %in% c("guns", "people", "europe", "war")) %>%
+  filter(term %in% c("guns", "people", "europe", "war")) |>
   ggplot(aes(year, count / year_total)) +
   geom_point() +
   geom_smooth() +
@@ -282,7 +302,7 @@ Some text mining tools expect tidy text, and some other expect a matrix. Look ag
 We can take the tidied newspaper articles dataset and cast it back into a document-term matrix using the [`cast_dtm()`](https://rdrr.io/pkg/tidytext/man/document_term_casters.html) function.
 
 ```{r}
-dtm_ap <- tidy_ap %>%
+dtm_ap <- tidy_ap |>
   #we use the cast function with the three columns needed
   cast_dtm(document, term, count)
 
@@ -292,7 +312,7 @@ dtm_ap
 Similarly, we could cast the tidy text into a `dfm` object from quanteda's dfm with [`cast_dfm()`](https://rdrr.io/pkg/tidytext/man/document_term_casters.html).
 
 ```{r}
-dfm_ap <- tidy_ap %>%
+dfm_ap <- tidy_ap |>
   cast_dfm(document, term, count)
 
 dfm_ap
@@ -303,10 +323,10 @@ Same thing can be done with Austen books:
 ```{r}
 library(janeaustenr)
 
-austen_dtm <- austen_books() %>%
+austen_dtm <- austen_books() |>
   #first we create the tidy format, tokenize and count
-  unnest_tokens(word, text) %>%
-  count(book, word) %>%
+  unnest_tokens(word, text) |>
+  count(book, word) |>
   #second we convert to the matrix: we use the cast function with the three columns needed
   cast_dtm(book, word, n)
 
@@ -329,20 +349,27 @@ Download any book from Project Gutenberg, create the tidy format filtering stopw
 
 ```{r}
 library(gutenbergr)
-bronte <- gutenberg_download(c(1260, 768, 969, 9182,767), mirror = "http://mirror.csclub.uwaterloo.ca/gutenberg/")
+nonfict <- gutenberg_download(c(1228, 205, 4300), mirror = "http://mirror.csclub.uwaterloo.ca/gutenberg/")
 ```
+
+|  |  |  |  |
+|----|----|----|----|
+| **Gutenberg ID** | **Title** | **Author** | **Genre/Topic** |
+| **1228** | *On the Origin of Species* | Charles Darwin | Science / Biology |
+| **205** | *Walden* | Henry David Thoreau | Memoir / Philosophy |
+| **4300** | *Ulysses* (Intro/Preface)\* | James Joyce / Various | Literary Criticism |
 
 ```{r}
-bronte_dtm <- bronte %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words) %>%
-  count(gutenberg_id, word) %>%
+nonfict_dtm <- nonfict |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words) |>
+  count(gutenberg_id, word) |>
   cast_dtm(gutenberg_id,word,n)
   
-bronte_dtm
+nonfict_dtm
 ```
 
-Sparsity in the Bronte's novels is 55%, slightly higher but very similar to Austen's, so we can conclude that they had a similarly rich lexical selection.
+Sparsity in the non-fiction books is 56%, slightly higher but very similar to Austen's, so we can conclude that they had a similarly rich lexical selection.
 
 ------------------------------------------------------------------------
 
@@ -378,25 +405,25 @@ Although more complex, this is very similar to the tidy format, and is **prepare
 We can, for example, find the most common 50 words across the articles:
 
 ```{r}
-acq_tokenized <- acq_tidy %>%
+acq_tokenized <- acq_tidy |>
   #we tokenize
-  unnest_tokens(word, text) %>%
+  unnest_tokens(word, text) |>
   #we filter stopwords
   anti_join(stop_words, by = "word")
 
 #we count and order
-acq_tokenized %>%
+acq_tokenized |>
   count(word, sort = TRUE)
 ```
 
 Or find the most distinctive words for each document.
 
 ```{r}
-acq_tokenized %>%
+acq_tokenized |>
   #we keep the id column as the document
-  count(id, word) %>%
+  count(id, word) |>
   #we perform tf-idf
-  bind_tf_idf(word, id, n) %>%
+  bind_tf_idf(word, id, n) |>
   #we arrange in descending order
   arrange(desc(tf_idf))
 ```
@@ -412,7 +439,7 @@ We will be working with a mixed dataset of real and fake news called [news.csv](
 Quanteda has a very useful tool called [readtext](https://github.com/kbenoit/readtext)(), which is an easy way to **read text data into R**, from almost any input format. We just need to download the file news.csv, place it in the same folder as this notebook, and read it.
 
 ```{r}
-install.packages("readtext")
+# install.packages("readtext")
 ```
 
 This function takes a text file or fileset, and returns a type of dataframe that can be used directly with the `corpus()` constructor function, to create a **quanteda** corpus object.
@@ -583,7 +610,7 @@ fakenews_dfm
 The difference between lemmatization and stemming can be explained briefly, even though the goal of both techniques is to **standardize words** so that different forms of the same word can be treated as the same token.
 
 | Lemmatization | Stemming |
-|:--:|:--:|
+|:--------------------------------------------------:|:---------------------------------------------------:|
 | Involves reducing words to their canonical form or lemma | Involves stripping the affixes from a word to obtain its root or stem |
 | A lemma is always an existing word that can be found in a dictionary | The resulting stem may not be a real word, but it represents the base form of the word |
 | Is slower and more accurate in its reduction of words | Is typically faster and more aggressive in its reduction of words |
@@ -603,11 +630,11 @@ topfeatures(fakenews_dfm, 20)
 For a `DFM` object, plotting a wordcloud is done through the function `textplot_wordcloud()`, that includes some arguments to make it pretty. We will need the packages `quanteda.textplots` and `RColorBrewer`.
 
 ```{r}
-install.packages("RColorBrewer")
+# install.packages("RColorBrewer")
 ```
 
 ```{r}
-install.packages("quanteda.textplots")
+# install.packages("quanteda.textplots")
 ```
 
 ```{r}

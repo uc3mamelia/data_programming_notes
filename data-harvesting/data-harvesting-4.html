@@ -103,9 +103,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We are going to use <code>RSelenium</code> that allows the bot to behave like a human and click on elements.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSelenium)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(selenium)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scrapex)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xml2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scrapex)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xml2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: package 'xml2' was built under R version 4.5.2</code></pre>
 </div>
@@ -145,11 +144,339 @@ Attaching package: 'tidyr'</code></pre>
 
     extract</code></pre>
 </div>
+</div>
+<section id="using-selenium-to-open-a-browser" class="level2">
+<h2 class="anchored" data-anchor-id="using-selenium-to-open-a-browser">Using Selenium to Open a Browser</h2>
+<p>Selenium opens a browser and clicks on parts of the pages as if it was human. After this, use <code>xml2</code> to extract the data needed.</p>
+<div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>blog_link <span class="ot">&lt;-</span> <span class="fu">gelman_blog_ex</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>Save the blog link.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remDr &lt;- rsDriver(browser = "firefox", phantomver = NULL, port = 4345L)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>remDr <span class="ot">&lt;-</span> <span class="fu">rsDriver</span>(<span class="at">browser =</span> <span class="st">"firefox"</span>, <span class="at">phantomver =</span> <span class="cn">NULL</span>, <span class="at">port =</span> <span class="dv">3434</span>L)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>checking Selenium Server versions:</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: PREDOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: DOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: POSTDOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>checking chromedriver versions:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: PREDOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: DOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: POSTDOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>checking geckodriver versions:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: PREDOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: DOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>BEGIN: POSTDOWNLOAD</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Connecting to remote server"
+$acceptInsecureCerts
+[1] FALSE
+
+$browserName
+[1] "firefox"
+
+$browserVersion
+[1] "147.0.3"
+
+$`moz:accessibilityChecks`
+[1] FALSE
+
+$`moz:buildID`
+[1] "20260203002554"
+
+$`moz:geckodriverVersion`
+[1] "0.36.0"
+
+$`moz:headless`
+[1] FALSE
+
+$`moz:platformVersion`
+[1] "24.6.0"
+
+$`moz:processID`
+[1] 78379
+
+$`moz:profile`
+[1] "/var/folders/95/wmp3s5dx1kdg3z3sqmxkgrv80000gn/T/rust_mozprofilePN1gbe"
+
+$`moz:shutdownTimeout`
+[1] 60000
+
+$`moz:webdriverClick`
+[1] TRUE
+
+$`moz:windowless`
+[1] FALSE
+
+$pageLoadStrategy
+[1] "normal"
+
+$platformName
+[1] "mac"
+
+$proxy
+named list()
+
+$setWindowRect
+[1] TRUE
+
+$strictFileInteractability
+[1] FALSE
+
+$timeouts
+$timeouts$implicit
+[1] 0
+
+$timeouts$pageLoad
+[1] 300000
+
+$timeouts$script
+[1] 30000
+
+
+$unhandledPromptBehavior
+[1] "dismiss and notify"
+
+$userAgent
+[1] "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:147.0) Gecko/20100101 Firefox/147.0"
+
+$webdriver.remote.sessionid
+[1] "4093fdc2-60f0-482a-a685-d4cbf496b405"
+
+$id
+[1] "4093fdc2-60f0-482a-a685-d4cbf496b405"</code></pre>
+</div>
+</div>
+<p>This opens an empty browser.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>remDr<span class="sc">$</span>client<span class="sc">$</span><span class="fu">navigate</span>(<span class="fu">prep_browser</span>(blog_link))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This opens the blog link.</p>
+</section>
+<section id="using-selenium-to-click-on-something" class="level2">
+<h2 class="anchored" data-anchor-id="using-selenium-to-click-on-something">Using Selenium to Click on Something</h2>
+<p>The most effective way to navigate in <code>RSelenium</code> is to use XPath to find parts of the website that you want perform an action and then use some of the methods to click, send or submit something on the website.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>blog_link <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_html</span>() <span class="sc">|&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"(//h1[@class='entry-title']//a)[1]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{xml_nodeset (1)}
+[1] &lt;a href="https://statmodeling.stat.columbia.edu/2022/10/16/mit-built-a-th ...</code></pre>
+</div>
+</div>
+<p><code>read_html()</code> downloads the HTML source code. <code>xml_find_all</code> finds all a links within h1 tags with the class “entry-title”. This saves the link, but does not click on it. We need to use Selenium to click on it.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Since we'll use the client a lot let's save it on a separate object</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>driver <span class="ot">&lt;-</span> remDr<span class="sc">$</span>client</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//h1[@class='entry-title']//a)[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This code clicks on the element selected. <code>findElement()</code> finds the element and <code>clickElement()</code> clicks it.</p>
+</section>
+<section id="extract-the-html-code" class="level2">
+<h2 class="anchored" data-anchor-id="extract-the-html-code">Extract the HTML Code</h2>
+<p>To extract the HTML code and extract information we need to use getPageSource() and extract the appropriate slot.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>page_source <span class="ot">&lt;-</span> driver<span class="sc">$</span><span class="fu">getPageSource</span>()[[<span class="dv">1</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>page_source</code> is a string that contains all the HTML source code of the website. We can then use <code>read_html()</code> to read it.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>html_code <span class="ot">&lt;-</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  page_source <span class="sc">|&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_html</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="finding-specific-information" class="level2">
+<h2 class="anchored" data-anchor-id="finding-specific-information">Finding Specific Information</h2>
+<p>Let’s assume we want to find all categories that are associated with this post. The categories are in the bottom of the post:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-3819731463.png" class="img-fluid figure-img"></p>
+<figcaption>The categories are in an a tag that has a href = “category”.</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>categories_first_post <span class="ot">&lt;-</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  html_code <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//footer[@class='entry-meta']//a[contains(@href, 'category')]"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_text</span>()</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>categories_first_post</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Zombies"</code></pre>
+</div>
+</div>
+<p>This extracts all categories of the post. Let’s extract the date.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>entry_date <span class="ot">&lt;-</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  html_code <span class="sc">|&gt;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//time[@class='entry-date']"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_text</span>() <span class="sc">|&gt;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parse_date_time</span>(<span class="st">"%B %d, %Y %I:%M %p"</span>)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>entry_date</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2022-10-16 09:31:00 UTC"</code></pre>
+</div>
+</div>
+<p>Note of the use of <code>parse_date_time</code> and the time format (all the <code>%</code> symbols) to convert the string of date/time into R. With that information we can create a clean data frame of entry dates with their respective categories in a list column:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>final_res <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">entry_date =</span> entry_date, <span class="at">categories =</span> <span class="fu">list</span>(categories_first_post))</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>final_res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  entry_date          categories
+  &lt;dttm&gt;              &lt;list&gt;    
+1 2022-10-16 09:31:00 &lt;chr [1]&gt; </code></pre>
+</div>
+</div>
+</section>
+<section id="making-a-loop" class="level2">
+<h2 class="anchored" data-anchor-id="making-a-loop">Making a Loop</h2>
+<p>With this code, let’s say we want to loop it over each blog post. We need Selenium to go back to the main page of the blog between extractions. Use <code>goBack()</code> to do this.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>driver<span class="sc">$</span><span class="fu">goBack</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now let’s make the loop:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>collect_categories <span class="ot">&lt;-</span> <span class="cf">function</span>(page_source) {</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read source code of blog post</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  html_code <span class="ot">&lt;-</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    page_source <span class="sc">|&gt;</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_html</span>()</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extract categories</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>  categories_first_post <span class="ot">&lt;-</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>    html_code <span class="sc">|&gt;</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xml_find_all</span>(<span class="st">"//footer[@class='entry-meta']//a[contains(@href, 'category')]"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xml_text</span>()</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Extract entry date</span></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>  entry_date <span class="ot">&lt;-</span></span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>    html_code <span class="sc">|&gt;</span></span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xml_find_all</span>(<span class="st">"//time[@class='entry-date']"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xml_text</span>() <span class="sc">|&gt;</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">parse_date_time</span>(<span class="st">"%B %d, %Y %I:%M %p"</span>)</span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Collect everything in a data frame</span></span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a>  final_res <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">entry_date =</span> entry_date, <span class="at">categories =</span> <span class="fu">list</span>(categories_first_post))</span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>    final_res</span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Get all number of blog posts on this page</span></span>
+<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>num_blogs <span class="ot">&lt;-</span></span>
+<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>  blog_link <span class="sc">|&gt;</span></span>
+<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_html</span>() <span class="sc">|&gt;</span></span>
+<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xml_find_all</span>(<span class="st">"//h1[@class='entry-title']//a"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">length</span>()</span>
+<span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-32"><a href="#cb41-32" aria-hidden="true" tabindex="-1"></a>blog_posts <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb41-33"><a href="#cb41-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-34"><a href="#cb41-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop over each post, extract the categories and go back to the main page</span></span>
+<span id="cb41-35"><a href="#cb41-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(num_blogs)) {</span>
+<span id="cb41-36"><a href="#cb41-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(i)</span>
+<span id="cb41-37"><a href="#cb41-37" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Go to the next blog post</span></span>
+<span id="cb41-38"><a href="#cb41-38" aria-hidden="true" tabindex="-1"></a>  xpath <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"(//h1[@class='entry-title']//a)["</span>, i, <span class="st">"]"</span>)</span>
+<span id="cb41-39"><a href="#cb41-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
+<span id="cb41-40"><a href="#cb41-40" aria-hidden="true" tabindex="-1"></a>  driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> xpath)<span class="sc">$</span><span class="fu">clickElement</span>()</span>
+<span id="cb41-41"><a href="#cb41-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-42"><a href="#cb41-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get the source code</span></span>
+<span id="cb41-43"><a href="#cb41-43" aria-hidden="true" tabindex="-1"></a>  page_source <span class="ot">&lt;-</span> driver<span class="sc">$</span><span class="fu">getPageSource</span>()[[<span class="dv">1</span>]]</span>
+<span id="cb41-44"><a href="#cb41-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-45"><a href="#cb41-45" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Grab all categories</span></span>
+<span id="cb41-46"><a href="#cb41-46" aria-hidden="true" tabindex="-1"></a>  blog_posts[[i]] <span class="ot">&lt;-</span> <span class="fu">collect_categories</span>(page_source)</span>
+<span id="cb41-47"><a href="#cb41-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-48"><a href="#cb41-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Go back to the main page before next iteration</span></span>
+<span id="cb41-49"><a href="#cb41-49" aria-hidden="true" tabindex="-1"></a>  driver<span class="sc">$</span><span class="fu">goBack</span>()</span>
+<span id="cb41-50"><a href="#cb41-50" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1
+[1] 2
+[1] 3
+[1] 4
+[1] 5
+[1] 6
+[1] 7
+[1] 8
+[1] 9
+[1] 10
+[1] 11
+[1] 12
+[1] 13
+[1] 14
+[1] 15
+[1] 16
+[1] 17
+[1] 18
+[1] 19
+[1] 20</code></pre>
+</div>
+</div>
+<p>While your code runs, open the browser and enjoy the show. Your browser will start working it self as if a ghost were scrolling down and clicking on each blog post. When it finishes, we’ll have a list of all categories in the last 20 blog posts. Let’s combine those and get a count of the most used categories:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>combined_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(blog_posts)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>combined_df <span class="sc">|&gt;</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(categories) <span class="sc">|&gt;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(categories) <span class="sc">|&gt;</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>n)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 0 × 2
+# ℹ 2 variables: categories &lt;???&gt;, n &lt;int&gt;</code></pre>
+</div>
+</div>
+<p>This should have a tibble with the data for categories, but it isn’t working.</p>
+</section>
+<section id="other-functions" class="level2">
+<h2 class="anchored" data-anchor-id="other-functions">Other Functions</h2>
+<p>Selenium can also fill out forms. These are some of the methods available:</p>
+<ul>
+<li><p>driver$Navigate(“http://somewhere.com/”)</p></li>
+<li><p>driver$goBack()</p></li>
+<li><p>driver$goForward()</p></li>
+<li><p>driver$refresh()</p></li>
+<li><p>driver$getTitle()</p></li>
+<li><p>driver$getCurrentUrl()</p></li>
+<li><p>driver$getStatus()</p></li>
+<li><p>driver$screenshot(display = TRUE)</p></li>
+<li><p>driver$getAllCookies()</p></li>
+<li><p>driver$deleteCookieNamed(“PREF”)</p></li>
+<li><p>driver$switchToFrame(“string|number|null|WebElement”)</p></li>
+<li><p>driver$getWindowHandles()</p></li>
+<li><p>driver$getCurrentWindowHandle()</p></li>
+<li><p>driver$switchToWindow(“windowId”)</p></li>
+</ul>
+<p>You can do all sorts of things like taking a screenshot of the website, grabbing the URL, delete cookies and so much more.</p>
+</section>
+<section id="filling-out-forms" class="level2">
+<h2 class="anchored" data-anchor-id="filling-out-forms">Filling out forms</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//h1[@class='entry-title']//a)[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
 
 </main>
 <!-- /main column -->
