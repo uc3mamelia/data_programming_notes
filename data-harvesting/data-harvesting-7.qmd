@@ -1,0 +1,262 @@
+---
+title: "Case study: Exploring the Amazon API"
+format: html
+editor: visual
+---
+
+Amazon has a lot of APIs, some public and some internal. We are going to pretend that we have subscribed to an amazon API.
+
+```{r}
+library(scrapex)
+library(httr2)
+library(dplyr)
+```
+
+Launch the API
+
+```{r}
+az_api <- api_amazon()
+```
+
+The API has seven endpoints. They are all GET, meaning we don't need to send anything. We might need to add parameters in order to get some of the data.
+
+This also grants us access to the tokens we need for security. The token forces the user to identify themself every time it is used. It is linked to your email.
+
+In this case, the API is fake so any token will work. How do you actually add a token? This depends on the API. You’ll need to read the documentation and find where the token should be specified. For many APIs, the token needs to be set as a header.
+
+```{r}
+token <- amazon_bearer_tokens()
+token
+```
+
+For this one, the token should be set under the header `Authorization` and must have the word `Bearer` in front of it. Bearer is the type of token. It is a more secure version.
+
+```{r}
+main_api_path <- paste0(az_api$api_web, "/api/v1/amazon/")
+header_token <- paste0("Bearer ", token)
+
+req <-
+  main_api_path |>
+  request() |>
+  req_headers(Authorization = header_token)
+
+req
+```
+
+Authorization will be \<redacted\> because it is sensitive information.
+
+## Author Endpoint
+
+This endpoint doesn't have any parameters to be added.
+
+```{r}
+req_res <- req |> req_url_path_append("authors")
+req_res
+```
+
+This adds author to the end of the URL.
+
+```{r}
+res <- req_res |> req_perform()
+res
+```
+
+This runs the request and gives us a 200 response to show it was successful.
+
+```{r}
+res |>
+  resp_body_json(simplifyVector = TRUE)
+```
+
+This prints the body of the data we retrieved. We have five authors and five genres.
+
+We want to retrieve the books of the authors.
+
+## Books endpoint
+
+We have two parameters required, author and genre. We can just choose one of the options from our table.
+
+```{r}
+req_res <-
+  req |>
+  req_url_path_append("books") |>
+  req_url_query(author = "Stuart Armstrong", genre = "Sunt")
+
+req_res
+```
+
+This is adding the parameters after the query and prepping it to be run.
+
+```{r}
+resp <- req_perform(req_res) |> 
+  resp_body_json(simplifyVector = TRUE) |>
+  as_tibble()
+resp
+```
+
+This is getting the information and converting it to a tibble. We can see it is all the same book. The different is the user id of the person accessing the book.
+
+```{r}
+resp |> select(-user_id) |> 
+  distinct() |> 
+  as.data.frame()
+```
+
+This removes user id from the table and gets only the distinct values.
+
+## Texts Endpoint
+
+```{r}
+resp <-
+  req |>
+  req_url_path_append("texts") |>
+  req_url_query(author = "Stuart Armstrong") |>
+  req_perform() |>
+  resp_body_json(simplifyVector = TRUE)
+
+resp
+```
+
+This would retrieve the text of the book.
+
+## Product Users Endpoint
+
+We need to provide the user_id to see their behavior. Since we have this in the previous table from authors, we are going to pull one.
+
+```{r}
+resp <-
+  req |>
+  req_url_path_append("products_users") |>
+  req_url_query(user_id = 199) |>
+  req_perform() |>
+  resp_body_json(simplifyVector = TRUE)
+
+resp
+```
+
+The user ID is incorrect in the fake API, so the user id is wrong always. Ignoring that...
+
+It retrieves the product id, price, taxes paid, tags describing the book, etc. We don't have the name of the book. We have to retrieve that from another database.
+
+## Products Endpoint
+
+```{r}
+resp <-
+  req |>
+  req_url_path_append("products") |>
+  req_url_query(product_id = 74) |>
+  req_perform() |>
+  resp_body_json(simplifyVector = TRUE)
+
+resp
+```
+
+We are using the product id we retrieved from the previous response, 74. We have retrieved the name of the book.
+
+## User Behavior Endpoint
+
+We have two parameters. Only one of them is required (one or the other). One parameter is a string, the other is an integer.
+
+```{r}
+resp <-
+  req |>
+  req_url_path_append("users") |>
+  req_url_query(user_id = 319) |>
+  req_perform() |>
+  resp_body_json(simplifyVector = TRUE) |>
+  as_tibble()
+
+resp
+```
+
+This pulls the information for user 319. It converts it into a tibble.
+
+It pulls the country, mac address, and ip address. This is the information of the user device.
+
+We can run the same query, but instead of adding the user id, add the country and retrieve a list of users that are in that country.
+
+```{r}
+resp <-
+  req |>
+  req_url_path_append("users") |>
+  req_url_query(country = "Germany") |>
+  req_perform() |>
+  resp_body_json(simplifyVector = TRUE) |>
+  as_tibble()
+
+resp
+```
+
+## Exercises
+
+1.  Which customers have read the most books from the database? Is there even a customer who has read the most? Your output should be all customers and the number of books they’ve read.
+
+-   Use authors and genres from authors endpoint
+
+-   Loop all pairs from books endpoint
+
+-   Get list of user_id
+
+```{r}
+authors_df <- req |>
+  req_url_path_append("authors") |>
+  req_perform() |>
+  resp_body_json(simplifyVector = TRUE)
+
+all_user_ids <- c()
+
+for (i in seq_len(nrow(authors_df))) {
+  author_name <- authors_df$author[i]
+  author_genre <- authors_df$genre[i]
+  
+  books <- req |>
+    req_url_path_append("books") |>
+    req_url_query(author = author_name, genre = author_genre) |>
+    req_perform() |>
+    resp_body_json(simplifyVector = TRUE) |>
+    as_tibble()
+  
+  all_user_ids <- c(all_user_ids, books$user_id)
+}
+
+table(all_user_ids)
+```
+
+2.  From all products that were bought (this means all users who bought any products), which are the most common tags? Similarly to the previous exercise, you need to end up with a vector with frequency of categories throughout all products.
+
+```{r}
+unique_users <- unique(all_user_ids)
+all_tags <- c()
+
+for (uid in unique_users) {
+  products_user <- req |>
+    req_url_path_append("products_users") |>
+    req_url_query(user_id = uid) |>
+    req_perform() |>
+    resp_body_json(simplifyVector = TRUE) |>
+    as_tibble()
+  
+  all_tags <- c(all_tags, unlist(products_user$tags))
+}
+
+sort(table(all_tags), decreasing = TRUE)
+```
+
+3.  Can you create a function that when passed the ID of a user, returns the unique names of all the products that user bought?
+
+```{r}
+all_user_products <- function(user_id) {
+  products_bought <- req |>
+    req_url_path_append("products_users") |>
+    unique()
+}
+```
+
+4.  Can you make a request to the `users` endpoint and provide both a `user_id` and the `country`? What does the status code mean? Can you look it up online? How can you fix this?
+
+```{r}
+resp <- req |>
+  req_url_path_append("users") |>
+  req_url_query(user_id = 319, country = "Germany") |>
+  req_perform()
+```

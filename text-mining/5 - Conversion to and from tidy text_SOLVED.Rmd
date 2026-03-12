@@ -2,16 +2,7 @@
 title: "5 - Conversion to and from tidytext_SOLVED"
 course: Text Mining - MUCSS 25/26
 date: "`r Sys.Date()`"
-output:
-  html_document: 
-    toc_depth: 10
-    fig_width: 15
-    fig_height: 8
-    df_print: default
 instructor: Carmen Torrijos
-based_on: tidytextmining.com
-editor_options: 
-  chunk_output_type: inline
 ---
 
 # Conversion to and from tidytext
@@ -164,7 +155,7 @@ speeches_tf_idf <- tidy_speeches |>
   bind_tf_idf(term, document, count) |>
   arrange(desc(tf_idf))
 
-speeches_tf_idfç
+speeches_tf_idf
 ```
 
 Let's choose four representative speeches to analyse the most distinctive words.
@@ -353,7 +344,7 @@ nonfict <- gutenberg_download(c(1228, 205, 4300), mirror = "http://mirror.csclub
 ```
 
 |  |  |  |  |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | **Gutenberg ID** | **Title** | **Author** | **Genre/Topic** |
 | **1228** | *On the Origin of Species* | Charles Darwin | Science / Biology |
 | **205** | *Walden* | Henry David Thoreau | Memoir / Philosophy |
@@ -397,7 +388,7 @@ Good news is that we can use the [`tidy()`](https://generics.r-lib.org/reference
 
 ```{r}
 acq_tidy <- tidy(acq)
-View(acq_tidy)
+acq_tidy
 ```
 
 Although more complex, this is very similar to the tidy format, and is **prepared to be used with tidy tools**.
@@ -448,7 +439,7 @@ This function takes a text file or fileset, and returns a type of dataframe that
 library(readtext)
 
 news <- readtext("news.csv")
-View(news)
+news
 ```
 
 The `corpus` object in `quanteda` needs to know where exactly is the text to analyze. This is the most important column, indicated with the argument `text_field`, and all the rests are treated as metadata. In this case, our text column is called **V3**.
@@ -459,7 +450,7 @@ First thing we need to do is drop the column we don't really need.
 
 ```{r}
 news <- news[-c(2)]
-View(news)
+news
 ```
 
 Second thing is to substitute the header by the first row.
@@ -472,14 +463,14 @@ colnames(news) <- as.character(unlist(news[1,]))
 # remove the first row from the dataset
 news <- news[-1,]
 
-View(news)
+news
 ```
 
 The problem we've got now is that we need to restore the doc_id header. Let's change the name of the first column.
 
 ```{r}
 colnames(news)[colnames(news) == "news.csv.1"] <- "doc_id"
-View(news)
+news
 ```
 
 The corpus is OK to work now. See that numbers in the doc_id column are not correlating, but we don't want to change all docs id. It is more convenient to keep them with their real IDs from the original dataset, just in case.
@@ -532,6 +523,8 @@ tokens(news_corpus)
 tokens(news_corpus["text4"], remove_numbers=TRUE, remove_punct=TRUE, remove_separators=TRUE)
 ```
 
+If we set remove_separators as false, we include spaces as a token.
+
 By default we are tokenizing at the word level, but the `what` argument also allows to tokenize characters or sentences.
 
 ```{r}
@@ -541,6 +534,8 @@ tokens(news_corpus["text4"], what = "character")
 ```{r}
 tokens(news_corpus["text4"], what = "sentence")
 ```
+
+This doesn't work great because ". -" doesn't register as the end of a sentence.
 
 #### Keyword in context
 
@@ -572,6 +567,8 @@ kwic_result
 kwic_result <- kwic(tokens(news_corpus),"community*", window=8)
 kwic_result
 ```
+
+We can see community is also including "Community", or "community's".
 
 ```{r}
 kwic_result <- kwic(tokens(corpus_subset(news_corpus, label == "FAKE")), "friendship", window=8) 
@@ -610,7 +607,7 @@ fakenews_dfm
 The difference between lemmatization and stemming can be explained briefly, even though the goal of both techniques is to **standardize words** so that different forms of the same word can be treated as the same token.
 
 | Lemmatization | Stemming |
-|:--------------------------------------------------:|:---------------------------------------------------:|
+|:----------------------------------:|:----------------------------------:|
 | Involves reducing words to their canonical form or lemma | Involves stripping the affixes from a word to obtain its root or stem |
 | A lemma is always an existing word that can be found in a dictionary | The resulting stem may not be a real word, but it represents the base form of the word |
 | Is slower and more accurate in its reduction of words | Is typically faster and more aggressive in its reduction of words |
@@ -656,7 +653,7 @@ textplot_wordcloud(fakenews_dfm, min_count = 6, random_order = FALSE,
 
 ```{r}
 real_corpus <- corpus_subset(news_corpus, label == "REAL")
-real_corpus
+head(real_corpus)
 ```
 
 -   Convert the corpus to a DFM removing first punctuation and stopwords. Use stemming.
@@ -688,6 +685,17 @@ textplot_wordcloud(realnews_dfm, min_count = 6, random_order = FALSE,
 
 -   Repeat the worldcloud without using stemming in the creation of the DFM. Is stemming being useful?
 
+```{r}
+realnews_dfm2 <- dfm(tokens_real_filtered)
+set.seed(100)
+
+textplot_wordcloud(realnews_dfm2, min_count = 6, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+```
+
+A word cloud with stemming is not useful because you need to see the whole word. However, lemmatization is super helpful in word clouds, because you don't want to see "university" and "universities".
+
 ------------------------------------------------------------------------
 
 #### Customizing the DFM
@@ -699,6 +707,7 @@ To do that, we create a **dictionary** with two groups of words, those related t
 ```{r}
 news_dict <- dictionary(list(reception = c("asylum", "asylee", "residency", "citizenship"),
                           rejection = c("deportation", "persecution", "exclusion", "extradition")))
+news_dict
 ```
 
 And we apply the dictionary directly when creating the DFM. We will use `dfm_lookup`, a function that:
@@ -749,6 +758,16 @@ fake_matrix
 
 The headline could be: in general, the FAKE news about immigration **mention rejection more than reception**, although many texts mix both.
 
+It is impossible that 144 texts contain both features. It happens because we are measuring two different things: the 121 is the number of documents. The 144 is the number of matched tokens in each category (appearances). If a document contains several dictionary words, it is counted multiple times. We need to convert the counts into document counts.
+
+```{r}
+# copy from revised solution notebook
+```
+
+61 reception only, 12 both features, 48 rejection only.
+
+This is more bias towards reception only. We should keep investigating. We should compare with the real news or look at the words in context.
+
 ### Step 5: Back to tidy
 
 Now we can use the `tidytext()` package tools to convert this dataset from the `readtext()` object to the format we know best.
@@ -760,12 +779,12 @@ class(news)
 ```{r}
 library(tidytext)
 
-tidy_news <- news %>%
-  select(text, label, doc_id) %>%
-  unnest_tokens(word, text) %>%
+tidy_news <- news |>
+  select(text, label, doc_id) |>
+  unnest_tokens(word, text) |>
   count(doc_id, label, word, sort = TRUE)
 
-View(tidy_news)
+tidy_news
 ```
 
 ------------------------------------------------------------------------
@@ -780,14 +799,14 @@ Recreate the trip around the formats with this dataset of [spam and ham messages
 library(readtext)
 
 spam <- readtext("spam.csv")
-View(spam)
+spam
 ```
 
 2.  Change the name of the "text" column to "label".
 
 ```{r}
 colnames(spam)[colnames(spam) == "text"] <- "label"
-View(spam)
+spam
 ```
 
 3.  Create a quanteda corpus object.
@@ -812,11 +831,11 @@ summary(spam_corpus)
 5.  Look for 3 interesting words and show them in context. Use it as a regex and define a window of 8.
 
 ```{r}
-kwic(tokens(spam_corpus), "cash", valuetype="regex", window=8)
+kwic(tokens(spam_corpus), "urgent", valuetype="regex", window=8)
 ```
 
 ```{r}
-kwic(tokens(spam_corpus), "football", valuetype="regex", window=8)
+kwic(tokens(spam_corpus), "cash", valuetype="regex", window=8)
 ```
 
 ```{r}

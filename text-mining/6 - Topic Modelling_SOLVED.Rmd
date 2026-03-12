@@ -1,0 +1,682 @@
+---
+title: "6 - Topic Modelling_SOLVED"
+course: Text Mining - MUCSS 25/26
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc_depth: 10
+    fig_width: 15
+    fig_height: 8
+    df_print: default
+instructor: Carmen Torrijos
+based_on: tidytextmining.com
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Topic Modelling
+
+Topic Modelling is a text mining technique to make **natural groups of items** from a corpus when we are not sure what we are looking for.
+
+## Latent Dirichlet Allocation
+
+LDA is one of the most popular algorithms to fit a topic model from a corpus. It takes as an input a Document-Term Matrix, and gives as an output an LDA object: a model representation of the relationships between documents, topics and words.
+
+![](images/Captura%20de%20Pantalla%202023-03-05%20a%20las%2017.29.10.png){width="410"}
+
+It is guided by two principles:
+
+-   Every document is a mixture of topics.
+
+-   Every topic is a mixture of words.
+
+![](https://lh5.googleusercontent.com/293GCf2Y-Tem49hpRG-fliq-A8Mvu05bUHI8qFPB8bKPkLFxVYJB_IuQe2I_LPjCp_o8UFTNd0VKnPF0eE_Bl9Obv7FB-gVn9pAOuYkkqEQJrtEzTpeNAfClV5bVJj7d-RV4tZ0GkCokHdivAbnL0-cxpA=s2048){width="334"}
+
+![]()
+
+Therefore, somehow this is a multilabel classification problem. The same word can be part of several different topics, and the same topic can be part of several different documents.
+
+![](images/Captura%20de%20Pantalla%202023-03-04%20a%20las%2012.26.21.png){width="274"}
+
+![](https://lh5.googleusercontent.com/3tgW0sw7v_pdbyXg6AoyAYaR3hr7dR1BxBOhqe5zA_VxstrtSxxUUoH6MwhDrWLWlnEJz0Tc8ilBBxDIkPoonURsTsYc0uZyibTD_J3wm8GnfyM5N2a-7tak1DHKOEvnbpqyyZ2p4VCJIuZCKIFQKQC6qg=s2048){width="275"}
+
+LDA is a mathematical method both for finding the mixture of words that is associated with each topic, and for determining the mixture of topics that describes each document.
+
+------------------------------------------------------------------------
+
+We will be working with the `AssociatedPress` dataset provided by the `topicmodels` package, which is already a DocumentTermMatrix. This is a collection of 2246 news articles from an American news agency, mostly published around 1988. Let's have a look.
+
+```{r}
+library(topicmodels)
+
+data("AssociatedPress")
+AssociatedPress
+```
+
+We can use the [`LDA()`](https://rdrr.io/pkg/topicmodels/man/lda.html) function from the topicmodels package, setting `k = 2`, to create a two-topic LDA model. We can choose how many topics because we don't really know what we are looking for: remember that we do not have a predefined category set.
+
+```{r}
+#three arguments: corpus, number of topics (k), and the seed
+# we set a seed so that the output of the model is predictable
+ap_lda <- LDA(AssociatedPress, k = 2, control = list(seed = 1234))
+ap_lda
+```
+
+Note that we cannot see any output, just a summary. Now we have texts in our corpus splitted in two.
+
+Fitting the model was the "easy part": the rest of the analysis will involve exploring and interpreting these two groups of texts with tidy tools.
+
+### Word-topic probability
+
+The method `tidy()` allows extracting the per-topic-per-word probabilities. It converts the LDA object in a three columns tibble: `topic`, `word` and the probability for the word of belonging to each topic, called β (`beta`).
+
+This is the full path:
+
+![](images/Captura%20de%20Pantalla%202023-03-05%20a%20las%2017.26.27.png)
+
+The tibble will look as follows:
+
+|  Topic  |  Word  | Beta |
+|:-------:|:------:|:----:|
+| topic 1 | word 1 | 0.30 |
+| topic 2 | word 1 | 0.70 |
+
+Let's go for it.
+
+```{r}
+library(tidytext)
+
+ap_topics <- tidy(ap_lda, matrix = "beta")
+ap_topics
+```
+
+For each combination, the model computes the probability for the word to belong to that topic.
+
+Now that we have the probability for each word to belong to each topic, we can start building an idea of **what each topic is about**.
+
+#### Most probable words for each topic
+
+First thing would be to extract the 10 words with a higher probability of belonging to each topic.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+ap_top_terms <- ap_topics %>%
+  group_by(topic) %>%
+  #we use slice_max to extract the 10 higher scores in the beta column
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  #we arrange by beta in descending order
+  arrange(topic, desc(beta))
+
+ap_top_terms
+```
+
+Let's make a plot to see it clearer.
+
+```{r}
+ap_top_terms %>%
+  #we reorder terms by their beta within each topic 
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  #plot settings
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+```
+
+We can already think of descriptive names for topic 1 and 2. Note that overlapping words in both topics are normal.
+
+#### Greatest difference
+
+As an alternative, we could consider the terms that have the greatest difference in `beta` between topic 1 and topic 2, meaning how more likely it is for them to belong to one topic rather than the other.
+
+This is made using a logarithmic ratio: log2(β2/β1)
+
+```{r}
+library(tidyr)
+
+beta_wide <- ap_topics %>%
+  #the column topic says 1 and 2, we paste "topic" to call them topic1 and topic2
+  mutate(topic = paste0("topic", topic)) %>%
+  #we reshape the column topic from long to wide
+  pivot_wider(names_from = topic, values_from = beta) %>% 
+  # we filter out rows where the values are less than or equal to 0.001
+  filter(topic1 > .001 | topic2 > .001) %>%
+  #create a new column with the result of the operation
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_wide
+```
+
+We have achieved the dataframe, but we need to filter by `log_ratio` to see the words with a highest difference. Let's make a plot for this.
+
+```{r}
+library(ggplot2)
+
+bw_filtered <- beta_wide %>%
+  # we keep only terms with log ratio >= 10
+  filter(abs(log_ratio) >= 10) 
+
+#we plot with log_ratio in x axis and terms reordered in y axis
+ggplot(data = bw_filtered, aes(x = log_ratio, y = reorder_within(term, topic2 / topic1, log_ratio))) +
+#plot settings
+geom_col(position = "dodge") +
+  scale_fill_manual(values = c("gray40", "steelblue")) +
+  theme_minimal() +
+  labs(x = "Log Ratio of Topic 2 to Topic 1", y = "Topic") +
+  ggtitle("Comparison of Topic Beta Values")
+
+```
+
+These are the words that belong with more certainty to one of the two topics.
+
+### Document-topic probabilities
+
+When we run the `tidy()` function from a LDA object just by default, we get the `beta` column, that gives us the probability for a word to belong to a topic.
+
+If we also want the **probability for a document to contain a topic**, we need to run the `tidy()` function with the argument `matrix = gamma`.
+
+```{r}
+ap_documents <- tidy(ap_lda, matrix = "gamma")
+ap_documents
+```
+
+The `gamma` column is an estimated proportion of words from that document that belong to that topic.
+
+-   For example, the model estimates that only about 25% of the words in document 1 belong to topic 1. So, document 1 is containing topic 1 in 25% and topic 2 in 75%.
+
+-   In document 3 both topics are fifty-fifty, since it has a γ of 52% for topic 1.
+
+-   In document 6 the whole document seems to be about topic 2, having a γ close to zero for topic 1.
+
+To check if this document 6 is all about political news, we could [`tidy()`](https://generics.r-lib.org/reference/tidy.html) the document-term matrix of the corpus (back to the beginning) and check what the most common words in that document were.
+
+```{r}
+tidy(AssociatedPress) %>%
+  #we filter by document 6 already tidied up
+  filter(document == 6) %>%
+  #we arrange the count in descending order to see most common words
+  arrange(desc(count))
+```
+
+Based on the most common words, this appears to be an article about the relationship between the American government and Panamanian dictator Manuel Noriega, which means the algorithm was right to place it in topic 2.
+
+## Back to classic literature
+
+Let's check this topic modelling method with texts that we already know to have lexical differences, like these four classics of literature:
+
+-   *Great Expectations* by Charles Dickens
+
+-   *The Invisible Man: A grotesque romance* by H.G. Wells
+
+-   *Twenty Thousand Leagues Under the Sea* by Jules Verne
+
+-   *Pride and Prejudice* by Jane Austen
+
+Imagine that chapters from these four books have been just mixed up together. We need to apply some topic modelling to the whole collection to learn where each chapter comes from.
+
+### Step 1.- Prepare the corpus
+
+We download the books.
+
+```{r}
+library(gutenbergr)
+
+books <- gutenberg_download(c(164, 5230, 42671, 1400),
+                            meta_fields = "title")
+```
+
+We split the books into chapters because chapters will be our documents for this test. We will call each chapter with the name of the book and the chapter number, such as `Pride and prejudice_1`.
+
+```{r}
+library(stringr)
+
+#we divide into documents, each representing one chapter
+by_chapter <- books %>%
+  group_by(title) %>%
+  mutate(chapter = cumsum(str_detect(
+    text, regex("^chapter ", ignore_case = TRUE)
+  ))) %>%
+  ungroup() %>%
+  #we are not using the initial pages since they have not enough content
+  filter(chapter > 0) %>%
+  unite(document, title, chapter)
+
+#we tokenize
+by_chapter_word <- by_chapter %>%
+  unnest_tokens(word, text)
+
+#we find document-word counts
+word_counts <- by_chapter_word %>%
+  anti_join(stop_words) %>%
+  count(document, word, sort = TRUE)
+
+word_counts
+```
+
+### Step 2.- Apply LDA function to chapters
+
+We have now a tidy dataframe with document, word, and how many times the word appears in the document.
+
+However, the `topicmodels` package requires a `DocumentTermMatrix`. We can cast a one-token-per-row table into a `DocumentTermMatrix` with tidytext's [`cast_dtm()`](https://rdrr.io/pkg/tidytext/man/document_term_casters.html).
+
+```{r}
+chapters_dtm <- word_counts %>%
+  cast_dtm(document, word, n)
+
+chapters_dtm
+```
+
+Note that our chapters collection has a sparsity of 97% = a very rich and varied vocabulary. This is a good sign that the topic modelling will be successful.
+
+Let's apply the LDA function specifying this time 4 topics, because we have 4 books.
+
+```{r}
+chapters_lda <- LDA(chapters_dtm, k = 4, control = list(seed = 1234))
+chapters_lda
+```
+
+Here we've got our LDA object.
+
+### Step 3.- Tidy it back
+
+We can get the LDA object back to the tidy format (topic, term, beta) to make further analysis.
+
+```{r}
+chapter_topics <- tidy(chapters_lda)
+chapter_topics
+```
+
+We can see that in all cases there is always a topic for which the word has a very different `beta` value. That's probably the topic associated to the book it comes from.
+
+Let's find the 5 most common words for each topic and plot them.
+
+```{r}
+top_terms <- chapter_topics %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 5) %>% 
+  ungroup() %>%
+  arrange(topic, desc(beta))
+
+top_terms
+```
+
+```{r}
+library(ggplot2)
+
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+```
+
+To which topic does each book belong?
+
+### Step 4.- Each chapter to its book
+
+We have seen which words correspond to each topic, but can we put the chapters back together in the correct books? Can we guess which book a chapter comes from?
+
+To do this, we need to know the probability of a document (chapter in this case) to contain a topic. It is, `gamma`.
+
+```{r}
+chapters_gamma <- tidy(chapters_lda, matrix = "gamma")
+chapters_gamma
+```
+
+Each chapter has a likelihood (`gamma`) of containing one of the four topics, it is, of belonging to one of the four books.
+
+Let's separate title and chapter number again:
+
+```{r}
+chapters_gamma <- chapters_gamma %>%
+  separate(document, c("title", "chapter"), sep = "_", convert = TRUE)
+
+chapters_gamma
+```
+
+And now, let's make a plot:
+
+```{r}
+# reorder titles in order of topic 1, topic 2, etc before plotting
+chapters_gamma %>%
+  mutate(title = reorder(title, gamma * topic)) %>%
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot() +
+  facet_wrap(~ title) +
+  labs(x = "topic", y = expression(gamma))
+```
+
+-   For *Pride and Prejudice* and *Twenty Thousand Leagues under the Sea*, it is clear: most chapters in the collection have a gamma of 1 for the corresponding topic, in this case 1 and 3.
+
+-   For *The Invisible Man*, most chapters have a high gamma for topic 2, but we can see some outliers that tend to identify with topic 4. This is a normal margin of error.
+
+-   For *Great Expectations*, however, something strange is happening. Some chapters are identifying with other topics, especially topic 2 which should be for *The Invisible Man*.
+
+Let's investigate further.
+
+First, we should have a look at the topic that has been most associated with each chapter of the book.
+
+```{r}
+chapter_classifications <- chapters_gamma %>%
+  group_by(title, chapter) %>%
+  #we use slice max to order by gamma
+  slice_max(gamma) %>%
+  ungroup()
+
+chapter_classifications
+```
+
+We can see that there are several chapters for `Great Expectations` associated to topic 2.
+
+And finally, see which chapters have been misidentified according to **the consensus for each book-topic**: the topic most chapters in the book have been assigned to.
+
+For example, we have established that Great Expectations is topic 2 because the most common associated topic for its chapters is number 2. Let's count **how many chapters have been associated to a topic other than 2.**
+
+First, we create a dataframe just with two columns: the book and its consensus topic.
+
+```{r}
+book_consensus <- chapter_classifications %>%
+  count(title, topic) %>%
+  group_by(title) %>%
+  slice_max(n, n = 1) %>% 
+  ungroup() %>%
+  transmute(book = title, topic)
+
+book_consensus
+```
+
+Second, we check with an inner join if any chapter is assigned to a topic different from the consensus.
+
+```{r}
+chapter_classifications %>%
+  inner_join(book_consensus, by = "topic") %>%
+  filter(title != book)
+```
+
+After the `inner_join`, we have all chapters that share a topic with some book, and by filtering `title != book`, we keep only the chapters **whose topic matches the consensus of another book, but not the consensus of their own book.**
+
+26 chapters in *Great Expectations* are associated to a topic different than 2 (topic 4 in this case). This is a larger margin of error and we should reconsider the analysis.
+
+### Step 5: Augment
+
+We may want to find **which words in each document were assigned to which topic**. This is the job of the [`augment()`](https://generics.r-lib.org/reference/augment.html) function.
+
+This function [takes both an LDA object and a DTM]{.underline}, and returns a tidy data frame of `document`, `term` and `count`, with an extra column: `.topic`, with the topic each word was assigned to.
+
+```{r}
+library(topicmodels)
+assignments <- augment(chapters_lda, data = chapters_dtm)
+assignments
+```
+
+Now, imagine that a word has been assigned to a topic, but belongs to a chapter assigned to a different topic. We can combine this `assignments` table with the consensus book titles (`book_topics`) to find which words were "incorrectly" classified.
+
+```{r}
+book_topics #most chapters associated to each topic
+```
+
+```{r}
+assignments <- assignments %>%
+  #we separate again the chapter number from the title
+  separate(document, c("title", "chapter"), 
+           sep = "_", convert = TRUE) %>%
+  #we compare the topic (consensus) with the .topic (assignments)
+  inner_join(book_topics, by = c(".topic" = "topic"))
+
+assignments
+```
+
+We can make a plot showing how often words from a book were assigned to a topic other than its consensus.
+
+```{r}
+library(scales)
+
+assignments %>%
+  count(title, consensus, wt = count) %>%
+  mutate(across(c(title, consensus), ~str_wrap(., 20))) %>%
+  group_by(title) %>%
+  #we create a column with the percentage of assignments
+  mutate(percent = n / sum(n)) %>%
+  #plot settings
+  ggplot(aes(consensus, title, fill = percent)) +
+  geom_tile() +
+  scale_fill_gradient2(high = "darkred", label = percent_format()) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.grid = element_blank()) +
+  labs(x = "Book words were assigned to",
+       y = "Book words came from",
+       fill = "% of assignments")
+```
+
+We already knew that some words in *Great Expectations* were causing problems. What were the most commonly mistaken words?
+
+```{r}
+wrong_words <- assignments %>%
+  #we filter by words coming from a title which is not the consensus (in book_topics)
+  filter(title != consensus)
+
+wrong_words
+```
+
+We take this dataframe already filtered by wrongly assigned words and print the `consensus` next to the `title` to observe the misalignment.
+
+```{r}
+wrong_words %>%
+  count(title, consensus, term, wt = count) %>%
+  ungroup() %>%
+  arrange(desc(n))
+```
+
+Here we can see all words that were assigned to topic 2 (*The Invisible Man*) when they were really coming from *Great Expectations* (topic 1). This happens because they appeared more often in *The Invisible Man* and the model gives priority.
+
+## Exercise: movies reviews
+
+We will be working with a dataset composed of 50,000 movies reviews from IMDB.
+
+This dataset comes with a sentiment column which we do not need to perform topic modelling, so we start by dropping it.
+
+```{r}
+imdb_dataset <- read.csv("IMDB Dataset.csv")
+imdb_dataset <- imdb_dataset[-c(2)]
+
+View(imdb_dataset)
+```
+
+We have texts now, but to work with DTMs and `tidytext` we need documents. Therefore, we create an index column just to keep track with doc numbers.
+
+```{r}
+imdb_dataset$doc <- 1:nrow(imdb_dataset)
+```
+
+The token br is everywhere in the reviews, due to a code mark in the page. Let's filter it by creating a dataframe with just one row and one column.
+
+```{r}
+stop_br <- data.frame(word = c("br"))
+stop_br
+```
+
+Ready to start the exercise:
+
+-   Call `tidytext` and `dplyr`
+
+-   Create a new dataframe called `tidy_imdb`
+
+-   Tokenize the reviews
+
+-   Filter stopwords and stop_br (in two different `anti_join` lines)
+
+-   `Count` word mentions and sort them
+
+```{r}
+library(tidytext)
+library(dplyr)
+
+tidy_imdb <- imdb_dataset %>%
+  unnest_tokens(word, review) %>%
+  anti_join(stop_words) %>%
+  anti_join(stop_br) %>%
+  count(doc, word, sort = TRUE)
+
+tidy_imdb
+```
+
+Now you should have a tidy dataset of movies reviews. But remember this workflow: you need a DTM to work through the LDA algorithm.
+
+![](images/Captura%20de%20Pantalla%202023-03-05%20a%20las%2017.26.27.png)
+
+------------------------------------------------------------------------
+
+-   Cast the `tidy_imdb` into a DTM. Name the variable `imdb_dtm`.
+
+```{r}
+library(dplyr)
+imdb_dtm <- tidy_imdb %>%
+  cast_dtm(doc, word, n)
+
+imdb_dtm
+```
+
+-   Call `topicmodels`. Take your DTM into the `LDA()` algorithm. Set 4 topics.
+
+```{r}
+library(topicmodels)
+imdb_lda <- LDA(imdb_dtm, k = 4, control = list(seed = 3333))
+imdb_lda
+```
+
+-   `Tidy()` it up with default options to get your `beta`.
+
+```{r}
+imdb_topics <- tidy(imdb_lda)
+imdb_topics
+```
+
+-   Extract the 10 words with higher probability of belonging to each of the four topics.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+imdb_top_terms <- imdb_topics %>%
+  group_by(topic) %>%
+  #we use slice_max to extract the 10 higher scores in the beta column
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  #we arrange by 
+  arrange(topic, -beta)
+
+View(imdb_top_terms)
+```
+
+-   Make a plot to visualize these words and their topics.
+
+```{r}
+imdb_top_terms %>%
+  #we reorder terms by their beta within each topic 
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  #plot settings
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+```
+
+OK! We now have something. However, there are too many words that are common to the four clusters.
+
+-   Let's skip too common words like *movie* or *film* the same way that we have excluded *br*. Create a dataframe of just one column, called `custom_stopwords`.
+
+```{r}
+custom_stopwords <- data.frame(word = c("br","film","movie","movies","films","watch","watching", "story", "acting", "time", "actors", "cast", "scene", "scenes", "plot", "character", "characters"))
+```
+
+-   Let's tidy it up again (tokenize, filter stopwords and count).
+
+```{r}
+library(tidytext)
+library(dplyr)
+
+tidy_imdb <- imdb_dataset %>%
+  unnest_tokens(word, review) %>%
+  anti_join(stop_words) %>%
+  anti_join(custom_stopwords) %>%
+  count(doc, word, sort = TRUE)
+
+tidy_imdb
+```
+
+-   Cast it into a DTM.
+
+```{r}
+library(dplyr)
+imdb_dtm <- tidy_imdb %>%
+  cast_dtm(doc, word, n)
+
+imdb_dtm
+```
+
+-   Go through LDA.
+
+```{r}
+imdb_lda <- LDA(imdb_dtm, k = 4, control = list(seed = 2222))
+imdb_lda
+```
+
+Tidy again to get beta.
+
+```{r}
+imdb_topics <- tidy(imdb_lda)
+imdb_topics
+```
+
+-   Extract the 15 words with higher probability of belonging to each of the four topics.
+
+    ```{r}
+    library(ggplot2)
+    library(dplyr)
+
+    imdb_top_terms <- imdb_topics %>%
+      group_by(topic) %>%
+      #we use slice_max to extract the 10 higher scores in the beta column
+      slice_max(beta, n = 15) %>% 
+      ungroup() %>%
+      #we arrange by 
+      arrange(topic, -beta)
+
+    View(imdb_top_terms)
+    ```
+
+-   Make a plot to visualize these 15 words.
+
+```{r}
+imdb_top_terms %>%
+  #we reorder terms by their beta within each topic 
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  #plot settings
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+```
+
+-   Try to image what this cluster is about. If you need more information, try plotting some more words for each topic.
+
+## Summary
+
+We have learned so far:
+
+-   How the LDA algorithm works
+
+-   How to convert from DTM to topic model object and to tidytext format
+
+-   How to calculate the most probable words for each topic
+
+-   How to extract words with the highest difference in probability between topic 1 and 2
+
+-   How to calculate the probability for a document of containing a topic
+
+-   How to apply LDA to a collection to see if topics match predefined groups
