@@ -116,6 +116,10 @@ editor: visual
 
 -   [N Grams](https://uc3mamelia.github.io/data_programming_notes/text-mining/4---N-grams.html)
 
+-   [Converting to and from Tidy Text](https://uc3mamelia.github.io/data_programming_notes/text-mining/5---Conversion-to-and-from-tidy-text_SOLVED.html)
+
+-   [Topic Modeling](https://uc3mamelia.github.io/data_programming_notes/text-mining/6---Topic-Modelling_SOLVED.html)
+
 ## Survey
 
 -   [Why Surveys](https://uc3mamelia.github.io/data_programming_notes/survey-ii/Why%20Surveys.html)

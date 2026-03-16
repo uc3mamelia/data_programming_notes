@@ -416,10 +416,12 @@ assignments
 Now, imagine that a word has been assigned to a topic, but belongs to a chapter assigned to a different topic. We can combine this `assignments` table with the consensus book titles (`book_topics`) to find which words were "incorrectly" classified.
 
 ```{r}
+#| eval: false
 book_topics #most chapters associated to each topic
 ```
 
 ```{r}
+#| eval: false
 assignments <- assignments %>%
   #we separate again the chapter number from the title
   separate(document, c("title", "chapter"), 
@@ -433,6 +435,7 @@ assignments
 We can make a plot showing how often words from a book were assigned to a topic other than its consensus.
 
 ```{r}
+#| eval: false
 library(scales)
 
 assignments %>%
@@ -456,6 +459,7 @@ assignments %>%
 We already knew that some words in *Great Expectations* were causing problems. What were the most commonly mistaken words?
 
 ```{r}
+#| eval: false
 wrong_words <- assignments %>%
   #we filter by words coming from a title which is not the consensus (in book_topics)
   filter(title != consensus)
@@ -466,6 +470,7 @@ wrong_words
 We take this dataframe already filtered by wrongly assigned words and print the `consensus` next to the `title` to observe the misalignment.
 
 ```{r}
+#| eval: false
 wrong_words %>%
   count(title, consensus, term, wt = count) %>%
   ungroup() %>%
@@ -481,6 +486,7 @@ We will be working with a dataset composed of 50,000 movies reviews from IMDB.
 This dataset comes with a sentiment column which we do not need to perform topic modelling, so we start by dropping it.
 
 ```{r}
+#| eval: false
 imdb_dataset <- read.csv("IMDB Dataset.csv")
 imdb_dataset <- imdb_dataset[-c(2)]
 
@@ -490,12 +496,14 @@ View(imdb_dataset)
 We have texts now, but to work with DTMs and `tidytext` we need documents. Therefore, we create an index column just to keep track with doc numbers.
 
 ```{r}
+#| eval: false
 imdb_dataset$doc <- 1:nrow(imdb_dataset)
 ```
 
 The token br is everywhere in the reviews, due to a code mark in the page. Let's filter it by creating a dataframe with just one row and one column.
 
 ```{r}
+#| eval: false
 stop_br <- data.frame(word = c("br"))
 stop_br
 ```
@@ -513,6 +521,7 @@ Ready to start the exercise:
 -   `Count` word mentions and sort them
 
 ```{r}
+#| eval: false
 library(tidytext)
 library(dplyr)
 
@@ -534,6 +543,7 @@ Now you should have a tidy dataset of movies reviews. But remember this workflow
 -   Cast the `tidy_imdb` into a DTM. Name the variable `imdb_dtm`.
 
 ```{r}
+#| eval: false
 library(dplyr)
 imdb_dtm <- tidy_imdb %>%
   cast_dtm(doc, word, n)
@@ -544,6 +554,7 @@ imdb_dtm
 -   Call `topicmodels`. Take your DTM into the `LDA()` algorithm. Set 4 topics.
 
 ```{r}
+#| eval: false
 library(topicmodels)
 imdb_lda <- LDA(imdb_dtm, k = 4, control = list(seed = 3333))
 imdb_lda
@@ -552,6 +563,7 @@ imdb_lda
 -   `Tidy()` it up with default options to get your `beta`.
 
 ```{r}
+#| eval: false
 imdb_topics <- tidy(imdb_lda)
 imdb_topics
 ```
@@ -559,6 +571,7 @@ imdb_topics
 -   Extract the 10 words with higher probability of belonging to each of the four topics.
 
 ```{r}
+#| eval: false
 library(ggplot2)
 library(dplyr)
 
@@ -576,6 +589,7 @@ View(imdb_top_terms)
 -   Make a plot to visualize these words and their topics.
 
 ```{r}
+#| eval: false
 imdb_top_terms %>%
   #we reorder terms by their beta within each topic 
   mutate(term = reorder_within(term, beta, topic)) %>%
@@ -591,12 +605,14 @@ OK! We now have something. However, there are too many words that are common to 
 -   Let's skip too common words like *movie* or *film* the same way that we have excluded *br*. Create a dataframe of just one column, called `custom_stopwords`.
 
 ```{r}
+#| eval: false
 custom_stopwords <- data.frame(word = c("br","film","movie","movies","films","watch","watching", "story", "acting", "time", "actors", "cast", "scene", "scenes", "plot", "character", "characters"))
 ```
 
 -   Let's tidy it up again (tokenize, filter stopwords and count).
 
 ```{r}
+#| eval: false
 library(tidytext)
 library(dplyr)
 
@@ -612,6 +628,7 @@ tidy_imdb
 -   Cast it into a DTM.
 
 ```{r}
+#| eval: false
 library(dplyr)
 imdb_dtm <- tidy_imdb %>%
   cast_dtm(doc, word, n)
@@ -622,6 +639,7 @@ imdb_dtm
 -   Go through LDA.
 
 ```{r}
+#| eval: false
 imdb_lda <- LDA(imdb_dtm, k = 4, control = list(seed = 2222))
 imdb_lda
 ```
@@ -629,6 +647,7 @@ imdb_lda
 Tidy again to get beta.
 
 ```{r}
+#| eval: false
 imdb_topics <- tidy(imdb_lda)
 imdb_topics
 ```
@@ -636,6 +655,7 @@ imdb_topics
 -   Extract the 15 words with higher probability of belonging to each of the four topics.
 
     ```{r}
+    #| eval: false
     library(ggplot2)
     library(dplyr)
 
@@ -653,6 +673,7 @@ imdb_topics
 -   Make a plot to visualize these 15 words.
 
 ```{r}
+#| eval: false
 imdb_top_terms %>%
   #we reorder terms by their beta within each topic 
   mutate(term = reorder_within(term, beta, topic)) %>%
