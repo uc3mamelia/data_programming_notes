@@ -1,0 +1,483 @@
+---
+title: "Topic 3.4: Linear Regression Model Selection"
+subtitle: "Home Price Prediction in Sacramento"
+author: "Advanced Modelling, Master in Computational Social Science"
+date: 'UC3M, 2025-2026'
+output:
+  html_document:
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+  pdf_document:
+    css: my-theme.css
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+editor_options:
+  chunk_output_type: inline
+---
+
+
+```{r global_options, include=T, echo = F}
+knitr::opts_chunk$set(echo = T, warning=FALSE, message=FALSE)
+```
+
+# Introduction
+
+In this notebook we are going to apply some of the model selection techniques seen in topic 3.4 applied to a regression dataset. We will be trying to predict home prices in Sacramento using a dataset available in `caret`.
+
+Recall that we will divide the ways for doing model selection in:
+
+- **Subset selection**: choose which variables to keep
+- **Regularization**: shrink coefficients with Ridge, Lasso, and Elastic Net
+- **Dimensionality reduction**: replace many predictors with a smaller set of components
+
+```{r libraries-setup}
+# Load libraries
+library(leaflet)
+library(tidyverse)
+library(caret)
+library(olsrr)
+library(pls)
+```
+
+
+# Data exploration
+
+The dataset contains 932 home sales in Sacramento, CA, corresponding to real transactions over a five-day period.
+
+**Variables:**
+
+- `price`: Sale price (our target $Y$)
+- `beds`, `baths`, `sqft`: House characteristics
+- `type`: Residential, Condo, or Multi-Family
+- `latitude`, `longitude`: Location
+- `city`, `zip`: Geographic identifiers
+
+```{r setup_data}
+# Load data
+data(Sacramento)
+
+# Explore the data
+dim(Sacramento)
+str(Sacramento)
+summary(Sacramento)
+```
+
+Before going further into the analysis, we will do a train/test split.
+
+```{r split_data}
+set.seed(42)  # For reproducibility
+in_train <- createDataPartition(Sacramento$price, p = 0.75, list = FALSE)
+training <- Sacramento[in_train, ]
+testing  <- Sacramento[-in_train, ]
+
+cat("Training set:", nrow(training), "observations\n")
+cat("Testing set:", nrow(testing), "observations\n")
+```
+
+We will now explore our training data to get some insights. First, lets plot the geographical distribution of our data on Sacramento, with the price in different colors. This is done using the `leaflet` package.
+
+```{r map_training_data}
+color_pal <- colorNumeric(palette = "RdYlBu", domain = training$price, reverse=T)
+
+map = leaflet(training) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  setView(lng=median(training$longitude), lat=median(training$latitude), zoom = 9) %>%
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             radius = ~sqrt(sqft)*2,
+             color = ~color_pal(price)) %>%
+  addLabelOnlyMarkers(
+    lng = median(training$longitude)-.6, lat = median(training$latitude)+.3,
+    label = "Price and size",
+    labelOptions = labelOptions(textsize = "20px", noHide = T, textOnly = T))
+
+map %>% addLegend(position="bottomleft", pal = color_pal, values = ~price, bins=4)
+```
+
+We can also have a look at the price distribution across the dataset, that looks roguhly symmetric on a log scale.
+
+```{r plot_price_density}
+training %>% ggplot(aes(x=price)) + geom_density(fill="navyblue") + scale_x_log10()
+```
+
+Before modeling, let's compare the pairwise correlations across the numeric variables:
+
+```{r plot_feature_correlations}
+GGally::ggcorr(training, label = T)
+```
+
+We can see how `sqft`, `baths` and  `beds` have a quite high correlation with the price. The geographical variable `longitude` seems also to be a bit relevant, while `latitude` is not.
+
+# Regression Baseline and Modelling Setup
+
+We will first fit a linear model with the classic approach: minimize sum of squared residuals. We use log-transformations for price and sqft to handle skewness.
+
+```{r fit_ols_baseline}
+linFit <- lm(log(price) ~ beds + baths + log(sqft) + type + latitude*longitude, data=training)
+summary(linFit)
+```
+
+We get a value of $R^2 \approx 60\%$, but some variables are not statistically significant. This hints at **multicollinearity**, as when predictors are correlated, individual coefficients are estimated with high noise.
+
+We can also evaluate the linear model in the test data to get the testing $R^2$:
+
+```{r evaluate_ols_baseline}
+pred_linFit <- exp(predict(linFit, newdata=testing))
+cat("Test R^2:", round(cor(testing$price, pred_linFit)^2, 3), "\n")
+```
+As we have seen, the price and area of the houses can be transformed by the log. We can also consider some other **engineered features** such as creating a ratio of beds per bath or using the squared longitude and latitude. 
+
+This can help include non linear combinations of our original variables to still use a linear model with higher flexibility. In the case of longitude and latitude, squaring them or adding their interaction can detect patterns like being far from the center. However, by doing so we might be including collinearity or loosing interpretability.
+
+
+```{r shared_modeling_setup}
+# pipeline for out feature engineering
+prepare_model_data <- function(df) {
+  df %>%
+    filter(price > 0, sqft > 0, baths > 0) %>%
+    drop_na(price, beds, baths, sqft, type, city, zip, latitude, longitude) %>%
+    mutate(
+      bedsperbath = beds / baths,
+      log_price   = log(price),
+      log_sqft    = log(sqft),
+      latitude2   = latitude^2,
+      longitude2  = longitude^2
+    )
+}
+
+# Apply pipeline to test and train
+training <- prepare_model_data(training)
+testing  <- prepare_model_data(testing)
+
+# Build the full model formula with all numerical variables, their selected transformations and interaction
+ModelF <- log_price ~ bedsperbath * type + log_sqft + latitude*longitude + latitude2 + longitude2
+
+# Extract the testing log prices to compare with our predicted results
+test_results <- data.frame(price = testing$log_price)
+
+# Store model complexity (number of coefficients) with the same keys as test_results columns
+model_p <- c()
+
+# Helper to keep predictions and complexity aligned across all models
+register_model <- function(name, pred, p) {
+  test_results[[name]] <<- as.numeric(pred)
+  model_p[[name]] <<- as.integer(p)
+}
+
+# And create a Cross Validation setup
+ctrl <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+
+```
+
+# Best Subset Selection
+
+## AIC and BIC
+
+Remember that as RSS and $R^2$ always improve with more data, we need some alternative metrics such as the **AIC** (Akaike Information Criteria) or **BIC** (Bayesian Information Criteria). In both cases lower values are better.
+
+We need to start by building a linear fill model, and then, using that model, we will get the best subset selection.
+
+```{r fit_subset_selection_base}
+# Base full model for subset selection
+linFit_full <- lm(ModelF, data = training)
+```
+
+Then, we will start by the *pure* best subset selection, trying all $2^p$ combinations and picking the best by a criterion. Feasible here since $p$ is small, but in larger cases only stepwise might be feasible. Note how this following chunk takes longer than the next stepwise variations.
+
+```{r best_subset_selection}
+best_subset <- ols_step_best_subset(linFit_full)
+best_subset
+```
+
+From the table we could select the best one based on one of the chosen metrics.
+
+However, as this best subset approach is not feasible in bigger dimensions, we need other options.
+
+We can use the forward selection method using the AIC with the following function, which will start with no predictors and add one at a time, keeping whichever addition reduces AIC the most:
+
+```{r forward_stepwise_aic}
+forward_AIC <- ols_step_forward_aic(linFit_full)
+forward_AIC
+
+
+register_model(
+  name = "forward_AIC",
+  pred = predict(forward_AIC$model, newdata = testing),
+  p = length(coef(forward_AIC$model))
+)
+postResample(pred = test_results$forward_AIC, obs = test_results$price)
+```
+
+We have other options, as we saw in class such as the backwards selection, or we can combine them using both forward and backwards selection with the following function, which specifies when a variable is added or removed by `(+)` or `(-)`
+
+```{r stepwise_aic}
+both_AIC <- ols_step_both_aic(linFit_full)
+both_AIC
+
+register_model(
+  name = "both_AIC",
+  pred = predict(both_AIC$model, newdata = testing),
+  p = length(coef(both_AIC$model))
+)
+postResample(pred = test_results$both_AIC, obs = test_results$price)
+```
+
+Many other options are available in the `olsrr` package, such as `olsrr::ols_step_both_adj_r2()` or `olsrr::ols_step_both_sbic()` using different criteria than the AIC.
+
+## Cross-Validated Stepwise Selection
+
+The `olsrr` output is useful for inspection and choosin by a given metric such as the AIC, but we can also tune the subset size directly with cross-validation:
+
+```{r forward_stepwise_cv}
+# The leapForward method does Forward Stepwise selection, and nvmax controls the maximum number of predictors
+# Other methods are available, such as leapBackward
+for_tune <- train(ModelF, data = training,
+                  method = "leapForward",
+                  preProc = c('nzv','scale', 'center'),
+                  tuneGrid = expand.grid(nvmax = 4:10),
+                  trControl = ctrl)
+plot(for_tune)
+cat("Best number of variables:", for_tune$bestTune$nvmax, "\n")
+coef(for_tune$finalModel, for_tune$bestTune$nvmax)
+
+register_model(
+  name = "forward_CV",
+  pred = predict(for_tune, testing),
+  p = length(coef(for_tune$finalModel, for_tune$bestTune$nvmax))
+)
+postResample(pred = test_results$forward_CV, obs = test_results$price)
+```
+
+> Remember that when using any of these methods and a validation dataset, if we select a model as our final one, we could retrain it with the full training data
+
+
+# Regularization
+
+Now let's see the regularization techniques, where a penalty term is included in the OLS objective to shrink coefficients and reduce variance:
+
+$$\min_\beta \text{RSS}(\beta)+ \lambda \cdot \text{Penalty}(\beta)$$
+
+The tuning parameter $\lambda$ controls the strength: $\lambda = 0$ gives OLS, larger $\lambda$ shrinks more.
+
+We reuse the shared setup above and let `caret` tune the penalty parameters with cross-validation.
+
+## Ridge Regression ($L_2$ penalty)
+
+Ridge **shrinks all coefficients toward zero** but never sets any to exactly zero:
+
+$$\text{Penalty} = \|\beta\|_2^2 = \sum_{j=1}^p \beta_j^2$$
+
+We start with a broad option of values for lambda in log scale, and then we can repeat the process with more lambda values around the best lambda region.
+
+```{r ridge_regression-2}
+ridge_grid <- expand.grid(lambda = 10^seq(-6, 1, length.out = 100)) # The lambda values can change a lot for different problems
+
+ridge_tune <- train(ModelF, data = training,
+                    method = 'ridge',
+                    preProc = c('scale', 'center'),
+                    tuneGrid = ridge_grid,
+                    trControl = ctrl)
+plot(ridge_tune, xTrans = log10, xlab = "log10(lambda)")
+
+cat("Best lambda:", ridge_tune$bestTune$lambda, "\n")
+```
+In this case we see that the best CV result is obtained for a very small $\lambda$ value. (The weight decay value is our $\lambda$).
+
+Lets try again with more values around that lambda:
+
+```{r ridge_regression}
+ridge_grid <- expand.grid(lambda = 10^seq(-6, -4, length.out = 100)) # The lambda values can change a lot for different problems
+
+ridge_tune <- train(ModelF, data = training,
+                    method = 'ridge',
+                    preProc = c('scale', 'center'),
+                    tuneGrid = ridge_grid,
+                    trControl = ctrl)
+plot(ridge_tune, xTrans = log10, xlab = "log10(lambda)")
+
+cat("Best lambda:", ridge_tune$bestTune$lambda, "\n")
+
+register_model(
+  name = "ridge",
+  pred = predict(ridge_tune, testing),
+  p = length(attr(ridge_tune$terms,"term.labels"))
+)
+postResample(pred = test_results$ridge, obs = test_results$price)
+```
+
+## Lasso ($L_1$ penalty)
+
+Lasso **sets some coefficients to exactly zero**, doing automatic variable selection:
+
+$$\text{Penalty} = \|\beta\|_1 = \sum_{j=1}^p |\beta_j|$$
+In this case the caret method controls the penalization by setting a "fraction" of the full solution, so that parameter can go between 0 an 1, and in that case 1 represents the full model with no shrinkage
+
+
+```{r lasso_regression}
+lasso_grid <- expand.grid(fraction = 10^seq(-6, 0, length.out = 100))
+
+lasso_tune <- train(ModelF, data = training,
+                    method = 'lasso',
+                    preProc = c('scale', 'center'),
+                    tuneGrid = lasso_grid,
+                    trControl = ctrl)
+plot(lasso_tune, xTrans = log10)
+
+cat("Best lambda:", lasso_tune$bestTune$fraction, "\n")
+
+register_model(
+  name = "lasso",
+  pred = predict(lasso_tune, testing),
+  p = length(attr(lasso_tune$terms,"term.labels"))
+)
+postResample(pred = test_results$lasso, obs = test_results$price)
+```
+
+Other regularization methods such as elastic net can also be used with caret; the method `glmnet` provides an implementation for it.
+
+
+# Dimensionality Reduction
+
+Instead of choosing a subset of variables, we can replace the original predictors with a smaller number of components.
+
+Before doing so, we can prepare our data to be used with the `pcr` and `plsr` formulas, which require some extra pre-processing:
+
+
+```{r dimensionality-reduction-setup}
+# First, build the data matrices with the full model formula
+# This creates a matrix with a column per each term in our model, including interactions or transformed variables
+# The -1 removes the intercept column, that would be full of 1s
+x_train_dr <- model.matrix(ModelF, data = training)[, -1, drop = FALSE]
+x_test_dr  <- model.matrix(ModelF, data = testing)[, -1, drop = FALSE]
+
+# Standardize the data
+pp <- preProcess(x_train_dr, method = c("center", "scale"))
+x_train_dr <- predict(pp, x_train_dr)
+x_test_dr  <- predict(pp, x_test_dr)
+
+#  Build dataframes
+pcr_train_df <- data.frame(log_price = training$log_price, x_train_dr, check.names = FALSE)
+pcr_test_df  <- data.frame(x_test_dr, check.names = FALSE)
+```
+
+
+
+## Principal Components Regression (PCR)
+
+PCR uses PCA in a supervised workflow: first build principal components from the predictors, then regress `log(price)` on the first $M$ components.
+
+```{r principal_components_regression}
+pcr_fit <- pcr(log_price ~ .,
+               data = pcr_train_df,
+               scale = FALSE, validation = "CV")
+
+pcr_cv <- drop(RMSEP(pcr_fit, estimate = "CV")$val[1, 1, -1])
+pcr_ncomp <- pls::selectNcomp(pcr_fit, method = "onesigma", plot = TRUE)
+cat("Best number of components (PCR):", pcr_ncomp, "\n")
+
+register_model(
+  name = "pcr",
+  pred = drop(predict(pcr_fit, newdata = pcr_test_df, ncomp = pcr_ncomp)),
+  p = pcr_ncomp + 1
+)
+postResample(pred = test_results$pcr, obs = test_results$price)
+```
+
+
+## Partial Least Squares (PLS)
+
+PLS also builds components, but unlike PCR it uses the response while constructing them. That is why PLS often reaches good predictive performance with fewer components.
+
+```{r partial_least_squares}
+pls_fit <- plsr(log_price ~ .,
+                data = pcr_train_df,
+                scale = FALSE, validation = "CV")
+
+pls_cv <- drop(RMSEP(pls_fit, estimate = "CV")$val[1, 1, -1])
+pls_ncomp <- pls::selectNcomp(pls_fit, method = "onesigma", plot = TRUE)
+cat("Best number of components (PLS):", pls_ncomp, "\n")
+
+register_model(
+  name = "pls",
+  pred = drop(predict(pls_fit, newdata = pcr_test_df, ncomp = pls_ncomp)),
+  p = pls_ncomp + 1
+)
+postResample(pred = test_results$pls, obs = test_results$price)
+```
+
+# Summary
+
+We can finally compare the obtained results by getting, as an example, the MAE for all models:
+
+```{r compare_models_mae}
+# Mean Absolute Error for all models
+mae_results <- apply(test_results[-1], 2, function(x) mean(abs(x - test_results$price)))
+sort(mae_results)
+```
+
+```{r plot_model_comparison}
+mae_df <- data.frame(Model = names(mae_results), MAE = mae_results)
+ggplot(mae_df, aes(x = reorder(Model, MAE), y = MAE)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Model Comparison (Test MAE, log price)", x = "Model", y = "MAE") +
+  theme_minimal()
+```
+
+And if we want to also compare other metrics or the number of predictors (complexity), we can see it in this table:
+
+```{r compare_models_summary, results='asis'}
+rmse_results <- apply(test_results[-1], 2, function(x) {
+  sqrt(mean((x - test_results$price)^2))
+})
+r2_results <- apply(test_results[-1], 2, function(x) {
+  cor(x, test_results$price)^2
+})
+
+# Get model complexity aligned with prediction columns
+num_coef_results <- as.numeric(model_p[names(mae_results)])
+
+# Adjusted R2 computed on test performance and penalized by model size:
+# Adj_R2 = 1 - (1 - R2) * (n - 1) / (n - k - 1), where k excludes intercept
+n_test <- nrow(testing)
+k_predictors <- pmax(num_coef_results - 1, 0)
+adj_r2_results <- mapply(function(r2, k) {
+  if (is.na(r2) || is.na(k) || n_test <= (k + 1)) return(NA_real_)
+  1 - (1 - r2) * (n_test - 1) / (n_test - k - 1)
+}, r2_results, k_predictors)
+
+summary_table <- data.frame(
+  Num_Coefficients = as.integer(num_coef_results),
+  MAE              = round(mae_results, 4),
+  RMSE             = round(rmse_results, 4),
+  R2               = round(r2_results, 4),
+  Adj_R2           = round(adj_r2_results,4)
+)
+summary_table <- summary_table[order(summary_table$MAE), ]
+
+tbl_format <- if (knitr::is_latex_output()) "latex" else "html"
+
+tbl <- knitr::kable(
+  summary_table,
+  format = tbl_format,
+  booktabs = (tbl_format == "latex"),
+  caption = "Model comparison on the test set (log-price scale)",
+  align = "cccc"
+)
+
+tbl <- tbl %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+
+print(tbl)
+```
+
+

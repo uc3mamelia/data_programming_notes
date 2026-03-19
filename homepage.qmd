@@ -166,6 +166,10 @@ editor: visual
 
 -   [Trees Practices](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/3.3-trees-practice.html)
 
+-   [Linear Model Selection](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/3.4-linear-model-selection.html)
+
+-   [Neural Networks](https://uc3mamelia.github.io/data_programming_notes/advanced-modeling/3.5-neural-networks.html)
+
 ## Retired
 
 #### [Happiness Stats](https://uc3mamelia.github.io/data_programming_notes/happiness_quarto.html)

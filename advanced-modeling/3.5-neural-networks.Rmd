@@ -1,0 +1,410 @@
+---
+title: "Topic 3.5: Neural Networks and MLPs"
+subtitle: "Binary classification, multiclass classification, and regression in R"
+author: "Advanced Modelling, Master in Computational Social Science"
+date: "UC3M, 2025-2026"
+output:
+  html_document:
+    theme: cerulean
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Introduction
+
+In this notebook we practice the basic workflow for fitting a simpel MLPs network in R, using `caret` and `nnet` packages.
+
+> Have a look at the `nnet` function documentation: [Link](https://www.rdocumentation.org/packages/nnet/versions/7.3-20/topics/nnet)
+
+There are many other options to train NNs in R, such as the `tensorflow` package (which requires installing Python in the background) or the `torch` package, but these are out of the scope of this course.
+
+We will solve 3 example toy problems:
+
+1. binary classification on `iris` modified to be 2 classes
+2. multiclass classification on full `iris`
+3. regression on Sacramento house prices
+
+
+
+```{r libraries}
+library(tidyverse)
+library(caret)
+library(nnet)
+
+theme_set(theme_minimal())
+```
+
+# Binary Classification on `iris`
+
+We start with the lightest possible example: turn `iris` into a binary problem by asking whether a flower is `setosa` or not.
+
+To keep the geometry intuitive, we only use `Petal.Length` and `Petal.Width` in this first example.
+
+```{r iris-binary-data}
+data(iris)
+
+iris_binary <- iris %>%
+  transmute(
+    Petal.Length,
+    Petal.Width,
+    Class = factor(
+      if_else(Species == "setosa", "setosa", "other"),
+      levels = c("setosa", "other")
+    )
+  )
+
+set.seed(3501)
+iris_binary_idx <- createDataPartition(iris_binary$Class, p = 0.7, list = FALSE)
+iris_binary_train <- iris_binary[iris_binary_idx, ]
+iris_binary_test  <- iris_binary[-iris_binary_idx, ]
+
+cat("Train:", nrow(iris_binary_train), "| Test:", nrow(iris_binary_test), "\n")
+```
+
+Before fitting the model, it helps to visualize the two classes:
+
+```{r iris-binary-plot}
+ggplot(iris_binary_train, aes(x = Petal.Length, y = Petal.Width, color = Class)) +
+  geom_point(size = 2, alpha = 0.85) +
+  labs(
+    title = "Binary iris task: setosa vs other",
+    subtitle = "We only use two petal features in this first example"
+  ) +
+  scale_color_brewer(palette = "Set1")
+```
+
+
+For this first model we use a small tuning grid:
+
+- `size`: number of hidden units,
+- `decay`: weight decay, a simple regularization parameter.
+
+`caret` handles the tuning and control
+
+```{r iris-binary-fit}
+ctrl_class <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 1,
+  classProbs = TRUE,
+  savePredictions = "final"
+)
+
+set.seed(3502)
+iris_binary_fit <- train(
+  Class ~ .,
+  data = iris_binary_train,
+  method = "nnet",
+  metric = "Accuracy",
+  preProcess = c("center", "scale"),
+  trControl = ctrl_class,
+  tuneGrid = expand.grid(
+    size = c(1, 3, 5),
+    decay = c(0, 0.01, 0.1)
+  ),
+  trace = TRUE,
+  maxit = 300
+)
+
+iris_binary_fit
+```
+
+
+For binary classification, one very useful output is the predicted probability of the positive class.
+
+```{r iris-binary-probabilities}
+iris_binary_prob <- predict(iris_binary_fit, newdata = iris_binary_test, type = "prob")
+head(iris_binary_prob)
+```
+
+We can now turn those probabilities into hard class labels using a threshold of `0.5`.
+
+```{r iris-binary-predictions}
+iris_binary_pred <- factor(
+  if_else(iris_binary_prob$setosa >= 0.5, "setosa", "other"),
+  levels = levels(iris_binary_test$Class)
+)
+
+confusionMatrix(iris_binary_pred, iris_binary_test$Class)
+```
+
+
+Because we only used two predictors, we can visualize the smooth decision surface learned by the MLP.
+
+```{r iris-binary-boundary}
+iris_binary_grid <- expand.grid(
+  Petal.Length = seq(
+    min(iris_binary$Petal.Length) - 0.2,
+    max(iris_binary$Petal.Length) + 0.2,
+    length.out = 200
+  ),
+  Petal.Width = seq(
+    min(iris_binary$Petal.Width) - 0.2,
+    max(iris_binary$Petal.Width) + 0.2,
+    length.out = 200
+  )
+)
+
+iris_binary_grid$prob_setosa <- predict(
+  iris_binary_fit,
+  newdata = iris_binary_grid,
+  type = "prob"
+)[, "setosa"]
+
+ggplot() +
+  geom_tile(
+    data = iris_binary_grid,
+    aes(x = Petal.Length, y = Petal.Width, fill = prob_setosa),
+    alpha = 0.45
+  ) +
+  geom_contour(
+    data = iris_binary_grid,
+    aes(x = Petal.Length, y = Petal.Width, z = prob_setosa),
+    breaks = 0.5,
+    color = "white",
+    linewidth = 0.7
+  ) +
+  geom_point(
+    data = iris_binary_train,
+    aes(x = Petal.Length, y = Petal.Width, color = Class),
+    size = 1.8,
+    alpha = 0.9
+  ) +
+  scale_fill_gradient(low = "grey90", high = "steelblue") +
+  scale_color_brewer(palette = "Set1") +
+  labs(
+    title = "MLP decision surface on the binary iris task",
+    subtitle = "White curve marks the 0.5 classification boundary",
+    fill = "P(setosa)"
+  )
+```
+
+# Multiclass Classification on Full `iris`
+
+Now we keep the same workflow, but return to the original three-species classification problem.
+
+The main conceptual change is that the output layer now produces one score per class instead of one probability for a yes/no outcome.
+
+```{r iris-multiclass-data}
+iris_multi <- iris
+
+set.seed(3503)
+iris_multi_idx <- createDataPartition(iris_multi$Species, p = 0.7, list = FALSE)
+iris_multi_train <- iris_multi[iris_multi_idx, ]
+iris_multi_test  <- iris_multi[-iris_multi_idx, ]
+
+cat("Train:", nrow(iris_multi_train), "| Test:", nrow(iris_multi_test), "\n")
+```
+
+```{r iris-multiclass-fit}
+ctrl_multi <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 1,
+  classProbs = TRUE,
+  savePredictions = "final"
+)
+
+set.seed(3504)
+iris_multi_fit <- train(
+  Species ~ .,
+  data = iris_multi_train,
+  method = "nnet",
+  metric = "Accuracy",
+  preProcess = c("center", "scale"),
+  trControl = ctrl_multi,
+  tuneGrid = expand.grid(
+    size = c(2, 4, 6),
+    decay = c(0, 0.01, 0.1)
+  ),
+  trace = TRUE,
+  maxit = 300
+)
+
+iris_multi_fit
+```
+
+```{r iris-multiclass-probabilities}
+head(predict(iris_multi_fit, newdata = iris_multi_test, type = "prob"))
+```
+
+```{r iris-multiclass-eval}
+iris_multi_pred <- predict(iris_multi_fit, newdata = iris_multi_test)
+confusionMatrix(iris_multi_pred, iris_multi_test$Species)
+```
+
+As with the binary case, we can visualize the learned decision regions. Because this model uses 4 predictors, we draw the surface over `Petal.Length` and `Petal.Width`, while holding `Sepal.Length` and `Sepal.Width` fixed at their training medians.
+
+```{r iris-multiclass-boundary}
+iris_multi_grid <- expand.grid(
+  Petal.Length = seq(
+    min(iris_multi$Petal.Length) - 0.2,
+    max(iris_multi$Petal.Length) + 0.2,
+    length.out = 250
+  ),
+  Petal.Width = seq(
+    min(iris_multi$Petal.Width) - 0.2,
+    max(iris_multi$Petal.Width) + 0.2,
+    length.out = 250
+  )
+)
+
+iris_multi_grid$Sepal.Length <- median(iris_multi_train$Sepal.Length)
+iris_multi_grid$Sepal.Width  <- median(iris_multi_train$Sepal.Width)
+
+iris_multi_grid$pred_species <- predict(iris_multi_fit, newdata = iris_multi_grid)
+
+ggplot() +
+  geom_tile(
+    data = iris_multi_grid,
+    aes(x = Petal.Length, y = Petal.Width, fill = pred_species),
+    alpha = 0.30
+  ) +
+  geom_point(
+    data = iris_multi_train,
+    aes(x = Petal.Length, y = Petal.Width, color = Species),
+    size = 1.8,
+    alpha = 0.9
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_color_brewer(palette = "Set1") +
+  labs(
+    title = "MLP decision surface on the multiclass iris task",
+    subtitle = "Surface in petal space, with sepal features fixed at training medians",
+    fill = "Predicted class",
+    color = "Observed class"
+  )
+```
+
+# Regression on Sacramento House Prices
+
+We now switch to regression. This example reuses the Sacramento case study from Topic 3.4, but the focus here is only on fitting a neural network for prediction.
+
+The feature engineering below is the same basic preprocessing logic used in Topic 3.4: log-transform skewed variables, remove problematic rows, and add a few simple engineered features. We do not repeat the full preprocessing motivation here.
+
+```{r sacramento-data}
+data(Sacramento)
+
+prepare_sacramento_data <- function(df) {
+  df %>%
+    filter(price > 0, sqft > 0, baths > 0) %>%
+    drop_na(price, beds, baths, sqft, type, city, zip, latitude, longitude) %>%
+    mutate(
+      bedsperbath = beds / baths,
+      log_price   = log(price),
+      log_sqft    = log(sqft),
+      latitude2   = latitude^2,
+      longitude2  = longitude^2
+    ) %>%
+    select(
+      price,
+      log_price,
+      beds,
+      baths,
+      log_sqft,
+      type,
+      latitude,
+      longitude,
+      bedsperbath,
+      latitude2,
+      longitude2
+    )
+}
+
+set.seed(3505)
+sac_idx <- createDataPartition(Sacramento$price, p = 0.75, list = FALSE)
+sac_train_raw <- Sacramento[sac_idx, ]
+sac_test_raw  <- Sacramento[-sac_idx, ]
+
+sac_train <- prepare_sacramento_data(sac_train_raw)
+sac_test  <- prepare_sacramento_data(sac_test_raw)
+
+cat("Train after cleaning:", nrow(sac_train), "| Test after cleaning:", nrow(sac_test), "\n")
+```
+
+And we build the desired predictor formula
+
+```{r sacramento-formula}
+sac_formula <- log_price ~ beds + baths + log_sqft + type +
+  latitude + longitude + bedsperbath + latitude2 + longitude2
+```
+
+
+For regression we keep the same `size` and `decay` tuning idea, but tell `nnet` to use a linear output with `linout = TRUE`.
+
+```{r sacramento-nn-fit}
+ctrl_reg <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 1
+)
+
+set.seed(3506)
+sac_nn_fit <- train(
+  sac_formula,
+  data = sac_train,
+  method = "nnet",
+  metric = "RMSE",
+  preProcess = c("center", "scale"),
+  trControl = ctrl_reg,
+  tuneGrid = expand.grid(
+    size = c(3, 5, 7),
+    decay = c(0, 0.01, 0.1)
+  ),
+  trace = TRUE,
+  linout = TRUE,
+  maxit = 500,
+  MaxNWts = 2000
+)
+
+sac_nn_fit
+```
+
+```{r sacramento-nn-eval}
+sac_nn_pred_log <- predict(sac_nn_fit, newdata = sac_test)
+
+metrics_table <-
+  as_tibble_row(postResample(pred = sac_nn_pred_log, obs = sac_test$log_price)) %>%
+    mutate(Model = "Neural network", .before = 1)
+
+metrics_table
+```
+
+The model is trained on `log_price`, but for interpretation we plot predictions back on the original dollar scale.
+
+```{r sacramento-predicted-vs-observed}
+sac_results <- tibble(
+  observed_log = sac_test$log_price,
+  predicted_log = sac_nn_pred_log,
+  observed_price = exp(observed_log),
+  predicted_price = exp(predicted_log)
+)
+
+ggplot(sac_results, aes(x = observed_price, y = predicted_price)) +
+  geom_point(alpha = 0.7, color = "steelblue") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "firebrick") +
+  scale_x_log10(labels = scales::dollar_format()) +
+  scale_y_log10(labels = scales::dollar_format()) +
+  labs(
+    title = "Sacramento test set: observed vs predicted prices",
+    subtitle = "Predictions come from an MLP trained on log(price)",
+    x = "Observed price",
+    y = "Predicted price"
+  )
+```
+
+
+# Final Remarks
+
+We have seen a very short and simple way of fitting small NNs with packages that do not allow tuning all the internal possibilities that a neural network has. If any one is in that, there are several tutorials on the [torch for R webpage](https://torch.mlverse.org/) 
